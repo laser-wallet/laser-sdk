@@ -137,7 +137,7 @@ export default class LaserFactory {
      * @param entryPoint The target EntryPoint address.
      * @returns The address of the new wallet or reverts on error.
      */
-    async createProxy(owner: Address, guardians: Address[], entryPoint: Address): Promise<void> {
+    async createProxy(owner: Address, guardians: Address[], entryPoint: Address): Promise<Address> {
         await this.checkParams(owner, guardians, entryPoint);
         const dataPayload = this.encodeFunctionData("init", [owner, guardians, entryPoint]);
 
@@ -163,7 +163,7 @@ export default class LaserFactory {
         owner: Address,
         guardians: Address[],
         entryPoint: Address
-    ): Promise<void> {
+    ): Promise<Address> {
         await this.checkParams(owner, guardians, entryPoint);
         const dataPayload = this.encodeFunctionData("init", [owner, guardians, entryPoint]);
 
