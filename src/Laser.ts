@@ -140,6 +140,20 @@ export class Laser {
     }
 
     /**
+     *
+     * @returns Boolean if an address is a Laser wallet.
+     * COMMENT: It is trivially easy to bypass this, this is just for the guardians.
+     */
+    async isLaser(_address: Address): Promise<boolean> {
+        // Laser Wallet contract: bytes4(keccak256("I_AM_LASER"))
+        const interfaceId = "0xae029e0b";
+        try {
+            return this.contract.supportsInterface(interfaceId);
+        } catch (e) {
+            throw Error(`Address probably not a Laser wallet: ${e}`);
+        }
+    }
+    /**
      * @param hash that was signed by the owners.
      * @param signatures of the message.
      * @returns true if the signature is valid for the wallet.
