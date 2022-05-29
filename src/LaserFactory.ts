@@ -19,6 +19,12 @@ export default class LaserFactory {
     readonly factory: Contract;
     readonly abi = abi;
 
+    /**
+     *
+     * @param providerUrl RPC url to have a connection with a node (INFURA, ALCHEMY).
+     * @chainId The id of the chain for this connection (e.g 1 for mainnet).
+     * @param _signer Deployer of the wallet. It can be Laser, and the transaction gets refunded after the user receives a first deposit.
+     */
     constructor(providerUrl: string, chainId: Numberish, _signer: Wallet) {
         this.provider = new ethers.providers.JsonRpcProvider(providerUrl);
         this.signer = _signer;

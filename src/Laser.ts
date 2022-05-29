@@ -7,6 +7,8 @@ import { ZERO, MAGIC_VALUE } from "./constants/constants";
 import { checksum } from "./utils";
 import { abi } from "./abis/LaserWallet.json";
 
+import LaserFactory from "./LaserFactory";
+
 /**
  * @dev Interacts with a Laser Wallet.
  */
@@ -17,6 +19,13 @@ export default class Laser {
     readonly abi = abi;
     readonly aaUrl: string;
 
+    /**
+     *
+     * @param providerUrl RPC url to have a connection with a node (INFURA, ALCHEMY).
+     * @param _signer The owner of the wallet (the encrypted keypair on the mobile).
+     * @param contractAddress The address of the wallet.
+     * @param aaUrl Url connection to send the UserOperation struct.
+     */
     constructor(providerUrl: string, _signer: Wallet, contractAddress: string, aaUrl: string) {
         this.provider = new ethers.providers.JsonRpcProvider(providerUrl);
         this.signer = _signer;
