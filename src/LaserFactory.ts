@@ -13,7 +13,7 @@ const GOERLI_FACTORY = "0xcCed5B88f14f1e133680117d01dEFeB38fC9a5A3";
  * @dev ProxyFactory that deploys new proxies and has additional features.
  * code: https://github.com/laser-wallet/laser-wallet-contracts/blob/master/contracts/proxies/LaserProxyFactory.sol
  */
-export default class LaserFactory {
+export class LaserFactory {
     readonly provider: Provider;
     readonly signer: Wallet;
     readonly factory: Contract;

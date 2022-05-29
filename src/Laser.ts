@@ -12,7 +12,7 @@ import LaserFactory from "./LaserFactory";
 /**
  * @dev Interacts with a Laser Wallet.
  */
-export default class Laser {
+export class Laser {
     readonly provider: Provider;
     readonly signer: Wallet;
     readonly contract: Contract; // The actual wallet.
