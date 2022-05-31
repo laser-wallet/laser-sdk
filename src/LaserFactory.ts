@@ -178,6 +178,17 @@ export class LaserFactory {
     }
 
     /**
+     * @dev Listens for the event 'ProxyCreation'.
+     */
+    async on(): Promise<void> {
+        console.log("Listening ...");
+         this.factory.on("ProxyCreation", async(proxy, singleton) => {
+            console.log("New wallet creation");
+            console.log("Wallet address: ", proxy);
+         });
+    }
+
+    /**
      * @dev Precomputes the address of a proxy that is created through 'create2'.
      * NOTE: This is super useful to pre-compute the address of a new user, so that the real deployment
      * happens when the user receives ETH for the first time.

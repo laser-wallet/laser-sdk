@@ -7,8 +7,6 @@ import { ZERO, MAGIC_VALUE } from "./constants/constants";
 import { checksum } from "./utils";
 import { abi } from "./abis/LaserWallet.json";
 
-import LaserFactory from "./LaserFactory";
-
 /**
  * @dev Interacts with a Laser Wallet.
  */
@@ -31,18 +29,6 @@ export class Laser {
         this.signer = _signer;
         this.contract = new Contract(contractAddress, abi, this.signer.connect(this.provider));
         this.aaUrl = aaUrl;
-
-        // We need to check that the connected signer is the owner.
-        this.contract
-            .owner()
-            .then((owner: Address) => {
-                if (owner.toLowerCase() !== this.signer.address.toLowerCase()) {
-                    throw Error("Incorrect owner");
-                }
-            })
-            .catch((e: Error) => {
-                throw Error(`Laser constructor: ${e}`);
-            });
     }
 
     /**
@@ -63,22 +49,15 @@ export class Laser {
     /**
      * @returns the nonce of the  wallet.
      */
-    async getNonce(): Promise<Numberish> {
-        return await this.contract.nonce();
-    }
-
-    /**
-     * @returns the threshold of the  wallet.
-     */
-    async getThreshold(): Promise<Numberish> {
-        return (await this.contract.getThreshold()).toString();
+    async getNonce(): Promise<string> {
+        return (await this.contract.nonce()).toString();
     }
 
     /**
      * @returns the network id that the wallet is connected to.
      */
-    async getNetworkId(): Promise<Numberish> {
-        return this.contract.getChainId();
+    async getNetworkId(): Promise<string> {
+        return (await this.contract.getChainId()).toString();
     }
 
     /**
@@ -140,15 +119,20 @@ export class Laser {
     }
 
     /**
-     *
      * @returns Boolean if an address is a Laser wallet.
      * COMMENT: It is trivially easy to bypass this, this is just for the guardians.
      */
     async isLaser(_address: Address): Promise<boolean> {
+        const address = checksum(_address);
+        const _abi = ["function supportsInterface(bytes4) external view returns (bool)"];
+        const targetAddress = new ethers.Contract(address, _abi, this.provider);
+        if (!(await this.isContract(address))) {
+            throw Error("Address is not a contract.");
+        }
         // Laser Wallet contract: bytes4(keccak256("I_AM_LASER"))
         const interfaceId = "0xae029e0b";
         try {
-            return this.contract.supportsInterface(interfaceId);
+            return await targetAddress.supportsInterface(interfaceId);
         } catch (e) {
             throw Error(`Address probably not a Laser wallet: ${e}`);
         }
@@ -159,8 +143,12 @@ export class Laser {
      * @returns true if the signature is valid for the wallet.
      */
     async isValidSignature(hash: string, signatures: string): Promise<boolean> {
-        const res = await this.contract.isValidSignature(hash, signatures);
-        return res.toLowerCase() === MAGIC_VALUE.toLowerCase();
+        try {
+            const res = await this.contract.isValidSignature(hash, signatures);
+            return res.toLowerCase() === MAGIC_VALUE.toLowerCase();
+        } catch (e) {
+            throw Error(`Error in isValidSignature, probably not valid: ${e}`);
+        }
     }
 
     /**
@@ -181,4 +169,24 @@ export class Laser {
     async userOperationHash(userOp: UserOperation): Promise<string> {
         return await this.contract.userOperationHash(userOp);
     }
+
+    /**
+     * @dev Data payload to change the owner.
+     * @param _newOwner New owner.
+     */
+    async changeOwnerData(_newOwner: Address): Promise<string> {
+        const newOwner = checksum(_newOwner);
+        const currentOwner = await this.getOwner();
+        if (newOwner.toLowerCase() === currentOwner.toLowerCase()) {
+            throw Error("New owner cannot be current owner.");
+        }
+        if (await this.isContract(newOwner)) {
+            throw Error("Owner cannot be a contract.");
+        }
+        return this.encodeFunctionData("changeOwner", [_newOwner]);
+    }
 }
+
+
+
+
