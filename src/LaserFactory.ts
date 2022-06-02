@@ -6,16 +6,13 @@ import { ZERO, SALT } from "./constants/constants";
 import { checksum } from "./utils";
 import { abi } from "./abis/LaserProxyFactory.json";
 
-// This is a deployed version of the factory in GOERLI.
-const GOERLI_FACTORY = "0xcCed5B88f14f1e133680117d01dEFeB38fC9a5A3";
-
 /**
  * @dev ProxyFactory that deploys new proxies and has additional features.
  * code: https://github.com/laser-wallet/laser-wallet-contracts/blob/master/contracts/proxies/LaserProxyFactory.sol
  */
 export class LaserFactory {
     readonly provider: Provider;
-    readonly signer: Wallet;
+    readonly relayer: Wallet;
     readonly factory: Contract;
     readonly abi = abi;
 
@@ -23,12 +20,17 @@ export class LaserFactory {
      *
      * @param providerUrl RPC url to have a connection with a node (INFURA, ALCHEMY).
      * @chainId The id of the chain for this connection (e.g 1 for mainnet).
-     * @param _signer Deployer of the wallet. It can be Laser, and the transaction gets refunded after the user receives a first deposit.
+     * @param relayer Deployer of the wallet. It can be Laser, and the transaction gets refunded after the user receives a first deposit.
+     * @param factoryAddress The address of the deployed factory.
      */
-    constructor(providerUrl: string, chainId: Numberish, _signer: Wallet) {
+    constructor(providerUrl: string, chainId: Numberish, relayer: Wallet, factoryAddress: Address) {
         this.provider = new ethers.providers.JsonRpcProvider(providerUrl);
-        this.signer = _signer;
-        this.factory = new ethers.Contract(GOERLI_FACTORY, abi, this.signer.connect(this.provider));
+        this.relayer = relayer;
+        this.factory = new ethers.Contract(
+            factoryAddress,
+            abi,
+            this.relayer.connect(this.provider)
+        );
 
         this.provider
             .getNetwork()
@@ -49,28 +51,36 @@ export class LaserFactory {
      * @param _params The parameters inside of an array. Empty array if there are no params.
      * @returns Encoded data payload.
      */
-    encodeFunctionData(funcName: string, ..._params: any[]): string {
-        const initAbi = [
-            "function init(address _owner,address[] calldata _guardians,address _entryPoint) external",
-        ];
+    encodeFunctionData(..._params: any[]): string {
+        const _abi = ["function init(address,address,address[],address) external"];
         const params = _params[0];
-        return new ethers.utils.Interface(initAbi).encodeFunctionData(funcName, params);
+        return new ethers.utils.Interface(_abi).encodeFunctionData("init", params);
     }
 
     /**
      * Checks the correctness of the parameters.
      * This checks are also done with more vigour in the contract side.
      * @param _owner The target owner address.
+     * @param _recoveryOwner The recovery owner.
      * @param guardians The target guardian addresses.
      * @param _entryPoint The target EntryPoint address.
      */
-    async checkParams(_owner: Address, guardians: Address[], _entryPoint: Address): Promise<void> {
+    async checkParams(
+        _owner: Address,
+        _recoveryOwner: Address,
+        guardians: Address[],
+        _entryPoint: Address
+    ): Promise<void> {
         const owner = checksum(_owner);
-        if (owner.toLowerCase() === ZERO.toLowerCase()) {
-            throw Error("Owner cannot be address 0.");
+        const recoveryOwner = checksum(_recoveryOwner);
+        if (
+            owner.toLowerCase() === ZERO.toLowerCase() ||
+            recoveryOwner.toLowerCase() == ZERO.toLowerCase()
+        ) {
+            throw Error("Owners cannot be address 0.");
         }
-        if (await this.isContract(owner)) {
-            throw Error("Owner cannot be a contract.");
+        if ((await this.isContract(owner)) || (await this.isContract(recoveryOwner))) {
+            throw Error("OwnerS cannot be a contract.");
         }
         if (guardians.length === 0) {
             throw Error("There needs to be at least 1 guardian.");
@@ -133,13 +143,19 @@ export class LaserFactory {
      * @dev Allows to create new proxy contact and execute a message call to the new proxy within one transaction.
      * It also performs safety checks prior execution.
      * @param owner The target owner address.
+     * @param recoveryOwner The recovery owner.
      * @param guardians The target guardian addresses.
      * @param entryPoint The target EntryPoint address.
      * @returns The address of the new wallet or reverts on error.
      */
-    async createProxy(owner: Address, guardians: Address[], entryPoint: Address): Promise<Address> {
-        await this.checkParams(owner, guardians, entryPoint);
-        const dataPayload = this.encodeFunctionData("init", [owner, guardians, entryPoint]);
+    async createProxy(
+        owner: Address,
+        recoveryOwner: Address,
+        guardians: Address[],
+        entryPoint: Address
+    ): Promise<Address> {
+        await this.checkParams(owner, recoveryOwner, guardians, entryPoint);
+        const dataPayload = this.encodeFunctionData([owner, guardians, entryPoint]);
 
         try {
             const transaction = await this.factory.createProxy(dataPayload);
@@ -155,17 +171,19 @@ export class LaserFactory {
      * @dev Allows to create new proxy contact and execute a message call to the new proxy within one transaction.
      * It also performs safety checks prior execution.
      * @param owner The target owner address.
+     * @param recoveryOwner The recovery owner.
      * @param guardians The target guardian addresses.
      * @param entryPoint The target EntryPoint address.
      * @returns The address of the new wallet or reverts on error.
      */
     async createProxyWithCreate2(
         owner: Address,
+        recoveryOwner: Address,
         guardians: Address[],
         entryPoint: Address
     ): Promise<Address> {
-        await this.checkParams(owner, guardians, entryPoint);
-        const dataPayload = this.encodeFunctionData("init", [owner, guardians, entryPoint]);
+        await this.checkParams(owner, recoveryOwner, guardians, entryPoint);
+        const dataPayload = this.encodeFunctionData([owner, recoveryOwner, guardians, entryPoint]);
 
         try {
             const transaction = await this.factory.createProxyWithNonce(dataPayload, SALT);
@@ -182,10 +200,10 @@ export class LaserFactory {
      */
     async on(): Promise<void> {
         console.log("Listening ...");
-         this.factory.on("ProxyCreation", async(proxy, singleton) => {
+        this.factory.on("ProxyCreation", async (proxy, singleton) => {
             console.log("New wallet creation");
             console.log("Wallet address: ", proxy);
-         });
+        });
     }
 
     /**

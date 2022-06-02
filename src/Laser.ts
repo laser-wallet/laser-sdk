@@ -1,11 +1,11 @@
 import { ethers, Contract, utils } from "ethers";
 import { Wallet } from "@ethersproject/wallet";
 import { Provider } from "@ethersproject/providers";
-import axios from "axios";
-import { Address, Numberish, Domain, UserOperation } from "./types";
-import { ZERO, MAGIC_VALUE } from "./constants/constants";
+import { Address, Numberish, Domain, UserOperation, userOp, TransactionInfo } from "./types";
+import { ZERO, MAGIC_VALUE } from "./constants";
 import { checksum } from "./utils";
 import { abi } from "./abis/LaserWallet.json";
+import { EIP712Sig } from "./utils/signatures";
 
 /**
  * @dev Interacts with a Laser Wallet.
@@ -119,25 +119,6 @@ export class Laser {
     }
 
     /**
-     * @returns Boolean if an address is a Laser wallet.
-     * COMMENT: It is trivially easy to bypass this, this is just for the guardians.
-     */
-    async isLaser(_address: Address): Promise<boolean> {
-        const address = checksum(_address);
-        const _abi = ["function supportsInterface(bytes4) external view returns (bool)"];
-        const targetAddress = new ethers.Contract(address, _abi, this.provider);
-        if (!(await this.isContract(address))) {
-            throw Error("Address is not a contract.");
-        }
-        // Laser Wallet contract: bytes4(keccak256("I_AM_LASER"))
-        const interfaceId = "0xae029e0b";
-        try {
-            return await targetAddress.supportsInterface(interfaceId);
-        } catch (e) {
-            throw Error(`Address probably not a Laser wallet: ${e}`);
-        }
-    }
-    /**
      * @param hash that was signed by the owners.
      * @param signatures of the message.
      * @returns true if the signature is valid for the wallet.
@@ -174,7 +155,7 @@ export class Laser {
      * @dev Data payload to change the owner.
      * @param _newOwner New owner.
      */
-    async changeOwnerData(_newOwner: Address): Promise<string> {
+    private async changeOwnerData(_newOwner: Address): Promise<string> {
         const newOwner = checksum(_newOwner);
         const currentOwner = await this.getOwner();
         if (newOwner.toLowerCase() === currentOwner.toLowerCase()) {
@@ -185,8 +166,61 @@ export class Laser {
         }
         return this.encodeFunctionData("changeOwner", [_newOwner]);
     }
+
+    /**
+     * @dev Sends a signed userOp object to the relayer.
+     * @param newOwner The address of the new owner.
+     * @param txInfo The transaction info (see types). Primarily gas costs.
+     */
+    async changeOwner(newOwner: Address, txInfo: TransactionInfo): Promise<UserOperation> {
+        // NOTE !!! It is missing a lot of extra safety checks... But it works for now.
+
+        const txData = this.changeOwnerData(newOwner);
+        const walletAddress = this.getContractAddress();
+        // The user operation object needs to be sent to the EntryPoint contract 'handleOps'...
+        // Check the examples folder ...
+        userOp.sender = walletAddress;
+        userOp.nonce = await this.getNonce();
+        userOp.callData = this.encodeFunctionData("exec", [walletAddress, 0, txData]);
+        userOp.callGas = txInfo.callGas;
+        userOp.maxFeePerGas = txInfo.maxFeePerGas;
+        userOp.maxPriorityFeePerGas = txInfo.maxPriorityFeePerGas;
+        userOp.signature = await EIP712Sig(this.signer, userOp, await this.getDomain());
+
+        // This userOp then gets sent to the relayer and then to the EntryPoint contract ...
+        return userOp;
+    }
+
+    /**
+     * @dev Sends a signed userOp object to the relayer.
+     * @param to Destination address of the transaction.
+     * @param amount Amount in ETH to send.
+     * @param txInfo The transaction info (see types). Primarily gas costs.
+     */
+    async sendEth(to: Address, amount: Numberish, txInfo: TransactionInfo): Promise<UserOperation> {
+        // NOTE !!! It is missing a lot of extra safety checks... But it works for now.
+
+        if (amount <= 0) {
+            throw Error("Cannot send 0 ETH.");
+        }
+        const currentBal = await this.getBalanceInEth();
+        if (Number(currentBal) < Number(amount)) {
+            throw Error("Insufficient balance.");
+        }
+        const amountInWei = ethers.utils.parseEther(amount.toString());
+        const walletAddress = this.getContractAddress();
+
+        // The user operation object needs to be sent to the EntryPoint contract 'handleOps'...
+        // Check the examples folder ...
+        userOp.sender = walletAddress;
+        userOp.nonce = await this.getNonce();
+        userOp.callData = this.encodeFunctionData("exec", [to, amountInWei, "0x"]);
+        userOp.callGas = txInfo.callGas;
+        userOp.maxFeePerGas = txInfo.maxFeePerGas;
+        userOp.maxPriorityFeePerGas = txInfo.maxPriorityFeePerGas;
+        userOp.signature = await EIP712Sig(this.signer, userOp, await this.getDomain());
+
+        // This userOp then gets sent to the relayer and then to the EntryPoint contract ...
+        return userOp;
+    }
 }
-
-
-
-
