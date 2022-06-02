@@ -59,8 +59,8 @@ export const userOp: UserOperation = {
     initCode: "0x",
     callData: "",
     callGas: 0,
-    verificationGas: 60000, // we can hardcode this ..
-    preVerificationGas: 10000, // We can hardcode this for now ...
+    verificationGas: 1000000, // we can hardcode this ..
+    preVerificationGas: 1000000, // We can hardcode this for now ...
     maxFeePerGas: 0,
     maxPriorityFeePerGas: 0,
     paymaster: ZERO,

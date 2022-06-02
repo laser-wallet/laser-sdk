@@ -5,7 +5,7 @@ import { Address, Numberish, Domain, UserOperation, userOp, TransactionInfo } fr
 import { ZERO, MAGIC_VALUE } from "./constants";
 import { checksum } from "./utils";
 import { abi } from "./abis/LaserWallet.json";
-import { EIP712Sig } from "./utils/signatures";
+import { EIP712Sig, sign } from "./utils/signatures";
 
 /**
  * @dev Interacts with a Laser Wallet.
@@ -191,13 +191,58 @@ export class Laser {
         return userOp;
     }
 
-    /**
+     /**
+     * This is signed with normal eth flow.
      * @dev Sends a signed userOp object to the relayer.
      * @param to Destination address of the transaction.
      * @param amount Amount in ETH to send.
      * @param txInfo The transaction info (see types). Primarily gas costs.
      */
     async sendEth(to: Address, amount: Numberish, txInfo: TransactionInfo): Promise<UserOperation> {
+        // NOTE !!! It is missing a lot of extra safety checks... But it works for now.
+
+        if (amount <= 0) {
+            throw Error("Cannot send 0 ETH.");
+        }
+        const currentBal = await this.getBalanceInEth();
+        if (Number(currentBal) < Number(amount)) {
+            throw Error("Insufficient balance.");
+        }
+        const amountInWei = ethers.utils.parseEther(amount.toString());
+        const walletAddress = this.getContractAddress();
+
+        // The user operation object needs to be sent to the EntryPoint contract 'handleOps'...
+        // Check the examples folder ...
+        userOp.sender = walletAddress;
+        userOp.nonce = await this.getNonce();
+        userOp.callData = this.encodeFunctionData("exec", [to, amountInWei, "0x"]);
+        userOp.callGas = txInfo.callGas;
+        userOp.maxFeePerGas = txInfo.maxFeePerGas;
+        userOp.maxPriorityFeePerGas = txInfo.maxPriorityFeePerGas;
+        userOp.signature = "0x";
+        const hash = await this.contract.userOperationHash(userOp);
+        userOp.signature = await sign(this.signer, hash);
+
+        // We check that the signature is correct ... 
+        const magicValue = await this.contract.isValidSignature(hash, userOp.signature);
+
+        if (magicValue.toLowerCase() !== MAGIC_VALUE.toLowerCase()) {
+            throw Error("Invalid signature, probably the hash is inccorect or not the owner");
+        }
+
+        console.log(userOp);
+        // This userOp then gets sent to the relayer and then to the EntryPoint contract ...
+        return userOp;
+    }
+
+    /**
+     * This is signed with EIP712.
+     * @dev Sends a signed userOp object to the relayer.
+     * @param to Destination address of the transaction.
+     * @param amount Amount in ETH to send.
+     * @param txInfo The transaction info (see types). Primarily gas costs.
+     */
+    async _sendEth(to: Address, amount: Numberish, txInfo: TransactionInfo): Promise<UserOperation> {
         // NOTE !!! It is missing a lot of extra safety checks... But it works for now.
 
         if (amount <= 0) {

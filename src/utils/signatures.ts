@@ -23,3 +23,12 @@ export async function EIP712Sig(
     // Returns the signature.
     return await signer._signTypedData(domain, types, txMessage);
 }
+
+export async function sign(signer: Wallet, hash: string): Promise<string> {
+    const typedDataHash = ethers.utils.arrayify(hash);
+    const signature = (await signer.signMessage(typedDataHash))
+        .replace(/1b$/, "1f")
+        .replace(/1c$/, "20");
+    return signature;
+}
+

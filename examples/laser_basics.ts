@@ -89,15 +89,14 @@ async function sendEth(): Promise<void> {
     // I hardcoded these values ... .they should be properly handled by simulation. 
     // Check the UserOperation object for description, or read: https://eips.ethereum.org/EIPS/eip-4337
     const txInfo: TransactionInfo = {
-        callGas: 200000, 
-        maxFeePerGas: 1000000000,
-        maxPriorityFeePerGas: 1000000000,
+        callGas: 2000000, 
+        maxFeePerGas: 10000000000,
+        maxPriorityFeePerGas: 10000000000,
     };
 
     userOp = await laser.sendEth(to, value, txInfo);
+
     console.log("user op -->", userOp);
-
-
     /**
      * Step2: Now that we have the user operation, the relayer needs to send the transaction to the EntryPoint. 
      */
@@ -109,11 +108,10 @@ async function sendEth(): Promise<void> {
      */
     try {
         await entryPoint.handleOps([userOp], relayer.address);
-        console.log("sucess ...");
+        console.log("success ...");
     } catch(e) {
         throw Error(`Error: ${e}`);
     }
 }
-
 
 sendEth();
