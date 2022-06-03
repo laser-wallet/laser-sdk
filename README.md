@@ -11,7 +11,7 @@ npm i laser-sdk
 ### Import with TypeScript:
 ```ts
 import { ethers } from "ethers";
-import { Laser, LaserFactory} from "laser-sdk";
+import { Laser, LaserFactory } from "laser-sdk";
 ```
 
 ### Import with JavScript:
