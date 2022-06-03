@@ -7,6 +7,15 @@
 ```
 npm i laser-sdk
 ```
+
+### Import with typescript:
+```ts
+import { ethers } from "ethers";
+import { Laser, LaserFactory} from "laser-sdk";
+```
+
+
+
 ## License
 
 #### LGPL-3.0 License.
