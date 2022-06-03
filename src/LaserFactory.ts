@@ -7,8 +7,7 @@ import { checksum } from "./utils";
 import { abi } from "./abis/LaserProxyFactory.json";
 
 /**
- * @dev ProxyFactory that deploys new proxies and has additional features.
- * code: https://github.com/laser-wallet/laser-wallet-contracts/blob/master/contracts/proxies/LaserProxyFactory.sol
+ * @dev Class that has all the methods to read/write to a Laser wallet.
  */
 export class LaserFactory {
     readonly provider: Provider;

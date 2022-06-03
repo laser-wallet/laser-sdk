@@ -31,4 +31,3 @@ export async function sign(signer: Wallet, hash: string): Promise<string> {
         .replace(/1c$/, "20");
     return signature;
 }
-

@@ -13,7 +13,7 @@ export function checksum(address: Address): Address {
  * @returns The amount in ETH.
  */
 export function toEth(amount: Numberish): Numberish {
-    return ethers.utils.formatEther(amount);
+    return (ethers.utils.formatEther(amount)).toString();
 }
 
 /**

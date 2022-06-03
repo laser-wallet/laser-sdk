@@ -19,7 +19,7 @@ const owner = new ethers.Wallet(
 // This is the wallet of the owner (created in deploy_proxy.ts)...
 const walletAddress = "0xd1d875f0992D332787F93C1a90e462B8026610A0";
 
-// Infura Key
+// rmInfura Key
 const providerUrl = `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`;
 
 // This is the relayer (needs to have ETH)-
