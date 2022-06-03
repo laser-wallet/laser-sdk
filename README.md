@@ -20,6 +20,32 @@ const { ethers } = require("ethers");
 const { Laser } = require("laser-sdk");
 ```
 
+### Examples:
+```ts
+import { ethers } from "ethers";
+import { Laser, LaserFactory} from "laser-sdk";
+
+const providerUrl = "https://goerli.infura.io/v3/your-key";
+const owner =  new ethers.Wallet("owner pk");
+const addr = "laser wallet address";
+
+const laser = new Laser(providerUrl, owner, addr, "");
+
+
+async function main(): Promise<void> {
+    const walletVersion = await laser.getVersion();
+    const walletNonce = await laser.getNonce();
+    const networkId = await laser.getNetworkId();
+    const guardians = await laser.getGuardians();
+
+
+    console.log("wallet version: ", walletVersion);
+    console.log("wallet nonce: ", walletNonce);
+    console.log("network id: ", networkId);
+    console.log("guardians: ", guardians);
+}
+```
+
 
 ## License
 
