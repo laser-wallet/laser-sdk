@@ -2,6 +2,12 @@
 
 ### SDK to interact with a Laser wallet.
 
+## Usage
+
+```
+npm i laser-sdk
+```
+
 ## License
 
 #### LGPL-3.0 License.
