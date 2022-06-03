@@ -8,12 +8,17 @@
 npm i laser-sdk
 ```
 
-### Import with typescript:
+### Import with TypeScript:
 ```ts
 import { ethers } from "ethers";
 import { Laser, LaserFactory} from "laser-sdk";
 ```
 
+### Import with JavScript:
+```js
+const { ethers } = require("ethers");
+const { Laser } = require("laser-sdk");
+```
 
 
 ## License
