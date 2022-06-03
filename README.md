@@ -17,7 +17,7 @@ import { Laser, LaserFactory } from "laser-sdk";
 ### Import with JavScript:
 ```js
 const { ethers } = require("ethers");
-const { Laser } = require("laser-sdk");
+const { Laser, LaserFactory } = require("laser-sdk");
 ```
 
 ### Examples:
