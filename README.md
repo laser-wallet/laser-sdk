@@ -7,7 +7,6 @@
 ```
 npm i laser-sdk
 ```
-
 ## License
 
 #### LGPL-3.0 License.
