@@ -1,7 +1,7 @@
 import { ethers, Contract, utils } from "ethers";
 import { Wallet } from "@ethersproject/wallet";
 import { Provider } from "@ethersproject/providers";
-import { Address, Numberish } from "./types";
+import { Address } from "./types";
 import { ZERO, SALT } from "./constants/constants";
 import { checksum } from "./utils";
 import { abi } from "./abis/LaserProxyFactory.json";
@@ -22,26 +22,14 @@ export class LaserFactory {
      * @param relayer Deployer of the wallet. It can be Laser, and the transaction gets refunded after the user receives a first deposit.
      * @param factoryAddress The address of the deployed factory.
      */
-    constructor(providerUrl: string, chainId: number, relayer: Wallet, factoryAddress: Address) {
-        this.provider = new ethers.providers.JsonRpcProvider(providerUrl, chainId);
+    constructor(provider: Provider, relayer: Wallet, factoryAddress: Address) {
+        this.provider = provider;
         this.relayer = relayer;
         this.factory = new ethers.Contract(
             factoryAddress,
             abi,
             this.relayer.connect(this.provider)
         );
-
-        this.provider
-            .getNetwork()
-            .then((res) => {
-                const id = res.chainId;
-                if (chainId.toString() !== id.toString()) {
-                    throw Error("Chain Id do not match.");
-                }
-            })
-            .catch((err) => {
-                throw Error("LaserFactory constructor.");
-            });
     }
 
     /**
