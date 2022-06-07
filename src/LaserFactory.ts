@@ -22,8 +22,8 @@ export class LaserFactory {
      * @param relayer Deployer of the wallet. It can be Laser, and the transaction gets refunded after the user receives a first deposit.
      * @param factoryAddress The address of the deployed factory.
      */
-    constructor(providerUrl: string, chainId: Numberish, relayer: Wallet, factoryAddress: Address) {
-        this.provider = new ethers.providers.JsonRpcProvider(providerUrl);
+    constructor(providerUrl: string, chainId: number, relayer: Wallet, factoryAddress: Address) {
+        this.provider = new ethers.providers.JsonRpcProvider(providerUrl, chainId);
         this.relayer = relayer;
         this.factory = new ethers.Contract(
             factoryAddress,
