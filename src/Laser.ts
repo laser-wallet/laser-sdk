@@ -280,7 +280,9 @@ export class Laser {
         userOp.callGas = txInfo.callGas;
         userOp.maxFeePerGas = txInfo.maxFeePerGas;
         userOp.maxPriorityFeePerGas = txInfo.maxPriorityFeePerGas;
-        userOp.signature = await EIP712Sig(this.signer, userOp, await this.getDomain());
+        userOp.signature = "0x";
+        const hash = await this.wallet.userOperationHash(userOp);
+        userOp.signature = await sign(this.signer, hash);
 
         // This userOp then gets sent to the relayer and then to the EntryPoint contract ...
         return userOp;
