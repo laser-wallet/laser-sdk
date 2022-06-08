@@ -1,4 +1,4 @@
-import { ethers, Contract, utils } from "ethers";
+import { ethers, Contract, utils, BigNumber } from "ethers";
 import { Wallet } from "@ethersproject/wallet";
 import { Provider } from "@ethersproject/providers";
 import { Address, Numberish, Domain, UserOperation, userOp, TransactionInfo } from "./types";
@@ -6,6 +6,7 @@ import { ZERO, MAGIC_VALUE } from "./constants";
 import { checksum, toEth, toWei } from "./utils";
 import { abi } from "./abis/LaserWallet.json";
 import { EIP712Sig, sign } from "./utils/signatures";
+import erc20Abi from "./abis/erc20.abi.json";
 
 /**
  * @dev Class that has all the methods to read/write to a Laser wallet.
@@ -230,7 +231,7 @@ export class Laser {
         if ((await this.isOwner(this.signer.address)) === false) {
             throw Error("Only the owner can send funds.");
         }
-        // We cannot change the owner is the wallet is locked. 
+        // We cannot change the owner is the wallet is locked.
         if (await this.isWalletlocked()) {
             throw Error("Wallet locked, forbidden operation.");
         }
@@ -250,7 +251,40 @@ export class Laser {
         return userOp;
     }
 
+    /**
+     * @param tokenAddress The address of the ERC20 token contract.
+     * @param to Destination address of the tokens.
+     * @param amount Amount of tokens to transfer.
+     * @param txInfo The transaction info (see types). Primarily gas costs.
+     * @returns The userOp object to then be sent to the EntryPoint contract.
+     */
+    async transferERC20(
+        tokenAddress: Address,
+        to: Address,
+        amount: BigNumber,
+        txInfo: TransactionInfo
+    ): Promise<UserOperation> {
+        // NOTE !!! It is missing a lot of extra safety checks... But it works for now.
+        if ((await this.isOwner(this.signer.address)) === false) {
+            throw Error("Only the owner can send funds.");
+        }
 
+        const txData = new ethers.utils.Interface(erc20Abi).encodeFunctionData("transfer", [
+            to,
+            amount,
+        ]);
+
+        userOp.sender = this.getContractAddress();
+        userOp.nonce = await this.getNonce();
+        userOp.callData = this.encodeFunctionData("exec", [tokenAddress, 0, txData]);
+        userOp.callGas = txInfo.callGas;
+        userOp.maxFeePerGas = txInfo.maxFeePerGas;
+        userOp.maxPriorityFeePerGas = txInfo.maxPriorityFeePerGas;
+        userOp.signature = await EIP712Sig(this.signer, userOp, await this.getDomain());
+
+        // This userOp then gets sent to the relayer and then to the EntryPoint contract ...
+        return userOp;
+    }
 
     /**
      * This is signed with normal eth flow.
@@ -266,7 +300,7 @@ export class Laser {
         if (amount <= 0) {
             throw Error("Cannot send 0 ETH.");
         }
-        // We cannot change the owner is the wallet is locked. 
+        // We cannot change the owner is the wallet is locked.
         if (await this.isWalletlocked()) {
             throw Error("Wallet locked, forbidden operation.");
         }
