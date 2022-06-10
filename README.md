@@ -2,6 +2,15 @@
 
 ### SDK to interact with a Laser wallet.
 
+## Usage: 
+
+```js
+import { laser } from "laser";
+
+const laserWallet = new laser.Laser(provider, owner, walletAddress);
+
+```
+
 ## License
 
 #### LGPL-3.0 License.
