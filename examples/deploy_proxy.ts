@@ -1,7 +1,8 @@
 import { ethers, utils } from "ethers";
-import { LaserFactory } from "../src";
+import { laser } from "../src";
 import { FACTORY_GOERLI, ENTRY_POINT_GOERLI } from "../src/constants";
 import dotenv from "dotenv";
+import { Laser } from "../src/laser";
 
 /**
  * EXAMPLE TO DEPLOY A PROXY IN GOERLI ...
@@ -12,13 +13,10 @@ dotenv.config();
 // The relayer pays for gas costs, in this case, it would be us ...
 const relayer = new ethers.Wallet(`${process.env.PK}`);
 
-// Infura Key
 const providerUrl = `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`;
+const provider = new ethers.providers.JsonRpcProvider(providerUrl);
 
-const goerliChainId = 5;
-
-// We create the factory ...
-const factory = new LaserFactory(providerUrl, goerliChainId, relayer, FACTORY_GOERLI);
+const factory = new laser.Factory(provider, relayer, FACTORY_GOERLI);
 
 // This function creates a new wallet and logs the address to the terminal.
 // It listents to the event ProxyCreation...
@@ -45,6 +43,19 @@ async function main(): Promise<void> {
 
     // We  listen to the event ...
     await factory.on();
+
+    // Here we precompute the address. (know the address in advanced).
+    const ownerAddress = owner.address;
+
+    /// NOTE: If any of the parameters change, the address will be completely different.
+    const dataInitializer = factory.encodeFunctionData([
+        ownerAddress,
+        recoveryOwner,
+        [guardian],
+        ENTRY_POINT_GOERLI,
+    ]);
+    const address = await factory.preComputeAddress(dataInitializer, ownerAddress);
+    console.log("precomputed address -->", address);
 
     try {
         // It takes some time, around 1 min.

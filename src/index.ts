@@ -1,2 +1,3 @@
-export { Laser } from "./Laser";
-export { LaserFactory } from "./LaserFactory";
+import * as laser from "./laser";
+
+export { laser };

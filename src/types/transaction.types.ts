@@ -1,4 +1,4 @@
-import { Numberish } from "./types";
+import { BigNumberish } from "ethers";
 
 /**
  * @param callGas The amount of gas to allocate the main execution call.
@@ -6,7 +6,7 @@ import { Numberish } from "./types";
  * @param maxPriorityFeePerGas Maximum priority fee per gas (similar to EIP 1559 max_priority_fee_per_gas).
  */
 export interface TransactionInfo {
-    callGas: Numberish;
-    maxFeePerGas: Numberish;
-    maxPriorityFeePerGas: Numberish;
+    callGas: BigNumberish;
+    maxFeePerGas: BigNumberish;
+    maxPriorityFeePerGas: BigNumberish;
 }

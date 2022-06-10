@@ -1,5 +1,5 @@
 import { ethers, Wallet } from "ethers";
-import { Domain, Address, Numberish, types, UserOperation } from "../types";
+import { Domain, Address, types, UserOperation } from "../types";
 import { ZERO } from "../constants";
 
 export async function EIP712Sig(

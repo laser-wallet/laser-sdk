@@ -1,53 +1,61 @@
 import { ethers, Contract, utils } from "ethers";
 import { Wallet } from "@ethersproject/wallet";
 import { Provider } from "@ethersproject/providers";
-import { Address, Numberish } from "./types";
-import { ZERO, SALT } from "./constants/constants";
-import { checksum } from "./utils";
-import { abi } from "./abis/LaserProxyFactory.json";
+import { Address } from "../types";
+import { ZERO, SALT } from "../constants/constants";
+import { checksum } from "../utils";
+import { abi } from "../abis/LaserProxyFactory.json";
+
+interface IFactory {
+    getSingleton(): Promise<Address>;
+    proxyRuntimeCode(): Promise<string>;
+    proxyCreationCode(): Promise<string>;
+    createProxy(
+        owner: Address,
+        recoveryOwner: Address,
+        guardians: Address[],
+        entryPoint: Address
+    ): Promise<Address>;
+    createProxyWithCreate2(
+        owner: Address,
+        recoveryOwner: Address,
+        guardians: Address[],
+        entryPoint: Address
+    ): Promise<Address>;
+    preComputeAddress(dataInitializer: string, owner: Address): Promise<Address>;
+}
 
 /**
  * @dev Class that has all the methods to read/write to a Laser wallet.
  */
-export class LaserFactory {
+export class Factory implements IFactory {
+    get address(): Address {
+        return this.factory.address;
+    }
+
     readonly provider: Provider;
     readonly relayer: Wallet;
     readonly factory: Contract;
     readonly abi = abi;
 
     /**
-     *
-     * @param providerUrl RPC url to have a connection with a node (INFURA, ALCHEMY).
      * @chainId The id of the chain for this connection (e.g 1 for mainnet).
      * @param relayer Deployer of the wallet. It can be Laser, and the transaction gets refunded after the user receives a first deposit.
      * @param factoryAddress The address of the deployed factory.
      */
-    constructor(providerUrl: string, chainId: Numberish, relayer: Wallet, factoryAddress: Address) {
-        this.provider = new ethers.providers.JsonRpcProvider(providerUrl);
+    constructor(_provider: Provider, relayer: Wallet, factoryAddress: Address) {
+        this.provider = _provider;
         this.relayer = relayer;
         this.factory = new ethers.Contract(
             factoryAddress,
             abi,
             this.relayer.connect(this.provider)
         );
-
-        this.provider
-            .getNetwork()
-            .then((res) => {
-                const id = res.chainId;
-                if (chainId.toString() !== id.toString()) {
-                    throw Error("Chain Id do not match.");
-                }
-            })
-            .catch((err) => {
-                throw Error("LaserFactory constructor.");
-            });
     }
 
     /**
      * @dev Encodes data.
-     * @param funcName The name of the function.
-     * @param _params The parameters inside of an array. Empty array if there are no params.
+     * @param params The parameters inside of an array. Empty array if there are no params.
      * @returns Encoded data payload.
      */
     encodeFunctionData(..._params: any[]): string {
@@ -210,8 +218,8 @@ export class LaserFactory {
      * NOTE: This is super useful to pre-compute the address of a new user, so that the real deployment
      * happens when the user receives ETH for the first time.
      */
-    // async preComputeAddress(owner: Address): Promise<void> {
-    //     const addr = await this.factory.preComputeAddress("0x", 1);
-    //     console.log(addr);
-    // }
+    async preComputeAddress(dataInitializer: string, owner: Address): Promise<Address> {
+        const address = await this.factory.preComputeAddress(dataInitializer, SALT);
+        return address;
+    }
 }

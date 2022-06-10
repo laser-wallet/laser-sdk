@@ -1,4 +1,5 @@
-import { Address, Numberish } from "./types";
+import { BigNumberish } from "ethers";
+import { Address } from "./types";
 import { ZERO } from "../constants";
 
 export const types = {
@@ -34,21 +35,21 @@ export const types = {
  */
 export interface UserOperation {
     sender: Address;
-    nonce: Numberish;
+    nonce: BigNumberish;
     initCode: string;
     callData: string;
-    callGas: Numberish;
-    verificationGas: Numberish;
-    preVerificationGas: Numberish;
-    maxFeePerGas: Numberish;
-    maxPriorityFeePerGas: Numberish;
+    callGas: BigNumberish;
+    verificationGas: BigNumberish;
+    preVerificationGas: BigNumberish;
+    maxFeePerGas: BigNumberish;
+    maxPriorityFeePerGas: BigNumberish;
     paymaster: Address;
     paymasterData: string;
     signature: string;
 }
 
 export interface Domain {
-    chainId: Numberish;
+    chainId: BigNumberish;
     verifyingContract: Address;
 }
 
