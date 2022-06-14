@@ -52,19 +52,3 @@ export interface Domain {
     chainId: BigNumberish;
     verifyingContract: Address;
 }
-
-// Basic userOp object.
-export const userOp: UserOperation = {
-    sender: "",
-    nonce: "",
-    initCode: "0x",
-    callData: "",
-    callGas: 0,
-    verificationGas: 1000000, // we can hardcode this ..
-    preVerificationGas: 1000000, // We can hardcode this for now ...
-    maxFeePerGas: 0,
-    maxPriorityFeePerGas: 0,
-    paymaster: ZERO,
-    paymasterData: "0x",
-    signature: "",
-};

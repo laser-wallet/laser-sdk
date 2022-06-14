@@ -8,6 +8,7 @@ import { UserOperation } from "../types";
  * @dev Contains all view methods for Laser.
  */
 interface IView {
+    getAddress(): Address;
     getVersion(): Promise<string>;
     getNonce(): Promise<string>;
     getOwner(): Promise<Address>;
@@ -45,6 +46,13 @@ export class View implements IView {
         this.provider = _provider;
         this.walletAddress = _walletAddress;
         this.wallet = new Contract(this.walletAddress, abi, this.provider);
+    }
+
+    /**
+     * @returns The address of the wallet.
+     */
+    getAddress(): Address {
+        return this.wallet.address;
     }
 
     /**

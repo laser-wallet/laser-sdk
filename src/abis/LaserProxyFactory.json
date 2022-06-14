@@ -2,7 +2,7 @@
     "_format": "hh-sol-artifact-1",
     "contractName": "LaserProxyFactory",
     "sourceName": "contracts/proxies/LaserProxyFactory.sol",
-    "abi": [
+    "factoryAbi": [
         {
             "inputs": [
                 {
