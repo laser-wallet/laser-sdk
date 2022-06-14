@@ -1,9 +1,18 @@
 import { ethers, utils } from "ethers";
 import { laser } from "../src";
-import { ENTRY_POINT_GOERLI } from "../src/constants";
+import {
+    ENTRY_POINT_GOERLI,
+    ZERO,
+    FACTORY_MAINNET,
+    SINGLETON_MAINNET,
+    ENTRY_POINT_MAINNET,
+} from "../src/constants";
 import dotenv from "dotenv";
-import { UserOperation, TransactionInfo } from "../src/types";
+import { UserOperation, TransactionInfo, Address } from "../src/types";
 import { entryPointAbi } from "../src/abis/TestEntryPoint.json";
+import { encodeFunctionData } from "../src/utils/index";
+import { Helper, Laser } from "../src/laser";
+import { abi } from "../src/abis/LaserWallet.json";
 
 /**
  * EXAMPLE TO DEPLOY A PROXY IN GOERLI ...
@@ -11,71 +20,101 @@ import { entryPointAbi } from "../src/abis/TestEntryPoint.json";
 dotenv.config();
 
 // This is the owner of the wallet that was deployed in deploy_proxy...
-const owner = new ethers.Wallet(
-    "0x029e8dda138cd055f391fe18b093cc8baad599d735509f90e0d31ff2ef82ec89"
-);
+const owner = new ethers.Wallet(`${process.env.PK}`);
 
-const walletAddress = "0xEEbedA17604F37FC60e1b20959e01a7c4BD56d4B";
+const walletAddress = "0xc8613B4F1D78b3935a2d41973353C353427049a1";
 
 const providerUrl = `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`;
 const provider = new ethers.providers.JsonRpcProvider(providerUrl);
 
-const relayer = new ethers.Wallet(`${process.env.PK}`, provider);
+/**
+ *  ** ** ** ** E X A M P L E S ** ** ** **** ** ** ** * * * * * **
+ */
 
-// Interacts with a laser wallet.
-// The wallet is deployed using the factory, example in: deploy_proxy.ts
-async function viewCalls(): Promise<void> {
-    /**
-     * laserView is just to be more precise and differentiate between view and state changing methods.
-     * It only requires a provider, it can be used to fetch data off-chain.
-     */
-    const laserView = new laser.View(provider, walletAddress);
-    // This methods are also accessible through laser.
-    const laserWallet = new laser.Laser(provider, owner, walletAddress);
+/**
+ * @dev Simple view examples to interact with Laser.
+ */
+async function viewLaser(): Promise<void> {
+    const wallet = new laser.Laser(provider, owner, walletAddress);
 
-    // Basic view calls, you can user 'laserView or laserWallet', both work.
-    const version = await laserView.getVersion();
-    const nonce = await laserWallet.getNonce();
-    const networkId = await laserView.getNetworkId();
-    const entryPoint = await laserView.getEntryPoint();
-    const _owner = await laserWallet.getOwner();
-    const recoveryOwner = await laserView.getRecoveryOwner();
+    const walletOwner = await wallet.getOwner();
+    const nonce = await wallet.getNonce();
+    const version = await wallet.getVersion();
+    const entryPoint = await wallet.getEntryPoint();
 
-    console.log(`Wallet version: ${version}`);
-    console.log(`nonce: ${nonce}`);
-    console.log(`network id: ${networkId}`);
-    console.log(`Entry Point: ${entryPoint}`);
-    console.log(`Owner: ${_owner}`);
-    console.log(`recovery owner: ${recoveryOwner}`);
+    console.log("wallet owner: ", walletOwner);
+    console.log("nonce: ", nonce);
+    console.log("version: ", version);
+    console.log("entry point: ", entryPoint);
 }
 
 
 /**
- * This are methods that primarily change the state. 
- * The user op gets sent to the EntryPoint... 
+ * @dev Examples to populate a UserOperation.
  */
-async function call(): Promise<void> {
-    const laserWallet = new laser.Laser(provider, owner, walletAddress);
-    const newGuardian = ethers.Wallet.createRandom().address;
+async function createUserOp(): Promise<void> {
+    const wallet = new laser.Laser(provider, owner, walletAddress);
 
+    /**
+     * Example to populate an op to change the owner:
+     */
+    const newOwner = ethers.Wallet.createRandom().address;
     const txInfo: TransactionInfo = {
-        callGas: 200000, // These values are not properly measured...
-        maxFeePerGas: 100000000,
-        maxPriorityFeePerGas: 100000000,
+        maxFeePerGas: 45000000000,
+        maxPriorityFeePerGas: 2000000000, // The values are hardcoded for the example (not accurate).
     };
+    const changeOwneruserOp = await wallet.changeOwner(newOwner, txInfo);
+    console.log("change owner user op --> ", changeOwneruserOp);
 
-    // We create the user op. 
-    const userOp: UserOperation = await laserWallet.sendEth(await laserWallet.getOwner(), 0.01, txInfo );
+    /**
+     * Example to populate an op that sends eth:
+     */
+    const to = ethers.Wallet.createRandom().address;
+    const amount = 0.0001;
+    const sendEthUserOp = await wallet.sendEth(to, amount, txInfo);
+    console.log("send eth user op -->", sendEthUserOp);
+}
+
+
+
+/**
+ * @dev Examples to send a UserOperation to the EntryPoint from the relayer.
+ * The UserOperation object gets sent from the app.
+ */
+async function relay(userOp: UserOperation): Promise<void> {
+    // Private key of the relayer, it needs to have eth to pay for the initial gas costs.
+    const relayerPrivateKey = process.env.PK; 
+    const relayer = new ethers.Wallet(`${relayerPrivateKey}`);
+    const laserRelayer = new laser.Laser(provider, relayer, userOp.sender);
     
+    // First we simulate the transaction on the EntryPoint. 
+    try {
+        const { preOpGas, prefund} = await laserRelayer.simulateOperation(userOp);
+        console.log("preOpGas -->", preOpGas.toString());
+        console.log("prefund -->", prefund.toString());
+    } catch(e) {
+        throw Error(`Simulation failed: ${e}`);
+    }
+
+    ///@todo Populate correct gas price:
+    // return min(maxFeePerGas, maxPriorityFeePerGas + block.basefee);
+    const gasPrice = userOp.maxFeePerGas; 
+
     const entryPoint = new ethers.Contract(ENTRY_POINT_GOERLI, entryPointAbi, relayer);
 
+    // Now we call the entry point.
     try {
-        await entryPoint.handleOps([userOp], relayer.address);
+        entryPoint.handleOps([userOp], relayer.address)
     } catch(e) {
-        throw e;
+        throw Error(`Error calling the entry point: ${e}`);
     }
 }
 
-call();
+
+
+
+
+
+
 
 
