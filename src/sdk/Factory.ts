@@ -4,7 +4,7 @@ import { Provider } from "@ethersproject/providers";
 import { Address } from "../types";
 import { ZERO, SALT } from "../constants/constants";
 import { checksum } from "../utils";
-import { abi } from "../abis/LaserProxyFactory.json";
+import { factoryAbi } from "../abis/LaserProxyFactory.json";
 
 interface IFactory {
     getSingleton(): Promise<Address>;
@@ -36,7 +36,7 @@ export class Factory implements IFactory {
     readonly provider: Provider;
     readonly relayer: Wallet;
     readonly factory: Contract;
-    readonly abi = abi;
+    readonly abi = factoryAbi;
 
     /**
      * @chainId The id of the chain for this connection (e.g 1 for mainnet).
@@ -48,7 +48,7 @@ export class Factory implements IFactory {
         this.relayer = relayer;
         this.factory = new ethers.Contract(
             factoryAddress,
-            abi,
+            this.abi,
             this.relayer.connect(this.provider)
         );
     }
@@ -218,7 +218,7 @@ export class Factory implements IFactory {
      * NOTE: This is super useful to pre-compute the address of a new user, so that the real deployment
      * happens when the user receives ETH for the first time.
      */
-    async preComputeAddress(dataInitializer: string, owner: Address): Promise<Address> {
+    async preComputeAddress(dataInitializer: string): Promise<Address> {
         const address = await this.factory.preComputeAddress(dataInitializer, SALT);
         return address;
     }

@@ -1,8 +1,14 @@
 import { ethers, utils } from "ethers";
 import { laser } from "../src";
-import { FACTORY_GOERLI, ENTRY_POINT_GOERLI } from "../src/constants";
+import {
+    FACTORY_GOERLI,
+    ENTRY_POINT_GOERLI,
+    FACTORY_MAINNET,
+    ENTRY_POINT_MAINNET,
+} from "../src/constants";
 import dotenv from "dotenv";
-import { Laser } from "../src/laser";
+import { Laser, View } from "../src/laser";
+import { factoryAbi } from "../src/abis/LaserProxyFactory.json";
 
 /**
  * EXAMPLE TO DEPLOY A PROXY IN GOERLI ...
@@ -28,12 +34,7 @@ async function main(): Promise<void> {
         throw Error(`Not enough balance: ${utils.formatEther(bal)} ETH`);
     }
 
-    // We create an owner ...
-    // I will use this owner to then sign transaction in laser_basics after the contract is created.
-    // NEVER put you private key like this, this is just for the example, it doesn't have eth...
-    const owner = new ethers.Wallet(
-        "0x029e8dda138cd055f391fe18b093cc8baad599d735509f90e0d31ff2ef82ec89"
-    );
+    const owner = new ethers.Wallet(`${process.env.PK}`);
 
     // Recovery owner...
     const recoveryOwner = ethers.Wallet.createRandom().address;
@@ -52,10 +53,14 @@ async function main(): Promise<void> {
         ownerAddress,
         recoveryOwner,
         [guardian],
-        ENTRY_POINT_GOERLI,
+        ENTRY_POINT_MAINNET,
     ]);
-    const address = await factory.preComputeAddress(dataInitializer, ownerAddress);
-    console.log("precomputed address -->", address);
+
+    const address = await factory.preComputeAddress(dataInitializer);
+
+    console.log("PRE COMPUTED address -->", address);
+
+    console.log("owner -->", owner.address);
 
     try {
         // It takes some time, around 1 min.
@@ -63,11 +68,9 @@ async function main(): Promise<void> {
             owner.address,
             recoveryOwner,
             [guardian],
-            ENTRY_POINT_GOERLI
+            ENTRY_POINT_MAINNET
         );
     } catch (e) {
         throw Error(`Error with createProxy ${e}`);
     }
 }
-
-main();
