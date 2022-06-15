@@ -1,6 +1,6 @@
 {
     "name": "laser-sdk",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "sdk to interact with a Laser wallet",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
