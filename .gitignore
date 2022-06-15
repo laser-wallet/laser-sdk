@@ -1,7 +1,6 @@
 .DS_Store
 .env
-node_modules/
-test/
-package-lock.json
-.dist/
+node_modules
+test
+dist
 .npmignore

@@ -1,21 +1,22 @@
 {
-  "name": "laser-sdk",
-  "version": "0.0.1",
-  "description": "sdk to interact with a Laser wallet",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "prettier:write": "npx prettier --write src/ && npx prettier --write test/",
-    "test": "ts-mocha test/*.ts"
-  },
-  "author": "Rodrigo Herrera I",
-  "license": "LGPL-3.0",
-  "dependencies": {
-    "ethers": "^5.6.8"
-  },
-  "devDependencies": {
-    "dotenv": "^16.0.1",
-    "prettier": "^2.6.2",
-    "typescript": "^4.6.4"
-  }
+    "name": "laser-sdk",
+    "version": "0.0.3",
+    "description": "sdk to interact with a Laser wallet",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "prettier:write": "npx prettier --write src/ && npx prettier --write test/",
+        "test": "ts-mocha test/*.ts",
+        "build": "tsc"
+    },
+    "author": "Rodrigo Herrera I",
+    "license": "LGPL-3.0",
+    "dependencies": {
+        "ethers": "^5.6.8"
+    },
+    "devDependencies": {
+        "dotenv": "^16.0.1",
+        "prettier": "^2.6.2",
+        "typescript": "^4.6.4"
+    }
 }
