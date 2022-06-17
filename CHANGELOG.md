@@ -1,5 +1,11 @@
 # laser-sdk
 
+## 0.1.2
+
+### Patch Changes
+
+-   75005df: Increase verification gas limit
+
 ## 0.1.1
 
 ### Patch Changes
