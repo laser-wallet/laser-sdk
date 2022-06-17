@@ -39,7 +39,7 @@ export class Helper extends View {
         const _callGas = await this.simulateLaserTransaction(execTx);
         const callGas = Number(_callGas) + 13000;
         // The first verification is 20k gas more expenssive because we are updating a zero storage value.
-        const _verificationGas = Number(await this.getNonce()) === 0 ? 60000 : 40000;
+        const _verificationGas = Number(await this.getNonce()) === 0 ? 80000 : 60000;
 
         return {
             sender: this.wallet.address,
