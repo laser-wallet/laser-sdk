@@ -1,5 +1,11 @@
 # laser-sdk
 
+## 0.1.1
+
+### Patch Changes
+
+-   eeafc67: Correcting gas numbers
+
 ## 0.1.0
 
 ### Minor Changes
