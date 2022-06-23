@@ -1,5 +1,11 @@
 # laser-sdk
 
+## 0.1.3
+
+### Patch Changes
+
+-   5de922f: Export signing utils
+
 ## 0.1.2
 
 ### Patch Changes
