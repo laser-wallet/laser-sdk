@@ -1,16 +1,12 @@
-import { ethers, utils } from "ethers";
+import { ethers, utils, BigNumber } from "ethers";
 import { laser } from "../src";
 import {
-    ENTRY_POINT_GOERLI,
     ZERO,
-    FACTORY_MAINNET,
-    SINGLETON_MAINNET,
-    ENTRY_POINT_MAINNET,
+    FACTORY_GOERLI,
+    SINGLETON_GOERLI
 } from "../src/constants";
 import dotenv from "dotenv";
-import { UserOperation, TransactionInfo, Address } from "../src/types";
-import { entryPointAbi } from "../src/abis/TestEntryPoint.json";
-import { encodeFunctionData } from "../src/utils/index";
+import { TransactionInfo, Address } from "../src/types";
 import { Helper, Laser } from "../src/laser";
 import { abi } from "../src/abis/LaserWallet.json";
 
@@ -22,7 +18,7 @@ dotenv.config();
 // This is the owner of the wallet that was deployed in deploy_proxy...
 const owner = new ethers.Wallet(`${process.env.PK}`);
 
-const walletAddress = "0xc8613B4F1D78b3935a2d41973353C353427049a1";
+const walletAddress = "0xC4157E0Fc052f26426777Ac7b593FA2d35089DCc";
 
 const providerUrl = `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`;
 const provider = new ethers.providers.JsonRpcProvider(providerUrl);
@@ -40,81 +36,87 @@ async function viewLaser(): Promise<void> {
     const walletOwner = await wallet.getOwner();
     const nonce = await wallet.getNonce();
     const version = await wallet.getVersion();
-    const entryPoint = await wallet.getEntryPoint();
 
     console.log("wallet owner: ", walletOwner);
     console.log("nonce: ", nonce);
     console.log("version: ", version);
-    console.log("entry point: ", entryPoint);
 }
 
 
 /**
- * @dev Examples to populate a UserOperation.
+ * Example to make a transaction.
  */
-async function createUserOp(): Promise<void> {
+async function sendEther(): Promise<void> {
+    
+    /**
+     * Example to send ETH
+     */
+    const to = "0x0cf5C6d3c1122504091EAd6a3Dc5BD31f7BbeDE3";
+    const amount = 0.000001; // amount in ETH not WEI. 
+
+    console.log("to -->", to);
+    let txInfo: TransactionInfo;
     const wallet = new laser.Laser(provider, owner, walletAddress);
 
-    /**
-     * Example to populate an op to change the owner:
-     */
-    const newOwner = ethers.Wallet.createRandom().address;
-    const txInfo: TransactionInfo = {
-        maxFeePerGas: 45000000000,
-        maxPriorityFeePerGas: 2000000000, // The values are hardcoded for the example (not accurate).
-    };
-    const changeOwneruserOp = await wallet.changeOwner(newOwner, txInfo);
-    console.log("change owner user op --> ", changeOwneruserOp);
+    // We get the base fee to suggest gas price to the user.
+    const baseFee = await wallet.getBaseFee();
+    
+    // We suggest 2 GWEI for miner's tip.
+    const maxPriorityFeePerGas = 2000000000;
 
-    /**
-     * Example to populate an op that sends eth:
-     */
-    const to = ethers.Wallet.createRandom().address;
-    const amount = 0.0001;
-    const sendEthUserOp = await wallet.sendEth(to, amount, txInfo);
-    console.log("send eth user op -->", sendEthUserOp);
+    // Formula for maxFeePerGas as suggested by block native.
+    const maxFeePerGas =  BigNumber.from(2).mul(baseFee).add(maxPriorityFeePerGas);
+    
+    // This are the suggested parameters, although the user can change them.
+    txInfo = {
+        maxFeePerGas: maxFeePerGas, 
+        maxPriorityFeePerGas: maxPriorityFeePerGas, 
+        gasTip: 30000 // The gas tip is the amount of calldata to start the transaction.
+    }
+
+    try {
+        await wallet.sendEth(to, amount, txInfo);
+    } catch(e) {
+        throw Error(`Error with the operation: ${e}`);
+    }
 }
-
 
 
 /**
- * @dev Examples to send a UserOperation to the EntryPoint from the relayer.
- * The UserOperation object gets sent from the app.
+ * Example to make an internal transaction.
  */
-async function relay(userOp: UserOperation): Promise<void> {
-    // Private key of the relayer, it needs to have eth to pay for the initial gas costs.
-    const relayerPrivateKey = process.env.PK; 
-    const relayer = new ethers.Wallet(`${relayerPrivateKey}`);
-    const laserRelayer = new laser.Laser(provider, relayer, userOp.sender);
+async function laserChangeOwner(): Promise<void> {
     
-    // First we simulate the transaction on the EntryPoint. 
-    try {
-        const { preOpGas, prefund} = await laserRelayer.simulateOperation(userOp);
-        console.log("preOpGas -->", preOpGas.toString());
-        console.log("prefund -->", prefund.toString());
-    } catch(e) {
-        throw Error(`Simulation failed: ${e}`);
+    /**
+     * Example to change the owner.
+     */
+
+    const newOwner = ethers.Wallet.createRandom().address;
+    console.log("new owner -->", newOwner);
+    let txInfo: TransactionInfo;
+    const wallet = new laser.Laser(provider, owner, walletAddress);
+
+    // We get the base fee to suggest gas price to the user.
+    const baseFee = await wallet.getBaseFee();
+    
+    // We suggest 2 GWEI for miner's tip.
+    const maxPriorityFeePerGas = 2000000000;
+
+    // Formula for maxFeePerGas as suggested by block native.
+    const maxFeePerGas =  BigNumber.from(2).mul(baseFee).add(maxPriorityFeePerGas);
+    
+    // This are the suggested parameters, although the user can change them.
+    txInfo = {
+        maxFeePerGas: maxFeePerGas, 
+        maxPriorityFeePerGas: maxPriorityFeePerGas, 
+        gasTip: 30000 // The gas tip is the amount of calldata to start the transaction.
     }
 
-    ///@todo Populate correct gas price:
-    // return min(maxFeePerGas, maxPriorityFeePerGas + block.basefee);
-    const gasPrice = userOp.maxFeePerGas; 
-
-    const entryPoint = new ethers.Contract(ENTRY_POINT_GOERLI, entryPointAbi, relayer);
-
-    // Now we call the entry point.
     try {
-        entryPoint.handleOps([userOp], relayer.address)
+        await wallet.changeOwner(newOwner, txInfo);
     } catch(e) {
-        throw Error(`Error calling the entry point: ${e}`);
+        throw Error(`Error with the operation: ${e}`);
     }
+
 }
-
-
-
-
-
-
-
-
 

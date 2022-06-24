@@ -1,26 +1,19 @@
 import { ethers, Contract, utils } from "ethers";
 import { Wallet } from "@ethersproject/wallet";
 import { Provider } from "@ethersproject/providers";
-import { Address } from "../types";
+import { Address, FACTORY_FUNCS, LASER_FUNCS } from "../types";
 import { ZERO, SALT } from "../constants/constants";
-import { checksum } from "../utils";
 import { factoryAbi } from "../abis/LaserProxyFactory.json";
 
 interface IFactory {
     getSingleton(): Promise<Address>;
     proxyRuntimeCode(): Promise<string>;
     proxyCreationCode(): Promise<string>;
-    createProxy(
-        owner: Address,
-        recoveryOwner: Address,
-        guardians: Address[],
-        entryPoint: Address
-    ): Promise<Address>;
+    createProxy(owner: Address, recoveryOwner: Address, guardians: Address[]): Promise<Address>;
     createProxyWithCreate2(
         owner: Address,
         recoveryOwner: Address,
-        guardians: Address[],
-        entryPoint: Address
+        guardians: Address[]
     ): Promise<Address>;
     preComputeAddress(dataInitializer: string, owner: Address): Promise<Address>;
 }
@@ -59,9 +52,21 @@ export class Factory implements IFactory {
      * @returns Encoded data payload.
      */
     encodeFunctionData(..._params: any[]): string {
-        const _abi = ["function init(address,address,address[],address) external"];
+        const _abi = ["function init(address,address,address[]) external"];
         const params = _params[0];
-        return new ethers.utils.Interface(_abi).encodeFunctionData("init", params);
+        return new ethers.utils.Interface(_abi).encodeFunctionData(LASER_FUNCS.init, params);
+    }
+
+    async checksum(address: Address): Promise<Address> {
+        if (address.includes(".")) {
+            const result = await this.provider.resolveName(address);
+            if (!result) throw Error("Invalid ENS");
+            else return result;
+        } else if (address.length === 42) {
+            return utils.getAddress(address);
+        } else {
+            throw Error("Invalid address");
+        }
     }
 
     /**
@@ -70,16 +75,14 @@ export class Factory implements IFactory {
      * @param _owner The target owner address.
      * @param _recoveryOwner The recovery owner.
      * @param guardians The target guardian addresses.
-     * @param _entryPoint The target EntryPoint address.
      */
     async checkParams(
         _owner: Address,
         _recoveryOwner: Address,
-        guardians: Address[],
-        _entryPoint: Address
+        guardians: Address[]
     ): Promise<void> {
-        const owner = checksum(_owner);
-        const recoveryOwner = checksum(_recoveryOwner);
+        const owner = await this.checksum(_owner);
+        const recoveryOwner = await this.checksum(_recoveryOwner);
         if (
             owner.toLowerCase() === ZERO.toLowerCase() ||
             recoveryOwner.toLowerCase() == ZERO.toLowerCase()
@@ -96,7 +99,7 @@ export class Factory implements IFactory {
         let dup = [];
 
         for (let i = 0; i < guardians.length; i++) {
-            const guardian = checksum(guardians[i]);
+            const guardian = await this.checksum(guardians[i]);
             dup.push(guardian.toLowerCase());
             if (guardian.toLowerCase() === ZERO.toLowerCase()) {
                 throw Error("Guardian cannot be address 0.");
@@ -108,11 +111,6 @@ export class Factory implements IFactory {
 
         if (new Set(dup).size < dup.length) {
             throw Error("Duplicate guardians.");
-        }
-
-        const entryPoint = checksum(_entryPoint);
-        if (!(await this.isContract(entryPoint))) {
-            throw Error("EntryPoint needs to be a contract.");
         }
     }
 
@@ -141,7 +139,7 @@ export class Factory implements IFactory {
      * @returns True if the address is a contract, false if it is an EOA.
      */
     async isContract(_address: Address): Promise<boolean> {
-        const address = checksum(_address);
+        const address = await this.checksum(_address);
         const code = await this.provider.getCode(address);
         return code.length > 2 ? true : false;
     }
@@ -152,17 +150,15 @@ export class Factory implements IFactory {
      * @param owner The target owner address.
      * @param recoveryOwner The recovery owner.
      * @param guardians The target guardian addresses.
-     * @param entryPoint The target EntryPoint address.
      * @returns The address of the new wallet or reverts on error.
      */
     async createProxy(
         owner: Address,
         recoveryOwner: Address,
-        guardians: Address[],
-        entryPoint: Address
+        guardians: Address[]
     ): Promise<Address> {
-        await this.checkParams(owner, recoveryOwner, guardians, entryPoint);
-        const dataPayload = this.encodeFunctionData([owner, guardians, entryPoint]);
+        await this.checkParams(owner, recoveryOwner, guardians);
+        const dataPayload = this.encodeFunctionData([owner, recoveryOwner, guardians]);
 
         try {
             const transaction = await this.factory.createProxy(dataPayload);
@@ -180,17 +176,15 @@ export class Factory implements IFactory {
      * @param owner The target owner address.
      * @param recoveryOwner The recovery owner.
      * @param guardians The target guardian addresses.
-     * @param entryPoint The target EntryPoint address.
      * @returns The address of the new wallet or reverts on error.
      */
     async createProxyWithCreate2(
         owner: Address,
         recoveryOwner: Address,
-        guardians: Address[],
-        entryPoint: Address
+        guardians: Address[]
     ): Promise<Address> {
-        await this.checkParams(owner, recoveryOwner, guardians, entryPoint);
-        const dataPayload = this.encodeFunctionData([owner, recoveryOwner, guardians, entryPoint]);
+        await this.checkParams(owner, recoveryOwner, guardians);
+        const dataPayload = this.encodeFunctionData([owner, recoveryOwner, guardians]);
 
         try {
             const transaction = await this.factory.createProxyWithNonce(dataPayload, SALT);
