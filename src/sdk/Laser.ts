@@ -46,6 +46,12 @@ interface ILaser {
         amount: BigNumberish,
         txInfo: TransactionInfo
     ): Promise<UserOperation>;
+    sendTransaction(
+        to: Address,
+        data: any,
+        value: BigNumberish,
+        txInfo: TransactionInfo
+    ): Promise<UserOperation>;
 }
 
 /**
@@ -385,6 +391,39 @@ export class Laser extends Helper implements ILaser {
             value: 0,
             data: txData,
         };
+
+        // We prepare the user op for signature.
+        const preBundleOp = await this.createOp(callData, txInfo, execTx);
+
+        const hash = await this.wallet.userOperationHash(preBundleOp);
+        const signature = await sign(this.signer, hash);
+
+        if (!(await this.isValidSignature(hash, signature))) {
+            throw Error("Invalid signature.");
+        }
+        const userOp = this.createOp(callData, txInfo, execTx, signature);
+        return userOp;
+    }
+
+    /**
+     * @param to Destination address of the transaction.
+     * @param data Transaction data.
+     * @param value Amount of ETH to send.
+     * @param txInfo The transaction info (see types). Primarily gas costs.
+     * @returns The userOp object to then be sent to the EntryPoint contract.
+     */
+    async sendTransaction(
+        to: Address,
+        data: any,
+        value: BigNumberish,
+        txInfo: TransactionInfo
+    ): Promise<UserOperation> {
+        if (!(await this.isOwner(this.signer.address))) {
+            throw Error("Only the owner can send funds.");
+        }
+
+        const callData = encodeFunctionData(abi, "exec", [to, value, data]);
+        const execTx: GenericTransaction = { to, value, data };
 
         // We prepare the user op for signature.
         const preBundleOp = await this.createOp(callData, txInfo, execTx);
