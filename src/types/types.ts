@@ -19,6 +19,13 @@ export type Domain = {
     verifyingContract: string;
 };
 
+export type SignTransactionOptions {
+        to: Address;
+        value: BigNumberish;
+        callData: any;
+        txInfo: TransactionInfo;
+}
+
 export interface Transaction {
     to: Address;
     value: BigNumberish;
@@ -29,17 +36,6 @@ export interface Transaction {
     gasTip: BigNumberish;
     signatures: string;
 }
-
-export const transaction: Transaction = {
-    to: "",
-    value: "",
-    callData: "",
-    nonce: "",
-    maxFeePerGas: "",
-    maxPriorityFeePerGas: "",
-    gasTip: "",
-    signatures: "",
-};
 
 export interface LaserTypes {
     to: Address;

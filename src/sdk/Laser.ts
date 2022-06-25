@@ -1,12 +1,18 @@
-import { ethers, Contract, utils, BigNumberish } from "ethers";
-import { Wallet } from "@ethersproject/wallet";
 import { JsonRpcProvider } from "@ethersproject/providers";
-import { Address, Domain, TransactionInfo, transaction, Transaction, LASER_FUNCS } from "../types";
-import { ZERO, MAGIC_VALUE } from "../constants";
-import { abi } from "../abis/LaserWallet.json";
-import { signTypedData, sign } from "../utils/signatures";
-import { Helper } from "./Helper";
+import { Wallet } from "@ethersproject/wallet";
+import { BigNumberish, Contract, ethers, providers } from "ethers";
 import erc20Abi from "../abis/erc20.abi.json";
+import { abi as walletAbi } from "../abis/LaserWallet.json";
+import { ZERO, emptyTransaction } from "../constants";
+import {
+    Address,
+    LASER_FUNCS,
+    SignTransactionOptions,
+    Transaction,
+    TransactionInfo,
+} from "../types";
+import { sign } from "../utils/signatures";
+import { Helper } from "./Helper";
 
 /**
  * @dev Contains all state changing methods for Laser.
@@ -23,9 +29,9 @@ interface ILaser {
      * ````````````````
      */
 
-    changeOwner(newOwner: Address, txInfo: TransactionInfo): Promise<boolean>;
-    changeRecoveryOwner(newRecoveryOwner: Address, txInfo: TransactionInfo): Promise<boolean>;
-    lock(txInfo: TransactionInfo): Promise<boolean>;
+    changeOwner(newOwner: Address, txInfo: TransactionInfo): Promise<Transaction>;
+    changeRecoveryOwner(newRecoveryOwner: Address, txInfo: TransactionInfo): Promise<Transaction>;
+    lock(txInfo: TransactionInfo): Promise<Transaction>;
     // unlock(txInfo: TransactionInfo): Promise<UserOperation>;
     // recoveryUnlock(txInfo: TransactionInfo): Promise<UserOperation>;
     //unlockGuardians(txInfo: TransactionInfo): Promise<UserOperation>;
@@ -34,17 +40,23 @@ interface ILaser {
     //     newRecoveryOwner: Address,
     //     txInfo: TransactionInfo
     // ): Promise<UserOperation>;
-    addGuardian(newGuardian: Address, txInfo: TransactionInfo): Promise<boolean>;
-    removeGuardian(guardianToRemove: Address, txInfo: TransactionInfo): Promise<boolean>;
+    addGuardian(newGuardian: Address, txInfo: TransactionInfo): Promise<Transaction>;
+    removeGuardian(guardianToRemove: Address, txInfo: TransactionInfo): Promise<Transaction>;
 
     // // Sends eth to another account ...
-    sendEth(to: Address, amount: BigNumberish, txInfo: TransactionInfo): Promise<boolean>;
+    sendEth(to: Address, amount: BigNumberish, txInfo: TransactionInfo): Promise<Transaction>;
     transferERC20(
         tokenAddress: Address,
         to: Address,
         amount: BigNumberish,
         txInfo: TransactionInfo
-    ): Promise<boolean>;
+    ): Promise<Transaction>;
+    sendTransaction(
+        to: Address,
+        data: any,
+        value: BigNumberish,
+        txInfo: TransactionInfo
+    ): Promise<Transaction>;
 }
 
 /**
@@ -54,7 +66,6 @@ export class Laser extends Helper implements ILaser {
     readonly provider: JsonRpcProvider;
     readonly signer: Wallet;
     readonly wallet: Contract; // The actual wallet.
-    readonly abi = abi;
 
     /**
      * @param _signer The owner of the wallet (the encrypted keypair on the mobile).
@@ -64,31 +75,51 @@ export class Laser extends Helper implements ILaser {
         super(_provider, walletAddress);
         this.provider = _provider;
         this.signer = _signer;
-        this.wallet = new Contract(walletAddress, abi, this.signer.connect(this.provider));
+        this.wallet = new Contract(walletAddress, walletAbi, this.signer.connect(this.provider));
     }
 
-    async execTransaction(transaction: Transaction): Promise<boolean> {
-        try {
-            await this.wallet.exec(
-                transaction.to,
-                transaction.value,
-                transaction.callData,
-                transaction.nonce,
-                transaction.maxFeePerGas,
-                transaction.maxPriorityFeePerGas,
-                transaction.gasTip,
-                transaction.signatures
-            );
-        } catch (e) {
-            throw Error(`Error in transaction: ${e}`);
+    async execTransaction(transaction: Transaction): Promise<providers.TransactionResponse> {
+        return this.wallet.exec(
+            transaction.to,
+            transaction.value,
+            transaction.callData,
+            transaction.nonce,
+            transaction.maxFeePerGas,
+            transaction.maxPriorityFeePerGas,
+            transaction.gasTip,
+            transaction.signatures
+        );
+    }
+
+    async signTransaction({
+        to,
+        value,
+        callData,
+        txInfo,
+    }: SignTransactionOptions): Promise<Transaction> {
+        const transaction = {
+            ...txInfo,
+            ...emptyTransaction,
+            to,
+            value,
+            callData,
+            nonce: await this.getNonce(),
+        };
+
+        const hash = await this.getHash(transaction);
+        transaction.signatures = await sign(this.signer, hash);
+
+        if (!(await this.isValidSignature(hash, transaction.signatures))) {
+            throw new Error("Invalid signature.");
         }
-        return true;
+
+        return transaction;
     }
 
     /**
      * @param _newOwner The address of the new owner.
      */
-    async changeOwner(_newOwner: Address, txInfo: TransactionInfo): Promise<boolean> {
+    async changeOwner(_newOwner: Address, txInfo: TransactionInfo): Promise<Transaction> {
         const newOwner = await this.verifyAddress(_newOwner);
         const currentOwner = await this.getOwner();
         if (newOwner.toLowerCase() === currentOwner.toLowerCase()) {
@@ -108,29 +139,18 @@ export class Laser extends Helper implements ILaser {
             throw Error("Wallet locked, forbidden operation.");
         }
 
-        transaction.to = this.wallet.address;
-        transaction.value = 0;
-        transaction.callData = this.encodeFunctionData(abi, LASER_FUNCS.changeOwner, [newOwner]);
-        transaction.nonce = await this.getNonce();
-        transaction.maxFeePerGas = txInfo.maxFeePerGas;
-        transaction.maxPriorityFeePerGas = txInfo.maxPriorityFeePerGas;
-        transaction.gasTip = txInfo.gasTip;
-
-        const hash = await this.getHash(transaction);
-        transaction.signatures = await sign(this.signer, hash);
-
-
-        if (!(await this.isValidSignature(hash, transaction.signatures))) {
-            throw Error("Invalid signature.");
-        }
-
-        return await this.execTransaction(transaction);
+        return this.signTransaction({
+            to: this.wallet.address,
+            value: 0,
+            callData: this.encodeFunctionData(walletAbi, LASER_FUNCS.changeOwner, [newOwner]),
+            txInfo,
+        });
     }
 
     async changeRecoveryOwner(
         _newRecoveryOwner: Address,
         txInfo: TransactionInfo
-    ): Promise<boolean> {
+    ): Promise<Transaction> {
         const newRecoveryOwner = await this.verifyAddress(_newRecoveryOwner);
         const currentOwner = await this.getOwner();
         if (newRecoveryOwner.toLowerCase() === currentOwner) {
@@ -149,31 +169,21 @@ export class Laser extends Helper implements ILaser {
             throw Error("Wallet locked, forbidden operation.");
         }
 
-        transaction.to = this.wallet.address;
-        transaction.value = 0;
-        transaction.callData = this.encodeFunctionData(abi, LASER_FUNCS.changeRecoveryOwner, [
-            newRecoveryOwner,
-        ]);
-        transaction.nonce = await this.getNonce();
-        transaction.maxFeePerGas = txInfo.maxFeePerGas;
-        transaction.maxPriorityFeePerGas = txInfo.maxPriorityFeePerGas;
-        transaction.gasTip = txInfo.gasTip;
-
-        const hash = await this.getHash(transaction);
-        transaction.signatures = await sign(this.signer, hash);
-
-        if (!(await this.isValidSignature(hash, transaction.signatures))) {
-            throw Error("Invalid signature.");
-        }
-
-        return await this.execTransaction(transaction);
+        return this.signTransaction({
+            to: this.wallet.address,
+            value: 0,
+            callData: this.encodeFunctionData(walletAbi, LASER_FUNCS.changeRecoveryOwner, [
+                newRecoveryOwner,
+            ]),
+            txInfo,
+        });
     }
 
     /**
      * @dev Locks the wallet. When the wallet is locked, the sovereign social recovery comes into play.
      * @notice Can only be called by a guardian.
      */
-    async lock(txInfo: TransactionInfo): Promise<boolean> {
+    async lock(txInfo: TransactionInfo): Promise<Transaction> {
         if (await this.isWalletLocked()) {
             throw Error("Wallet is currently locked");
         }
@@ -183,29 +193,18 @@ export class Laser extends Helper implements ILaser {
             throw Error("Only a guardian can lock the wallet.");
         }
 
-        transaction.to = this.wallet.address;
-        transaction.value = 0;
-        transaction.callData = this.encodeFunctionData(abi, LASER_FUNCS.lock, []);
-        transaction.nonce = await this.getNonce();
-        transaction.maxFeePerGas = txInfo.maxFeePerGas;
-        transaction.maxPriorityFeePerGas = txInfo.maxPriorityFeePerGas;
-        transaction.gasTip = txInfo.gasTip;
-
-        const hash = await this.getHash(transaction);
-        transaction.signatures = await sign(this.signer, hash);
-
-
-        if (!(await this.isValidSignature(hash, transaction.signatures))) {
-            throw Error("Invalid signature.");
-        }
-
-        return await this.execTransaction(transaction);
+        return this.signTransaction({
+            to: this.wallet.address,
+            value: 0,
+            callData: this.encodeFunctionData(walletAbi, LASER_FUNCS.lock, []),
+            txInfo,
+        });
     }
 
     /**
      * @param _newGuardian The address of the new guardian.
      */
-    async addGuardian(_newGuardian: Address, txInfo: TransactionInfo): Promise<boolean> {
+    async addGuardian(_newGuardian: Address, txInfo: TransactionInfo): Promise<Transaction> {
         const newGuardian = await this.verifyAddress(_newGuardian);
         const currentOwner = await this.getOwner();
         if (newGuardian.toLowerCase() === currentOwner.toLowerCase()) {
@@ -236,28 +235,18 @@ export class Laser extends Helper implements ILaser {
             }
         }
 
-        transaction.to = this.wallet.address;
-        transaction.value = 0;
-        transaction.callData = this.encodeFunctionData(abi, LASER_FUNCS.addGuardian, [newGuardian]);
-        transaction.nonce = await this.getNonce();
-        transaction.maxFeePerGas = txInfo.maxFeePerGas;
-        transaction.maxPriorityFeePerGas = txInfo.maxPriorityFeePerGas;
-        transaction.gasTip = txInfo.gasTip;
-
-        const hash = await this.getHash(transaction);
-        transaction.signatures = await sign(this.signer, hash);
-
-        if (!(await this.isValidSignature(hash, transaction.signatures))) {
-            throw Error("Invalid signature.");
-        }
-
-        return await this.execTransaction(transaction);
+        return this.signTransaction({
+            to: this.wallet.address,
+            value: 0,
+            callData: this.encodeFunctionData(walletAbi, LASER_FUNCS.addGuardian, [newGuardian]),
+            txInfo,
+        });
     }
 
     /**
      * @param _guardian The address of the guardian to remove.
      */
-    async removeGuardian(_guardian: Address, txInfo: TransactionInfo): Promise<boolean> {
+    async removeGuardian(_guardian: Address, txInfo: TransactionInfo): Promise<Transaction> {
         const guardian = await this.verifyAddress(_guardian);
         const currentOwner = await this.getOwner();
         if (!(await this.isOwner(this.signer.address))) {
@@ -284,29 +273,22 @@ export class Laser extends Helper implements ILaser {
                 ? "0x0000000000000000000000000000000000000001"
                 : guardians[prevGuardianIndex];
 
-        transaction.to = this.wallet.address;
-        transaction.value = 0;
-        transaction.callData = this.encodeFunctionData(abi, LASER_FUNCS.removeGuardian, [
-            prevGuardian,
-            guardian,
-        ]);
-        transaction.nonce = await this.getNonce();
-        transaction.maxFeePerGas = txInfo.maxFeePerGas;
-        transaction.maxPriorityFeePerGas = txInfo.maxPriorityFeePerGas;
-        transaction.gasTip = txInfo.gasTip;
-
-        const hash = await this.getHash(transaction);
-                transaction.signatures = await sign(this.signer, hash);
-
-
-        if (!(await this.isValidSignature(hash, transaction.signatures))) {
-            throw Error("Invalid signature.");
-        }
-
-        return await this.execTransaction(transaction);
+        return this.signTransaction({
+            to: this.wallet.address,
+            value: 0,
+            callData: this.encodeFunctionData(walletAbi, LASER_FUNCS.removeGuardian, [
+                prevGuardian,
+                guardian,
+            ]),
+            txInfo,
+        });
     }
 
-    async sendEth(_to: Address, amount: BigNumberish, txInfo: TransactionInfo): Promise<boolean> {
+    async sendEth(
+        _to: Address,
+        amount: BigNumberish,
+        txInfo: TransactionInfo
+    ): Promise<Transaction> {
         const to = await this.verifyAddress(_to);
         if (amount <= 0) {
             throw Error("Cannot send 0 ETH.");
@@ -326,23 +308,12 @@ export class Laser extends Helper implements ILaser {
             throw Error("Only the owner can send funds.");
         }
 
-        const amountInWei = Helper.toWei(amount);
-
-        transaction.to = to;
-        transaction.value = amountInWei;
-        transaction.callData = "0x";
-        transaction.nonce = await this.getNonce();
-        transaction.maxFeePerGas = txInfo.maxFeePerGas;
-        transaction.maxPriorityFeePerGas = txInfo.maxPriorityFeePerGas;
-        transaction.gasTip = txInfo.gasTip;
-
-        const hash = await this.getHash(transaction);
-        transaction.signatures = await sign(this.signer, hash);
-
-        if (!(await this.isValidSignature(hash, transaction.signatures))) {
-            throw Error("Invalid signature.");
-        }
-        return await this.execTransaction(transaction);
+        return this.signTransaction({
+            to,
+            value: Helper.toWei(amount),
+            callData: "0x",
+            txInfo,
+        });
     }
 
     async transferERC20(
@@ -350,7 +321,7 @@ export class Laser extends Helper implements ILaser {
         _to: Address,
         amount: BigNumberish,
         txInfo: TransactionInfo
-    ): Promise<boolean> {
+    ): Promise<Transaction> {
         const tokenAddress = await this.verifyAddress(_tokenAddress);
         const to = await this.verifyAddress(_to);
 
@@ -359,24 +330,32 @@ export class Laser extends Helper implements ILaser {
             throw Error("Only the owner can send funds.");
         }
 
-        // Right now we are adding 18 decimals, but this changes by token.
-        const amountInWei = Helper.toWei(amount);
+        return this.signTransaction({
+            to: tokenAddress,
+            value: 0,
+            // Right now we are adding 18 decimals, but this changes by token.
+            callData: this.encodeFunctionData(erc20Abi, "transfer", [to, Helper.toWei(amount)]),
+            txInfo,
+        });
+    }
 
-        transaction.to = to;
-        transaction.value = amountInWei;
-        transaction.callData = this.encodeFunctionData(erc20Abi, "transfer", [to, amountInWei]);
-        transaction.nonce = await this.getNonce();
-        transaction.maxFeePerGas = txInfo.maxFeePerGas;
-        transaction.maxPriorityFeePerGas = txInfo.maxPriorityFeePerGas;
-        transaction.gasTip = txInfo.gasTip;
-
-        const hash = await this.getHash(transaction);
-        transaction.signatures = await sign(this.signer, hash);
-
-        if (!(await this.isValidSignature(hash, transaction.signatures))) {
-            throw Error("Invalid signature.");
+    /**
+     * @param to Destination address of the transaction.
+     * @param data Transaction data.
+     * @param value Amount of ETH to send.
+     * @param txInfo The transaction info (see types). Primarily gas costs.
+     * @returns The userOp object to then be sent to the EntryPoint contract.
+     */
+    async sendTransaction(
+        to: Address,
+        data: string,
+        value: BigNumberish,
+        txInfo: TransactionInfo
+    ): Promise<Transaction> {
+        if (!(await this.isOwner(this.signer.address))) {
+            throw Error("Only the owner can send funds.");
         }
 
-        return await this.execTransaction(transaction);
+        return this.signTransaction({ to, value, callData: data, txInfo });
     }
 }
