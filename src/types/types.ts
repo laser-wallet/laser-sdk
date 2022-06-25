@@ -19,12 +19,12 @@ export type Domain = {
     verifyingContract: string;
 };
 
-export type SignTransactionOptions {
-        to: Address;
-        value: BigNumberish;
-        callData: any;
-        txInfo: TransactionInfo;
-}
+export type SignTransactionOptions = {
+    to: Address;
+    value: BigNumberish;
+    callData: any;
+    txInfo: TransactionInfo;
+};
 
 export interface Transaction {
     to: Address;
