@@ -2,7 +2,7 @@
  * All external functions for Laser.
  */
 export const LASER_FUNCS = {
-    init: "innit",
+    init: "init",
     exec: "exec",
     simulateTransaction: "simulateTransaction",
     operationHash: "operationHash",

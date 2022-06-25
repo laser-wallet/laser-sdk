@@ -98,8 +98,8 @@ export class Laser extends Helper implements ILaser {
         txInfo,
     }: SignTransactionOptions): Promise<Transaction> {
         const transaction = {
-            ...txInfo,
             ...emptyTransaction,
+            ...txInfo,
             to,
             value,
             callData,
