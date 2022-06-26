@@ -143,6 +143,7 @@ export class Helper extends View {
                 transaction.maxFeePerGas,
                 transaction.maxPriorityFeePerGas,
                 transaction.gasTip,
+                transaction.signatures,
                 {
                     from: ZERO,
                 }

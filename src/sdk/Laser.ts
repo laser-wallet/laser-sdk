@@ -63,6 +63,9 @@ interface ILaser {
  * @dev Class that has all the methods to read/write to a Laser wallet.
  */
 export class Laser extends Helper implements ILaser {
+    /**
+     * @todo !! Add simulation checks.
+     */
     readonly provider: JsonRpcProvider;
     readonly signer: Wallet;
     readonly wallet: Contract; // The actual wallet.
@@ -79,7 +82,7 @@ export class Laser extends Helper implements ILaser {
     }
 
     async execTransaction(transaction: Transaction): Promise<providers.TransactionResponse> {
-        return this.wallet.exec(
+        return await this.wallet.exec(
             transaction.to,
             transaction.value,
             transaction.callData,
@@ -88,8 +91,12 @@ export class Laser extends Helper implements ILaser {
             transaction.maxPriorityFeePerGas,
             transaction.gasTip,
             transaction.signatures
-        );
+        , {
+            maxPriorityFeePerGas: transaction.maxPriorityFeePerGas,
+            maxFeePerGas: transaction.maxFeePerGas
+        });
     }
+
 
     async signTransaction({
         to,
@@ -112,7 +119,7 @@ export class Laser extends Helper implements ILaser {
         if (!(await this.isValidSignature(hash, transaction.signatures))) {
             throw new Error("Invalid signature.");
         }
-
+        
         return transaction;
     }
 

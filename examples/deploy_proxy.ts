@@ -26,7 +26,7 @@ const factory = new Factory(provider, relayer, FACTORY_GOERLI);
 async function main(): Promise<void> {
     const bal = await factory.provider.getBalance(relayer.address);
 
-    // We check that the signer has enough eth (at least 0.1).
+    // We check that the signer has enough eth (at least 0.01).
     if (Number(utils.formatEther(bal)) < 0.01) {
         throw Error(`Not enough balance: ${utils.formatEther(bal)} ETH`);
     }
@@ -69,3 +69,4 @@ async function main(): Promise<void> {
 }
 
 
+main();
