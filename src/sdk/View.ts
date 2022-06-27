@@ -1,8 +1,7 @@
 import { Contract, ethers, utils, BigNumberish } from "ethers";
-import { Provider } from "@ethersproject/providers";
+import { JsonRpcProvider } from "@ethersproject/providers";
 import { Address } from "../types";
 import { abi } from "../abis/LaserWallet.json";
-import { UserOperation } from "../types";
 
 /**
  * @dev Contains all view methods for Laser.
@@ -13,12 +12,8 @@ interface IView {
     getNonce(): Promise<string>;
     getOwner(): Promise<Address>;
     getRecoveryOwner(): Promise<Address>;
-    getEntryPoint(): Promise<Address>;
     getGuardians(): Promise<Address[]>;
     getBalance(): Promise<BigNumberish>;
-
-    // Singleton is the master copy address, where all the delgatecalls are forward.
-    getSingleton(): Promise<Address>;
 
     // If the wallet is locked, the recovery mechanism gets activated and some operations are restricted,
     // primarily value operations...
@@ -29,20 +24,17 @@ interface IView {
 
     // The network id that the wallet is currently connected to.
     getNetworkId(): Promise<string>;
-
-    // Hash of the transaction.
-    getHash(userOp: UserOperation): Promise<string>;
 }
 
 /**
  * @dev Class that contains all the relevant view methods to interact with a Laser wallet.
  */
 export class View implements IView {
-    provider: Provider;
+    provider: JsonRpcProvider;
     walletAddress: Address;
     wallet: Contract;
 
-    constructor(_provider: Provider, _walletAddress: Address) {
+    constructor(_provider: JsonRpcProvider, _walletAddress: Address) {
         this.provider = _provider;
         this.walletAddress = _walletAddress;
         this.wallet = new Contract(this.walletAddress, abi, this.provider);
@@ -81,13 +73,6 @@ export class View implements IView {
      */
     async getRecoveryOwner(): Promise<Address> {
         return await this.wallet.recoveryOwner();
-    }
-
-    /**
-     * @returns The entry point contract address.
-     */
-    async getEntryPoint(): Promise<Address> {
-        return await this.wallet.entryPoint();
     }
 
     /**
@@ -132,13 +117,5 @@ export class View implements IView {
      */
     async getNetworkId(): Promise<string> {
         return (await this.wallet.getChainId()).toString();
-    }
-
-    /**
-     * @param userOp UserOperation object of the transaction.
-     * @returns The hash of the transaction.
-     */
-    async getHash(userOp: UserOperation): Promise<string> {
-        return await this.wallet.userOperationHash(userOp);
     }
 }

@@ -1,11 +1,10 @@
 import { BigNumberish, Contract, ethers, utils } from "ethers";
 import { View } from "./View";
-import { Provider } from "@ethersproject/providers";
-import { Address, UserOperation } from "../types";
+import { JsonRpcProvider } from "@ethersproject/providers";
+import { Address } from "../types";
 import { abi } from "../abis/LaserWallet.json";
 import { MAGIC_VALUE, ZERO } from "../constants";
-import { TransactionInfo, GenericTransaction } from "../types";
-import { entryPointAbi } from "../abis/TestEntryPoint.json";
+import { TransactionInfo, Transaction } from "../types";
 
 interface SimulationResults {
     preOpGas: BigNumberish;
@@ -16,45 +15,15 @@ interface SimulationResults {
  * @dev Helper methods for Laser.
  */
 export class Helper extends View {
-    readonly provider: Provider;
+    readonly provider: JsonRpcProvider;
     readonly walletAddress: Address;
     readonly wallet: Contract;
 
-    constructor(_provider: Provider, _walletAddress: Address) {
+    constructor(_provider: JsonRpcProvider, _walletAddress: Address) {
         super(_provider, _walletAddress);
         this.provider = _provider;
         this.walletAddress = _walletAddress;
         this.wallet = new Contract(this.walletAddress, abi, this.provider);
-    }
-
-    /**
-     * @dev Helper function to create a user operation object.
-     */
-    async createOp(
-        _callData: string,
-        txInfo: TransactionInfo,
-        execTx: GenericTransaction,
-        _signature?: string
-    ): Promise<UserOperation> {
-        const _callGas = await this.simulateLaserTransaction(execTx);
-        const callGas = Number(_callGas) + 13000;
-        // The first verification is 20k gas more expenssive because we are updating a zero storage value.
-        const _verificationGas = Number(await this.getNonce()) === 0 ? 90000 : 60000;
-
-        return {
-            sender: this.wallet.address,
-            nonce: await this.getNonce(),
-            initCode: "0x",
-            callData: _callData,
-            callGas: callGas,
-            verificationGas: _verificationGas, // TODO: This is not accurate, get the exact gas cost to verify a signature.
-            preVerificationGas: 30000, // This is not 100% accurate....
-            maxFeePerGas: txInfo.maxFeePerGas,
-            maxPriorityFeePerGas: txInfo.maxPriorityFeePerGas,
-            paymaster: ZERO,
-            paymasterData: "0x",
-            signature: _signature ? _signature : "0x",
-        };
     }
 
     /**
@@ -142,48 +111,50 @@ export class Helper extends View {
     }
 
     /**
-     * @dev Returns the user operation hash to be signed by owners.
-     * @param userOp The UserOperation struct.
+     *
+     * @param transaction Transaction type.
+     * @returns The has of the transaction to sign.
      */
-    async userOperationHash(userOp: UserOperation): Promise<string> {
-        return await this.wallet.userOperationHash(userOp);
-    }
-
-    /**
-     * @dev The results of simulating a UserOperation transaction.
-     * The UserOperation object is sent to the EntryPoint to check for correctness.
-     * @returns preOpGas total gas used by validation (including contract creation).
-     * @returns prefund the amount the wallet had to prefund (zero in case a paymaster pays).
-     */
-    async simulateOperation(userOp: UserOperation): Promise<SimulationResults> {
-        const entryPointAddress = await this.getEntryPoint();
-        const entryPoint = new ethers.Contract(entryPointAddress, entryPointAbi, this.provider);
-
-        try {
-            // We make an eth_call to simulateValidation from address zero.
-            const request = await entryPoint.callStatic.simulateValidation(userOp, { from: ZERO });
-            return {
-                preOpGas: request.preOpGas.toString(),
-                prefund: request.prefund.toString(),
-            };
-        } catch (e) {
-            throw Error(`Failed simulation: ${e}`);
-        }
+    async getHash(transaction: Transaction): Promise<string> {
+        const hash = await this.wallet.operationHash(
+            transaction.to,
+            transaction.value,
+            transaction.callData,
+            transaction.nonce,
+            transaction.maxFeePerGas,
+            transaction.maxPriorityFeePerGas,
+            transaction.gasTip
+        );
+        return hash;
     }
 
     /**
      * @param tx Basic Laser transaction (to, value, data).
      * @returns Transaction's call gas
      */
-    async simulateLaserTransaction(tx: GenericTransaction): Promise<BigNumberish> {
+    async simulateTransaction(transaction: Transaction): Promise<BigNumberish> {
         const pWallet = new ethers.Contract(this.wallet.address, abi, this.provider);
         try {
-            const callGas = await pWallet.callStatic.simulateTransaction(tx.to, tx.value, tx.data, {
-                from: ZERO,
-            });
+            const callGas = await pWallet.callStatic.simulateTransaction(
+                transaction.to,
+                transaction.value,
+                transaction.callData,
+                transaction.nonce,
+                transaction.maxFeePerGas,
+                transaction.maxPriorityFeePerGas,
+                transaction.gasTip,
+                transaction.signatures,
+                {
+                    from: ZERO,
+                }
+            );
             return callGas;
         } catch (e) {
             throw Error(`Error in transaction simulation ${e}`);
         }
+    }
+
+    async getBaseFee(): Promise<BigNumberish> {
+        return (await this.provider.send("eth_getBlockByNumber", ["latest", true])).baseFeePerGas;
     }
 }

@@ -1,13 +1,18 @@
-import { ethers, Contract, utils, BigNumberish } from "ethers";
+import { JsonRpcProvider } from "@ethersproject/providers";
 import { Wallet } from "@ethersproject/wallet";
-import { Provider } from "@ethersproject/providers";
-import { Address, Domain, UserOperation, TransactionInfo, GenericTransaction } from "../types";
-import { ZERO, MAGIC_VALUE } from "../constants";
-import { toEth, toWei, encodeFunctionData } from "../utils";
-import { abi } from "../abis/LaserWallet.json";
-import { EIP712Sig, sign } from "../utils/signatures";
-import { Helper } from "./Helper";
+import { BigNumberish, Contract, ethers, providers } from "ethers";
 import erc20Abi from "../abis/erc20.abi.json";
+import { abi as walletAbi } from "../abis/LaserWallet.json";
+import { ZERO, emptyTransaction } from "../constants";
+import {
+    Address,
+    LASER_FUNCS,
+    SignTransactionOptions,
+    Transaction,
+    TransactionInfo,
+} from "../types";
+import { sign } from "../utils/signatures";
+import { Helper } from "./Helper";
 
 /**
  * @dev Contains all state changing methods for Laser.
@@ -24,9 +29,9 @@ interface ILaser {
      * ````````````````
      */
 
-    changeOwner(newOwner: Address, txInfo: TransactionInfo): Promise<UserOperation>;
-    changeRecoveryOwner(newRecoveryOwner: Address, txInfo: TransactionInfo): Promise<UserOperation>;
-    lock(txInfo: TransactionInfo): Promise<UserOperation>;
+    changeOwner(newOwner: Address, txInfo: TransactionInfo): Promise<Transaction>;
+    changeRecoveryOwner(newRecoveryOwner: Address, txInfo: TransactionInfo): Promise<Transaction>;
+    lock(txInfo: TransactionInfo): Promise<Transaction>;
     // unlock(txInfo: TransactionInfo): Promise<UserOperation>;
     // recoveryUnlock(txInfo: TransactionInfo): Promise<UserOperation>;
     //unlockGuardians(txInfo: TransactionInfo): Promise<UserOperation>;
@@ -35,50 +40,93 @@ interface ILaser {
     //     newRecoveryOwner: Address,
     //     txInfo: TransactionInfo
     // ): Promise<UserOperation>;
-    addGuardian(newGuardian: Address, txInfo: TransactionInfo): Promise<UserOperation>;
-    removeGuardian(guardianToRemove: Address, txInfo: TransactionInfo): Promise<UserOperation>;
+    addGuardian(newGuardian: Address, txInfo: TransactionInfo): Promise<Transaction>;
+    removeGuardian(guardianToRemove: Address, txInfo: TransactionInfo): Promise<Transaction>;
 
     // // Sends eth to another account ...
-    sendEth(to: Address, amount: BigNumberish, txInfo: TransactionInfo): Promise<UserOperation>;
+    sendEth(to: Address, amount: BigNumberish, txInfo: TransactionInfo): Promise<Transaction>;
     transferERC20(
         tokenAddress: Address,
         to: Address,
         amount: BigNumberish,
         txInfo: TransactionInfo
-    ): Promise<UserOperation>;
+    ): Promise<Transaction>;
     sendTransaction(
         to: Address,
         data: any,
         value: BigNumberish,
         txInfo: TransactionInfo
-    ): Promise<UserOperation>;
+    ): Promise<Transaction>;
 }
 
 /**
  * @dev Class that has all the methods to read/write to a Laser wallet.
  */
 export class Laser extends Helper implements ILaser {
-    readonly provider: Provider;
+    /**
+     * @todo !! Add simulation checks.
+     */
+    readonly provider: JsonRpcProvider;
     readonly signer: Wallet;
     readonly wallet: Contract; // The actual wallet.
-    readonly abi = abi;
 
     /**
      * @param _signer The owner of the wallet (the encrypted keypair on the mobile).
      * @param walletAddress The address of the wallet.
      */
-    constructor(_provider: Provider, _signer: Wallet, walletAddress: string) {
+    constructor(_provider: JsonRpcProvider, _signer: Wallet, walletAddress: string) {
         super(_provider, walletAddress);
         this.provider = _provider;
         this.signer = _signer;
-        this.wallet = new Contract(walletAddress, abi, this.signer.connect(this.provider));
+        this.wallet = new Contract(walletAddress, walletAbi, this.signer.connect(this.provider));
+    }
+
+    async execTransaction(transaction: Transaction): Promise<providers.TransactionResponse> {
+        return await this.wallet.exec(
+            transaction.to,
+            transaction.value,
+            transaction.callData,
+            transaction.nonce,
+            transaction.maxFeePerGas,
+            transaction.maxPriorityFeePerGas,
+            transaction.gasTip,
+            transaction.signatures
+        , {
+            maxPriorityFeePerGas: transaction.maxPriorityFeePerGas,
+            maxFeePerGas: transaction.maxFeePerGas
+        });
+    }
+
+
+    async signTransaction({
+        to,
+        value,
+        callData,
+        txInfo,
+    }: SignTransactionOptions): Promise<Transaction> {
+        const transaction = {
+            ...emptyTransaction,
+            ...txInfo,
+            to,
+            value,
+            callData,
+            nonce: await this.getNonce(),
+        };
+
+        const hash = await this.getHash(transaction);
+        transaction.signatures = await sign(this.signer, hash);
+
+        if (!(await this.isValidSignature(hash, transaction.signatures))) {
+            throw new Error("Invalid signature.");
+        }
+        
+        return transaction;
     }
 
     /**
      * @param _newOwner The address of the new owner.
-     * @returns The userOp object to then be sent to the EntryPoint contract.
      */
-    async changeOwner(_newOwner: Address, txInfo: TransactionInfo): Promise<UserOperation> {
+    async changeOwner(_newOwner: Address, txInfo: TransactionInfo): Promise<Transaction> {
         const newOwner = await this.verifyAddress(_newOwner);
         const currentOwner = await this.getOwner();
         if (newOwner.toLowerCase() === currentOwner.toLowerCase()) {
@@ -98,35 +146,18 @@ export class Laser extends Helper implements ILaser {
             throw Error("Wallet locked, forbidden operation.");
         }
 
-        const txData = encodeFunctionData(abi, "changeOwner", [newOwner]);
-        const callData = encodeFunctionData(abi, "exec", [this.getAddress(), 0, txData]);
-
-        const execTx: GenericTransaction = {
-            to: this.getAddress(),
+        return this.signTransaction({
+            to: this.wallet.address,
             value: 0,
-            data: txData,
-        };
-
-        // We prepare the user op for signature.
-        const preBundleOp = await this.createOp(callData, txInfo, execTx);
-        const hash = await this.getHash(preBundleOp);
-        const signature = await sign(this.signer, hash);
-        if (!(await this.isValidSignature(hash, signature))) {
-            throw Error("Invalid signature.");
-        }
-        const userOp = await this.createOp(callData, txInfo, execTx, signature);
-        return userOp;
+            callData: this.encodeFunctionData(walletAbi, LASER_FUNCS.changeOwner, [newOwner]),
+            txInfo,
+        });
     }
 
-    /**
-     * @param _newRecoveryOwner The address of the new recovery owner.
-     * @param txInfo The transaction info (see types). Primarily gas costs.
-     * @returns The userOp object to then be sent to the EntryPoint contract.
-     */
     async changeRecoveryOwner(
         _newRecoveryOwner: Address,
         txInfo: TransactionInfo
-    ): Promise<UserOperation> {
+    ): Promise<Transaction> {
         const newRecoveryOwner = await this.verifyAddress(_newRecoveryOwner);
         const currentOwner = await this.getOwner();
         if (newRecoveryOwner.toLowerCase() === currentOwner) {
@@ -145,64 +176,42 @@ export class Laser extends Helper implements ILaser {
             throw Error("Wallet locked, forbidden operation.");
         }
 
-        const txData = encodeFunctionData(abi, "changeRecoveryOwner", [newRecoveryOwner]);
-        const callData = encodeFunctionData(abi, "exec", [this.getAddress(), 0, txData]);
-
-        const execTx: GenericTransaction = {
-            to: this.getAddress(),
+        return this.signTransaction({
+            to: this.wallet.address,
             value: 0,
-            data: txData,
-        };
-
-        // We prepare the user op for signature.
-        const preBundleOp = await this.createOp(callData, txInfo, execTx);
-        const hash = await this.getHash(preBundleOp);
-        const signature = await sign(this.signer, hash);
-        if (!(await this.isValidSignature(hash, signature))) {
-            throw Error("Invalid signature.");
-        }
-        const userOp = await this.createOp(callData, txInfo, execTx, signature);
-        return userOp;
+            callData: this.encodeFunctionData(walletAbi, LASER_FUNCS.changeRecoveryOwner, [
+                newRecoveryOwner,
+            ]),
+            txInfo,
+        });
     }
 
     /**
      * @dev Locks the wallet. When the wallet is locked, the sovereign social recovery comes into play.
      * @notice Can only be called by a guardian.
      */
-    async lock(txInfo: TransactionInfo): Promise<UserOperation> {
+    async lock(txInfo: TransactionInfo): Promise<Transaction> {
         if (await this.isWalletLocked()) {
             throw Error("Wallet is currently locked");
         }
-        // Only a guardian can sign this op.
+        // Only a guardian can sign this.
         const signer = this.signer.address;
         if (!(await this.wallet.isGuardian(signer))) {
             throw Error("Only a guardian can lock the wallet.");
         }
 
-        const txData = encodeFunctionData(abi, "lock", []);
-        const callData = encodeFunctionData(abi, "exec", [this.getAddress(), 0, txData]);
-
-        const execTx: GenericTransaction = {
-            to: this.getAddress(),
+        return this.signTransaction({
+            to: this.wallet.address,
             value: 0,
-            data: txData,
-        };
-
-        // We prepare the user op for signature.
-        const preBundleOp = await this.createOp(callData, txInfo, execTx);
-        const hash = await this.getHash(preBundleOp);
-        const signature = await sign(this.signer, hash);
-
-        ///@todo isValidSignature() only checks for the owner.
-        // Create a verification process for the guardian.
-        const userOp = await this.createOp(callData, txInfo, execTx, signature);
-        return userOp;
+            callData: this.encodeFunctionData(walletAbi, LASER_FUNCS.lock, []),
+            txInfo,
+        });
     }
 
     /**
      * @param _newGuardian The address of the new guardian.
      */
-    async addGuardian(_newGuardian: Address, txInfo: TransactionInfo): Promise<UserOperation> {
+    async addGuardian(_newGuardian: Address, txInfo: TransactionInfo): Promise<Transaction> {
         const newGuardian = await this.verifyAddress(_newGuardian);
         const currentOwner = await this.getOwner();
         if (newGuardian.toLowerCase() === currentOwner.toLowerCase()) {
@@ -233,31 +242,18 @@ export class Laser extends Helper implements ILaser {
             }
         }
 
-        const txData = encodeFunctionData(abi, "addGuardian", [newGuardian]);
-        const callData = encodeFunctionData(abi, "exec", [this.getAddress(), 0, txData]);
-
-        const execTx: GenericTransaction = {
-            to: this.getAddress(),
+        return this.signTransaction({
+            to: this.wallet.address,
             value: 0,
-            data: txData,
-        };
-
-        // We prepare the user op for signature.
-        const preBundleOp = await this.createOp(callData, txInfo, execTx);
-        const hash = await this.getHash(preBundleOp);
-        const signature = await sign(this.signer, hash);
-
-        if (!(await this.isValidSignature(hash, signature))) {
-            throw Error("Invalid signature.");
-        }
-        const userOp = await this.createOp(callData, txInfo, execTx, signature);
-        return userOp;
+            callData: this.encodeFunctionData(walletAbi, LASER_FUNCS.addGuardian, [newGuardian]),
+            txInfo,
+        });
     }
 
     /**
      * @param _guardian The address of the guardian to remove.
      */
-    async removeGuardian(_guardian: Address, txInfo: TransactionInfo): Promise<UserOperation> {
+    async removeGuardian(_guardian: Address, txInfo: TransactionInfo): Promise<Transaction> {
         const guardian = await this.verifyAddress(_guardian);
         const currentOwner = await this.getOwner();
         if (!(await this.isOwner(this.signer.address))) {
@@ -284,39 +280,22 @@ export class Laser extends Helper implements ILaser {
                 ? "0x0000000000000000000000000000000000000001"
                 : guardians[prevGuardianIndex];
 
-        const txData = encodeFunctionData(abi, "removeGuardian", [prevGuardian, guardian]);
-        const callData = encodeFunctionData(abi, "exec", [this.getAddress(), 0, txData]);
-
-        const execTx: GenericTransaction = {
-            to: this.getAddress(),
+        return this.signTransaction({
+            to: this.wallet.address,
             value: 0,
-            data: txData,
-        };
-
-        // We prepare the user op for signature.
-        const preBundleOp = await this.createOp(callData, txInfo, execTx);
-        const hash = await this.getHash(preBundleOp);
-        const signature = await sign(this.signer, hash);
-
-        if (!(await this.isValidSignature(hash, signature))) {
-            throw Error("Invalid signature.");
-        }
-        const userOp = await this.createOp(callData, txInfo, execTx, signature);
-        return userOp;
+            callData: this.encodeFunctionData(walletAbi, LASER_FUNCS.removeGuardian, [
+                prevGuardian,
+                guardian,
+            ]),
+            txInfo,
+        });
     }
 
-    /**
-     * This is signed with normal eth flow.
-     * @param _to Destination address of the transaction.
-     * @param amount Amount in ETH to send.
-     * @param txInfo The transaction info (see types). Primarily gas costs.
-     * @returns The userOp object to then be sent to the EntryPoint contract.
-     */
     async sendEth(
         _to: Address,
         amount: BigNumberish,
         txInfo: TransactionInfo
-    ): Promise<UserOperation> {
+    ): Promise<Transaction> {
         const to = await this.verifyAddress(_to);
         if (amount <= 0) {
             throw Error("Cannot send 0 ETH.");
@@ -330,79 +309,41 @@ export class Laser extends Helper implements ILaser {
         const currentBal = Helper.toEth(await this.getBalance());
 
         if (Number(currentBal) < Number(amount)) {
-            // NOTE !!! It is missing a lot of extra safety checks... But it works for now.
             throw Error("Insufficient balance.");
         }
         if (!(await this.isOwner(this.signer.address))) {
             throw Error("Only the owner can send funds.");
         }
 
-        const amountInWei = Helper.toWei(amount);
-
-        const callData = encodeFunctionData(abi, "exec", [to, amountInWei, "0x"]);
-
-        const execTx: GenericTransaction = {
-            to: to,
-            value: amountInWei,
-            data: "0x",
-        };
-
-        // We prepare the user op for signature.
-        const preBundleOp = await this.createOp(callData, txInfo, execTx);
-        const hash = await this.wallet.userOperationHash(preBundleOp);
-        const signature = await sign(this.signer, hash);
-        if (!(await this.isValidSignature(hash, signature))) {
-            throw Error("Invalid signature.");
-        }
-        const userOp = await this.createOp(callData, txInfo, execTx, signature);
-        return userOp;
+        return this.signTransaction({
+            to,
+            value: Helper.toWei(amount),
+            callData: "0x",
+            txInfo,
+        });
     }
 
-    /**
-     * @param _tokenAddress The address of the ERC20 token contract.
-     * @param _to Destination address of the tokens.
-     * @param amount Amount of tokens to transfer.
-     * @param txInfo The transaction info (see types). Primarily gas costs.
-     * @returns The userOp object to then be sent to the EntryPoint contract.
-     */
     async transferERC20(
         _tokenAddress: Address,
         _to: Address,
         amount: BigNumberish,
         txInfo: TransactionInfo
-    ): Promise<UserOperation> {
+    ): Promise<Transaction> {
         const tokenAddress = await this.verifyAddress(_tokenAddress);
         const to = await this.verifyAddress(_to);
 
         ///@todo Extra safety checks.
-
         if (!(await this.isOwner(this.signer.address))) {
             throw Error("Only the owner can send funds.");
         }
 
-        // Right now we are adding 18 decimals, but this changes by token.
-        const amountInWei = Helper.toWei(amount);
-
-        const txData = encodeFunctionData(erc20Abi, "transfer", [to, amountInWei]);
-        const callData = encodeFunctionData(abi, "exec", [tokenAddress, 0, txData]);
-
-        const execTx: GenericTransaction = {
+        return this.signTransaction({
             to: tokenAddress,
             value: 0,
-            data: txData,
-        };
-
-        // We prepare the user op for signature.
-        const preBundleOp = await this.createOp(callData, txInfo, execTx);
-
-        const hash = await this.wallet.userOperationHash(preBundleOp);
-        const signature = await sign(this.signer, hash);
-
-        if (!(await this.isValidSignature(hash, signature))) {
-            throw Error("Invalid signature.");
-        }
-        const userOp = this.createOp(callData, txInfo, execTx, signature);
-        return userOp;
+            // Right now we are adding 18 decimals, but this changes by token.
+            callData: this.encodeFunctionData(erc20Abi, "transfer", [to, Helper.toWei(amount)]),
+            txInfo,
+        });
     }
 
     /**
@@ -414,27 +355,14 @@ export class Laser extends Helper implements ILaser {
      */
     async sendTransaction(
         to: Address,
-        data: any,
+        data: string,
         value: BigNumberish,
         txInfo: TransactionInfo
-    ): Promise<UserOperation> {
+    ): Promise<Transaction> {
         if (!(await this.isOwner(this.signer.address))) {
             throw Error("Only the owner can send funds.");
         }
 
-        const callData = encodeFunctionData(abi, "exec", [to, value, data]);
-        const execTx: GenericTransaction = { to, value, data };
-
-        // We prepare the user op for signature.
-        const preBundleOp = await this.createOp(callData, txInfo, execTx);
-
-        const hash = await this.wallet.userOperationHash(preBundleOp);
-        const signature = await sign(this.signer, hash);
-
-        if (!(await this.isValidSignature(hash, signature))) {
-            throw Error("Invalid signature.");
-        }
-        const userOp = this.createOp(callData, txInfo, execTx, signature);
-        return userOp;
+        return this.signTransaction({ to, value, callData: data, txInfo });
     }
 }

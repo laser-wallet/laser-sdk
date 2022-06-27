@@ -1,32 +1,28 @@
 import { ethers, Wallet } from "ethers";
-import { Domain, Address, types, UserOperation } from "../types";
+import { Domain, Address, types, Transaction, LaserTypes } from "../types";
 import { ZERO } from "../constants";
 
-export async function EIP712Sig(
+export async function signTypedData(
     signer: Wallet,
-    userOp: UserOperation,
-    domain: Domain
+    domain: Domain,
+    transaction: Transaction
 ): Promise<string> {
-    const txMessage = {
-        sender: userOp.sender,
-        nonce: userOp.nonce,
-        callData: userOp.callData,
-        callGas: userOp.callGas,
-        verificationGas: userOp.preVerificationGas,
-        preVerificationGas: 10000,
-        maxFeePerGas: userOp.maxFeePerGas,
-        maxPriorityFeePerGas: userOp.maxPriorityFeePerGas,
-        paymaster: ZERO, // we are not using a paymaster
-        paymasterData: "0x",
+    const laserTypes: LaserTypes = {
+        to: transaction.to,
+        value: transaction.value,
+        callData: transaction.callData,
+        nonce: transaction.nonce,
+        maxFeePerGas: transaction.maxFeePerGas,
+        maxPriorityFeePerGas: transaction.maxPriorityFeePerGas,
+        gasTip: transaction.gasTip,
     };
-
-    // Returns the signature.
-    return await signer._signTypedData(domain, types, txMessage);
+    const signature = await signer._signTypedData(domain, types, laserTypes);
+    return signature;
 }
 
 export async function sign(signer: Wallet, hash: string): Promise<string> {
-    const typedDataHash = ethers.utils.arrayify(hash);
-    const signature = (await signer.signMessage(typedDataHash))
+    const toSignHash = ethers.utils.arrayify(hash);
+    const signature = (await signer.signMessage(toSignHash))
         .replace(/1b$/, "1f")
         .replace(/1c$/, "20");
     return signature;
