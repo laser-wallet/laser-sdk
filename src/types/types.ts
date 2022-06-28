@@ -52,3 +52,20 @@ export interface TransactionInfo {
     maxPriorityFeePerGas: BigNumberish;
     gasTip: BigNumberish;
 }
+
+export interface BlockOutput {
+    hash: string;
+    type: BigNumberish;
+    blockHash: string;
+    blockNumber: BigNumberish;
+    confirmations: BigNumberish;
+    from: Address;
+    gasPrice: BigNumberish;
+    maxPriorityFeePerGas: BigNumberish;
+    maxFeePerGas: BigNumberish;
+    gasLimit: BigNumberish;
+    to: Address;
+    value: BigNumberish;
+    nonce: BigNumberish;
+    data: string;
+}

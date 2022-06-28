@@ -14,15 +14,8 @@ interface IView {
     getRecoveryOwner(): Promise<Address>;
     getGuardians(): Promise<Address[]>;
     getBalance(): Promise<BigNumberish>;
-
-    // If the wallet is locked, the recovery mechanism gets activated and some operations are restricted,
-    // primarily value operations...
     isWalletLocked(): Promise<boolean>;
-
-    // If the guardians are locked, they cannot do operations...
     areGuardiansBlocked(): Promise<boolean>;
-
-    // The network id that the wallet is currently connected to.
     getNetworkId(): Promise<string>;
 }
 

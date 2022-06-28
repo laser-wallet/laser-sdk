@@ -4,7 +4,8 @@ import { JsonRpcProvider } from "@ethersproject/providers";
 import { Address } from "../types";
 import { abi } from "../abis/LaserWallet.json";
 import { MAGIC_VALUE, ZERO } from "../constants";
-import { TransactionInfo, Transaction } from "../types";
+import { TransactionInfo, Transaction, LASER_FUNCS, BlockOutput } from "../types";
+import erc20Abi from "../abis/erc20.abi.json";
 
 interface SimulationResults {
     preOpGas: BigNumberish;
@@ -111,7 +112,6 @@ export class Helper extends View {
     }
 
     /**
-     *
      * @param transaction Transaction type.
      * @returns The has of the transaction to sign.
      */
@@ -154,7 +154,79 @@ export class Helper extends View {
         }
     }
 
+    /**
+     * @returns The base fee of the latest block.
+     */
     async getBaseFee(): Promise<BigNumberish> {
         return (await this.provider.send("eth_getBlockByNumber", ["latest", true])).baseFeePerGas;
     }
+
+    /**
+     * @notice This helper function packs the signatures in correct order according to the smart
+     * contract's specifications.
+     * @param signatures The bundled signatures (they don't need to be in a specific order).
+     * @param funcName The name of the function to call.
+     * @returns The packed signatures in correct order.
+     */
+    async packSignatures(signatures: string, funcName: string): Promise<string> {
+        // Signatures need to be at least 130 bytes + 0x.
+        if (signatures.length < 264) {
+            throw Error("Incorrect signature length.");
+        }
+        if (funcName === "lock") {
+            // If the function name is lock, we need to pack both of the signatures.
+            return "";
+        }
+
+        // @todo Check each function name and bundle the signatures in correct order.
+        return "";
+    }
+
+    /**
+     * @param _tokenAddress The address of the required token.
+     * @returns The token balance of the connected wallet.
+     */
+    async getTokenBalance(_tokenAddress: Address): Promise<BigNumberish> {
+        const tokenAddress = await this.verifyAddress(_tokenAddress);
+
+        // The tokenAddress needs to be a contract.
+        if (!(await this.isContract(tokenAddress))) {
+            throw Error("Token address is not a contract.");
+        }
+
+        const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, this.provider);
+        try {
+            return await tokenContract.balanceOf(this.wallet.address);
+        } catch (e) {
+            throw Error(
+                `Invalid balance call, probably the address is not ERC-20 compatible: ${e}`
+            );
+        }
+    }
+
+    /**
+     * @param _tokenAddress The address of the required token.
+     * @returns The token balance of the connected wallet without decimals.
+     */
+    async getConvertedTokenBalance(_tokenAddress: Address): Promise<BigNumberish> {
+        const balance = await this.getTokenBalance(_tokenAddress);
+        const tokenContract = new ethers.Contract(_tokenAddress, erc20Abi, this.provider);
+        const decimals = await tokenContract.decimals();
+        return ethers.utils.formatUnits(balance, decimals);
+    }
+
+    /**
+     * @dev Listens each block and logs the block's result if the connected wallet
+     * sent or received a transaction.
+     */
+    async listenBlocks(): Promise<void> {
+        this.provider.on("block", async (blockNumber) => {
+            const blockWithTransactions = await this.provider.getBlockWithTransactions(blockNumber);
+            const transactions = blockWithTransactions.transactions;
+            const target = (this.wallet.address).toLowerCase();
+            const targetBlock = transactions.filter((tx => (tx.to )?.toLowerCase() === target || (tx.from).toLowerCase() === target));
+            console.log(targetBlock);
+        });
+    }
+
 }
