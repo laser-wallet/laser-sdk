@@ -223,10 +223,11 @@ export class Helper extends View {
         this.provider.on("block", async (blockNumber) => {
             const blockWithTransactions = await this.provider.getBlockWithTransactions(blockNumber);
             const transactions = blockWithTransactions.transactions;
-            const target = (this.wallet.address).toLowerCase();
-            const targetBlock = transactions.filter((tx => (tx.to )?.toLowerCase() === target || (tx.from).toLowerCase() === target));
+            const target = this.wallet.address.toLowerCase();
+            const targetBlock = transactions.filter(
+                (tx) => tx.to?.toLowerCase() === target || tx.from.toLowerCase() === target
+            );
             console.log(targetBlock);
         });
     }
-
 }

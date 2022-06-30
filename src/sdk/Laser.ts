@@ -105,7 +105,7 @@ export class Laser extends Helper implements ILaser {
 
         const hash = await this.getHash(transaction);
         transaction.signatures = await sign(this.signer, hash);
-
+        transaction.chainInfo = await this.getChainInfo();
         if (!(await this.isValidSignature(hash, transaction.signatures))) {
             throw Error("Invalid signature.");
         }

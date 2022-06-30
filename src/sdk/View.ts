@@ -1,6 +1,6 @@
 import { Contract, ethers, utils, BigNumberish } from "ethers";
 import { JsonRpcProvider } from "@ethersproject/providers";
-import { Address } from "../types";
+import { Address, ChainInfo } from "../types";
 import { abi } from "../abis/LaserWallet.json";
 
 /**
@@ -16,7 +16,7 @@ interface IView {
     getBalance(): Promise<BigNumberish>;
     isWalletLocked(): Promise<boolean>;
     areGuardiansBlocked(): Promise<boolean>;
-    getNetworkId(): Promise<string>;
+    getChainInfo(): Promise<ChainInfo>;
 }
 
 /**
@@ -106,9 +106,39 @@ export class View implements IView {
     }
 
     /**
-     * @returns The network id that the wallet is connected to.
+     * @returns The name and network id of the current network.
      */
-    async getNetworkId(): Promise<string> {
-        return (await this.wallet.getChainId()).toString();
+    async getChainInfo(): Promise<ChainInfo> {
+        const chainId = (await this.wallet.getChainId()).toString();
+
+        switch (chainId) {
+            case "1": {
+                return {
+                    chainId: 1,
+                    name: "mainnet",
+                };
+            }
+            case "3": {
+                return {
+                    chainId: 3,
+                    name: "ropsten",
+                };
+            }
+            case "4": {
+                return {
+                    chainId: 4,
+                    name: "rinkeby",
+                };
+            }
+            case "5": {
+                return {
+                    chainId: 5,
+                    name: "goerli",
+                };
+            }
+            default: {
+                throw Error("Unsupported network.");
+            }
+        }
     }
 }

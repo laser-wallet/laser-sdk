@@ -14,6 +14,11 @@ export const types = {
     ],
 };
 
+export type ChainInfo = {
+    chainId: number | string;
+    name: string;
+};
+
 export type Domain = {
     chainId: number | string;
     verifyingContract: string;
@@ -35,6 +40,7 @@ export interface Transaction {
     maxPriorityFeePerGas: BigNumberish;
     gasTip: BigNumberish;
     signatures: string;
+    chainInfo: ChainInfo;
 }
 
 export interface LaserTypes {
