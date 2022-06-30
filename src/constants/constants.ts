@@ -17,4 +17,8 @@ export const emptyTransaction: Transaction = {
     maxPriorityFeePerGas: "",
     gasTip: "",
     signatures: "",
+    chainInfo: {
+        chainId: "", 
+        name: "",
+    }
 };
