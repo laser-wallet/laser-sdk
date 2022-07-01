@@ -13,10 +13,11 @@ dotenv.config();
 // The relayer pays for gas costs, in this case, it would be us ...
 const relayer = new ethers.Wallet(`${process.env.PK}`);
 
-const providerUrl = `https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`;
+const providerUrl = `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`;
+
 const provider = new ethers.providers.JsonRpcProvider(providerUrl);
 
-const factory = new Factory(provider, relayer, FACTORY_MAINNET);
+const factory = new Factory(provider, relayer, FACTORY_GOERLI);
 
 // This function creates a new wallet and logs the address to the terminal.
 // It listents to the event ProxyCreation...
@@ -24,9 +25,12 @@ async function main(): Promise<void> {
     const bal = await factory.provider.getBalance(relayer.address);
 
     // We check that the signer has enough eth (at least 0.01).
-    if (Number(utils.formatEther(bal)) < 0.01) {
-        throw Error(`Not enough balance: ${utils.formatEther(bal)} ETH`);
-    }
+    // if (Number(utils.formatEther(bal)) < 0.01) {
+    //     throw Error(`Not enough balance: ${utils.formatEther(bal)} ETH`);
+    // }    
+
+    console.log("singleton -->", await factory.getSingleton());
+    console.log("runtime -->", await factory.proxyRuntimeCode());
 
     const owner = new ethers.Wallet(`${process.env.PK}`);
 
@@ -49,12 +53,12 @@ async function main(): Promise<void> {
 
     console.log("PRE COMPUTED address -->", address);
 
-    try {
-        // It takes some time, around 1 min.
-        await factory.createProxyWithCreate2(owner.address, recoveryOwner, [guardian]);
-    } catch (e) {
-        throw Error(`Error with createProxy ${e}`);
-    }
+    // try {
+    //     // It takes some time, around 1 min.
+    //     await factory.createProxyWithCreate2(owner.address, recoveryOwner, [guardian]);
+    // } catch (e) {
+    //     throw Error(`Error with createProxy ${e}`);
+    // }
 }
 
 main();

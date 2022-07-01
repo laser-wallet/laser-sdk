@@ -18,7 +18,7 @@ export const emptyTransaction: Transaction = {
     gasTip: "",
     signatures: "",
     chainInfo: {
-        chainId: "", 
+        chainId: "",
         name: "",
-    }
+    },
 };

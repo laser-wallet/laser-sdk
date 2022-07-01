@@ -1,6 +1,6 @@
-import { BigNumberish, Contract, ethers, utils } from "ethers";
+import { BigNumberish, Contract, ethers, utils, BigNumber } from "ethers";
 import { View } from "./View";
-import { JsonRpcProvider } from "@ethersproject/providers";
+import { Provider } from "@ethersproject/providers";
 import { Address } from "../types";
 import { abi } from "../abis/LaserWallet.json";
 import { MAGIC_VALUE, ZERO } from "../constants";
@@ -16,11 +16,11 @@ interface SimulationResults {
  * @dev Helper methods for Laser.
  */
 export class Helper extends View {
-    readonly provider: JsonRpcProvider;
+    readonly provider: Provider;
     readonly walletAddress: Address;
     readonly wallet: Contract;
 
-    constructor(_provider: JsonRpcProvider, _walletAddress: Address) {
+    constructor(_provider: Provider, _walletAddress: Address) {
         super(_provider, _walletAddress);
         this.provider = _provider;
         this.walletAddress = _walletAddress;
@@ -158,7 +158,13 @@ export class Helper extends View {
      * @returns The base fee of the latest block.
      */
     async getBaseFee(): Promise<BigNumberish> {
-        return (await this.provider.send("eth_getBlockByNumber", ["latest", true])).baseFeePerGas;
+        const latestBlock = await this.provider.getBlock("latest");
+        const baseFeePerGas = latestBlock.baseFeePerGas;
+        if (baseFeePerGas) {
+            return baseFeePerGas.toString();
+        } else {
+            throw Error("Could not get base fee per gas.");
+        }
     }
 
     /**
@@ -196,7 +202,7 @@ export class Helper extends View {
 
         const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, this.provider);
         try {
-            return await tokenContract.balanceOf(this.wallet.address);
+            return tokenContract.balanceOf(this.wallet.address);
         } catch (e) {
             throw Error(
                 `Invalid balance call, probably the address is not ERC-20 compatible: ${e}`
@@ -213,6 +219,21 @@ export class Helper extends View {
         const tokenContract = new ethers.Contract(_tokenAddress, erc20Abi, this.provider);
         const decimals = await tokenContract.decimals();
         return ethers.utils.formatUnits(balance, decimals);
+    }
+
+    /**
+     * @dev Checks that the wallet has enough gas for the transaction.
+     * @note NOT FINAL !!
+     */
+    checkGas(txInfo: TransactionInfo, walletBalance: BigNumberish) {
+        const baseGas = 40000; // This should be properly calculated, not final!!!
+        const totalGas = BigNumber.from(baseGas).add(txInfo.gasTip);
+        const ethCost = totalGas.mul(txInfo.maxFeePerGas);
+        const balance = Helper.toWei(walletBalance);
+
+        if (BigNumber.from(balance).lt(BigNumber.from(ethCost))) {
+            throw Error("Insufficient gas cost.");
+        }
     }
 
     /**

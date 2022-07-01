@@ -1,4 +1,4 @@
-import { JsonRpcProvider } from "@ethersproject/providers";
+import { Provider } from "@ethersproject/providers";
 import { Wallet } from "@ethersproject/wallet";
 import { BigNumber, BigNumberish, Contract, ethers, providers } from "ethers";
 import erc20Abi from "../abis/erc20.abi.json";
@@ -46,7 +46,7 @@ interface ILaser {
  * @dev Class that has all the methods to read/write to a Laser wallet.
  */
 export class Laser extends Helper implements ILaser {
-    readonly provider: JsonRpcProvider;
+    readonly provider: Provider;
     readonly signer: Wallet;
     readonly wallet: Contract; // The actual wallet.
 
@@ -55,7 +55,7 @@ export class Laser extends Helper implements ILaser {
      * @param _signer The owner of the wallet (the encrypted keypair on the mobile).
      * @param walletAddress The address of the wallet.
      */
-    constructor(_provider: JsonRpcProvider, _signer: Wallet, walletAddress: string) {
+    constructor(_provider: Provider, _signer: Wallet, walletAddress: string) {
         super(_provider, walletAddress);
         this.provider = _provider;
         this.signer = _signer;
@@ -68,7 +68,7 @@ export class Laser extends Helper implements ILaser {
      * This is a generic non-opinionated function to call 'exec' in Laser's smart contracts.
      */
     async execTransaction(transaction: Transaction): Promise<providers.TransactionResponse> {
-        return await this.wallet.exec(
+        return this.wallet.exec(
             transaction.to,
             transaction.value,
             transaction.callData,
@@ -137,7 +137,7 @@ export class Laser extends Helper implements ILaser {
             throw Error("Wallet locked, forbidden operation.");
         }
 
-        return await this.signTransaction({
+        return this.signTransaction({
             to: this.wallet.address,
             value: 0,
             callData: this.encodeFunctionData(walletAbi, LASER_FUNCS.changeOwner, [newOwner]),
@@ -171,7 +171,7 @@ export class Laser extends Helper implements ILaser {
             throw Error("Wallet locked, forbidden operation.");
         }
 
-        return await this.signTransaction({
+        return this.signTransaction({
             to: this.wallet.address,
             value: 0,
             callData: this.encodeFunctionData(walletAbi, LASER_FUNCS.changeRecoveryOwner, [
@@ -195,7 +195,7 @@ export class Laser extends Helper implements ILaser {
             throw Error("Only a guardian can lock the wallet.");
         }
 
-        return await this.signTransaction({
+        return this.signTransaction({
             to: this.wallet.address,
             value: 0,
             callData: this.encodeFunctionData(walletAbi, LASER_FUNCS.lock, []),
@@ -260,7 +260,7 @@ export class Laser extends Helper implements ILaser {
             }
         }
 
-        return await this.signTransaction({
+        return this.signTransaction({
             to: this.wallet.address,
             value: 0,
             callData: this.encodeFunctionData(walletAbi, LASER_FUNCS.addGuardian, [newGuardian]),
@@ -299,7 +299,7 @@ export class Laser extends Helper implements ILaser {
                 ? "0x0000000000000000000000000000000000000001"
                 : guardians[prevGuardianIndex];
 
-        return await this.signTransaction({
+        return this.signTransaction({
             to: this.wallet.address,
             value: 0,
             callData: this.encodeFunctionData(walletAbi, LASER_FUNCS.removeGuardian, [
@@ -327,9 +327,9 @@ export class Laser extends Helper implements ILaser {
         if (await this.isWalletLocked()) {
             throw Error("Wallet locked, forbidden operation.");
         }
-
         // Blanace in Eth.
         const currentBal = Helper.toEth(await this.getBalance());
+        this.checkGas(txInfo, currentBal);
 
         if (Number(currentBal) < Number(amount)) {
             throw Error("Insufficient balance.");
@@ -338,7 +338,7 @@ export class Laser extends Helper implements ILaser {
             throw Error("Only the owner can send funds.");
         }
 
-        return await this.signTransaction({
+        return this.signTransaction({
             to,
             value: Helper.toWei(amount),
             callData: "0x",
@@ -380,7 +380,7 @@ export class Laser extends Helper implements ILaser {
             throw Error("Insufficient balance.");
         }
 
-        return await this.signTransaction({
+        return this.signTransaction({
             to: tokenAddress,
             value: 0,
             callData: this.encodeFunctionData(erc20Abi, "transfer", [to, amountToTransfer]),

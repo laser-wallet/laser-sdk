@@ -1,5 +1,5 @@
 import { Contract, ethers, utils, BigNumberish } from "ethers";
-import { JsonRpcProvider } from "@ethersproject/providers";
+import { Provider } from "@ethersproject/providers";
 import { Address, ChainInfo } from "../types";
 import { abi } from "../abis/LaserWallet.json";
 
@@ -23,11 +23,11 @@ interface IView {
  * @dev Class that contains all the relevant view methods to interact with a Laser wallet.
  */
 export class View implements IView {
-    provider: JsonRpcProvider;
+    provider: Provider;
     walletAddress: Address;
     wallet: Contract;
 
-    constructor(_provider: JsonRpcProvider, _walletAddress: Address) {
+    constructor(_provider: Provider, _walletAddress: Address) {
         this.provider = _provider;
         this.walletAddress = _walletAddress;
         this.wallet = new Contract(this.walletAddress, abi, this.provider);

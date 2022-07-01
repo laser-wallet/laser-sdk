@@ -118,21 +118,21 @@ export class Factory implements IFactory {
      * @dev Returns the base contract, where all the delegatecalls are forwarded.
      */
     async getSingleton(): Promise<Address> {
-        return await this.factory.singleton();
+        return this.factory.singleton();
     }
 
     /**
      * @dev Allows to retrieve the runtime code of a deployed Proxy. This can be used to check that the expected Proxy was deployed.
      */
     async proxyRuntimeCode(): Promise<string> {
-        return await this.factory.proxyRuntimeCode();
+        return this.factory.proxyRuntimeCode();
     }
 
     /**
      *  @dev Allows to retrieve the creation code used for the Proxy deployment. With this it is easily possible to calculate predicted address.
      */
     async proxyCreationCode(): Promise<string> {
-        return await this.factory.proxyCreationCode();
+        return this.factory.proxyCreationCode();
     }
 
     /**
@@ -213,7 +213,7 @@ export class Factory implements IFactory {
      * happens when the user receives ETH for the first time.
      */
     async preComputeAddress(dataInitializer: string): Promise<Address> {
-        const address = await this.factory.preComputeAddress(dataInitializer, SALT);
+        const address = this.factory.preComputeAddress(dataInitializer, SALT);
         return address;
     }
 }
