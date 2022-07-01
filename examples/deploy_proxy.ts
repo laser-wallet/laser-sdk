@@ -1,7 +1,6 @@
 import { ethers, utils } from "ethers";
 import { FACTORY_GOERLI, FACTORY_MAINNET } from "../src/constants";
 import dotenv from "dotenv";
-import { factoryAbi } from "../src/abis/LaserProxyFactory.json";
 import { Factory } from "../src/sdk/Factory";
 
 /**
@@ -30,7 +29,6 @@ async function main(): Promise<void> {
     // }    
 
     console.log("singleton -->", await factory.getSingleton());
-    console.log("runtime -->", await factory.proxyRuntimeCode());
 
     const owner = new ethers.Wallet(`${process.env.PK}`);
 
@@ -40,25 +38,18 @@ async function main(): Promise<void> {
     // We create a random guardian ...
     const guardian = ethers.Wallet.createRandom().address;
 
-    // We  listen to the event ...
-    await factory.on();
-
     // Here we precompute the address. (know the address in advanced).
     const ownerAddress = owner.address;
 
     /// NOTE: If any of the parameters change, the address will be completely different.
     const dataInitializer = factory.encodeFunctionData([ownerAddress, recoveryOwner, [guardian]]);
 
-    const address = await factory.preComputeAddress(dataInitializer);
 
-    console.log("PRE COMPUTED address -->", address);
-
-    // try {
-    //     // It takes some time, around 1 min.
-    //     await factory.createProxyWithCreate2(owner.address, recoveryOwner, [guardian]);
-    // } catch (e) {
-    //     throw Error(`Error with createProxy ${e}`);
-    // }
+    try {
+        const receipt = await factory.createProxyWithCreate2(owner.address, recoveryOwner, [guardian]);
+        console.log(receipt);
+    } catch (e) {
+        throw Error(`Error with createProxy ${e}`);
+    }
 }
 
-main();

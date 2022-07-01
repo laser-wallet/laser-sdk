@@ -1,20 +1,24 @@
-import { ethers, Contract, utils } from "ethers";
+import { ethers, Contract, utils, ContractReceipt } from "ethers";
 import { Wallet } from "@ethersproject/wallet";
 import { Provider } from "@ethersproject/providers";
 import { Address, FACTORY_FUNCS, LASER_FUNCS } from "../types";
 import { ZERO, SALT } from "../constants/constants";
-import { factoryAbi } from "../abis/LaserProxyFactory.json";
+import { LaserProxyFactory__factory, LaserProxyFactory } from "../typechain";
 
 interface IFactory {
     getSingleton(): Promise<Address>;
     proxyRuntimeCode(): Promise<string>;
     proxyCreationCode(): Promise<string>;
-    createProxy(owner: Address, recoveryOwner: Address, guardians: Address[]): Promise<Address>;
+    createProxy(
+        owner: Address,
+        recoveryOwner: Address,
+        guardians: Address[]
+    ): Promise<ContractReceipt>;
     createProxyWithCreate2(
         owner: Address,
         recoveryOwner: Address,
         guardians: Address[]
-    ): Promise<Address>;
+    ): Promise<ContractReceipt>;
     preComputeAddress(dataInitializer: string, owner: Address): Promise<Address>;
 }
 
@@ -22,14 +26,9 @@ interface IFactory {
  * @dev Class that has all the methods to read/write to a Laser wallet.
  */
 export class Factory implements IFactory {
-    get address(): Address {
-        return this.factory.address;
-    }
-
     readonly provider: Provider;
     readonly relayer: Wallet;
-    readonly factory: Contract;
-    readonly abi = factoryAbi;
+    readonly factory: LaserProxyFactory;
 
     /**
      * @chainId The id of the chain for this connection (e.g 1 for mainnet).
@@ -39,9 +38,8 @@ export class Factory implements IFactory {
     constructor(_provider: Provider, relayer: Wallet, factoryAddress: Address) {
         this.provider = _provider;
         this.relayer = relayer;
-        this.factory = new ethers.Contract(
+        this.factory = LaserProxyFactory__factory.connect(
             factoryAddress,
-            this.abi,
             this.relayer.connect(this.provider)
         );
     }
@@ -156,15 +154,14 @@ export class Factory implements IFactory {
         owner: Address,
         recoveryOwner: Address,
         guardians: Address[]
-    ): Promise<Address> {
+    ): Promise<ContractReceipt> {
         await this.checkParams(owner, recoveryOwner, guardians);
         const dataPayload = this.encodeFunctionData([owner, recoveryOwner, guardians]);
-
         try {
             const transaction = await this.factory.createProxy(dataPayload);
             const receipt = await transaction.wait();
+            return receipt;
             // Returns the address of the new wallet.
-            return receipt.events[1].args.proxy;
         } catch (e) {
             throw Error(`Error with createProxy: ${e}`);
         }
@@ -182,15 +179,14 @@ export class Factory implements IFactory {
         owner: Address,
         recoveryOwner: Address,
         guardians: Address[]
-    ): Promise<Address> {
+    ): Promise<ContractReceipt> {
         await this.checkParams(owner, recoveryOwner, guardians);
         const dataPayload = this.encodeFunctionData([owner, recoveryOwner, guardians]);
 
         try {
             const transaction = await this.factory.createProxyWithNonce(dataPayload, SALT);
             const receipt = await transaction.wait();
-            // Returns the address of the new wallet.
-            return receipt.events[1].args.proxy;
+            return receipt;
         } catch (e) {
             throw Error(`Error with createProxy: ${e}`);
         }

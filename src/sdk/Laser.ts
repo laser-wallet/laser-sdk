@@ -2,7 +2,8 @@ import { Provider } from "@ethersproject/providers";
 import { Wallet } from "@ethersproject/wallet";
 import { BigNumber, BigNumberish, Contract, ethers, providers } from "ethers";
 import erc20Abi from "../abis/erc20.abi.json";
-import { abi as walletAbi } from "../abis/LaserWallet.json";
+import { LaserWallet__factory, LaserWallet } from "../typechain";
+import { walletAbi } from "../abis";
 import { ZERO, emptyTransaction } from "../constants";
 import {
     Address,
@@ -48,7 +49,7 @@ interface ILaser {
 export class Laser extends Helper implements ILaser {
     readonly provider: Provider;
     readonly signer: Wallet;
-    readonly wallet: Contract; // The actual wallet.
+    readonly wallet: LaserWallet;
 
     /**
      * @param _provider JsonRpc ethers provider.
@@ -59,7 +60,10 @@ export class Laser extends Helper implements ILaser {
         super(_provider, walletAddress);
         this.provider = _provider;
         this.signer = _signer;
-        this.wallet = new Contract(walletAddress, walletAbi, this.signer.connect(this.provider));
+        this.wallet = LaserWallet__factory.connect(
+            walletAddress,
+            this.signer.connect(this.provider)
+        );
     }
 
     /**

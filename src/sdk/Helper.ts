@@ -2,7 +2,7 @@ import { BigNumberish, Contract, ethers, utils, BigNumber } from "ethers";
 import { View } from "./View";
 import { Provider } from "@ethersproject/providers";
 import { Address } from "../types";
-import { abi } from "../abis/LaserWallet.json";
+import { LaserWallet__factory, LaserWallet } from "../typechain";
 import { MAGIC_VALUE, ZERO } from "../constants";
 import { TransactionInfo, Transaction, LASER_FUNCS, BlockOutput } from "../types";
 import erc20Abi from "../abis/erc20.abi.json";
@@ -18,13 +18,13 @@ interface SimulationResults {
 export class Helper extends View {
     readonly provider: Provider;
     readonly walletAddress: Address;
-    readonly wallet: Contract;
+    readonly wallet: LaserWallet;
 
     constructor(_provider: Provider, _walletAddress: Address) {
         super(_provider, _walletAddress);
         this.provider = _provider;
         this.walletAddress = _walletAddress;
-        this.wallet = new Contract(this.walletAddress, abi, this.provider);
+        this.wallet = LaserWallet__factory.connect(_walletAddress, this.provider);
     }
 
     /**
@@ -94,7 +94,7 @@ export class Helper extends View {
      */
     async isGuardian(_address: string): Promise<boolean> {
         const address = await this.verifyAddress(_address);
-        return await this.wallet.isGuardian(address);
+        return this.wallet.isGuardian(address);
     }
 
     /**
@@ -116,7 +116,7 @@ export class Helper extends View {
      * @returns The has of the transaction to sign.
      */
     async getHash(transaction: Transaction): Promise<string> {
-        const hash = await this.wallet.operationHash(
+        return this.wallet.operationHash(
             transaction.to,
             transaction.value,
             transaction.callData,
@@ -125,17 +125,12 @@ export class Helper extends View {
             transaction.maxPriorityFeePerGas,
             transaction.gasTip
         );
-        return hash;
     }
 
-    /**
-     * @param tx Basic Laser transaction (to, value, data).
-     * @returns Transaction's call gas
-     */
     async simulateTransaction(transaction: Transaction): Promise<BigNumberish> {
-        const pWallet = new ethers.Contract(this.wallet.address, abi, this.provider);
+        const walletForSimulation = LaserWallet__factory.connect(this.walletAddress, this.provider);
         try {
-            const callGas = await pWallet.callStatic.simulateTransaction(
+            const callGas = await walletForSimulation.callStatic.simulateTransaction(
                 transaction.to,
                 transaction.value,
                 transaction.callData,

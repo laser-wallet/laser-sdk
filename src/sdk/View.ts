@@ -1,7 +1,7 @@
 import { Contract, ethers, utils, BigNumberish } from "ethers";
 import { Provider } from "@ethersproject/providers";
 import { Address, ChainInfo } from "../types";
-import { abi } from "../abis/LaserWallet.json";
+import { LaserWallet__factory, LaserWallet } from "../typechain";
 
 /**
  * @dev Contains all view methods for Laser.
@@ -25,12 +25,12 @@ interface IView {
 export class View implements IView {
     provider: Provider;
     walletAddress: Address;
-    wallet: Contract;
+    wallet: LaserWallet;
 
     constructor(_provider: Provider, _walletAddress: Address) {
         this.provider = _provider;
         this.walletAddress = _walletAddress;
-        this.wallet = new Contract(this.walletAddress, abi, this.provider);
+        this.wallet = LaserWallet__factory.connect(_walletAddress, this.provider);
     }
 
     /**
@@ -44,49 +44,50 @@ export class View implements IView {
      * @returns the current version of the wallet.
      */
     async getVersion(): Promise<string> {
-        return await this.wallet.VERSION();
+        return this.wallet.VERSION();
     }
 
     /**
      * @returns the nonce of the  wallet.
      */
     async getNonce(): Promise<string> {
-        return (await this.wallet.nonce()).toString();
+        const nonce = await this.wallet.nonce();
+        return nonce.toString();
     }
 
     /**
      * @returns The address of the owner of this wallet.
      */
     async getOwner(): Promise<Address> {
-        return await this.wallet.owner();
+        return this.wallet.owner();
     }
 
     /**
      * @returns The address of the recovery owner of this wallet.
      */
     async getRecoveryOwner(): Promise<Address> {
-        return await this.wallet.recoveryOwner();
+        return this.wallet.recoveryOwner();
     }
 
     /**
      * @returns The guardians of this wallet.
      */
     async getGuardians(): Promise<Address[]> {
-        return await this.wallet.getGuardians();
+        return this.wallet.getGuardians();
     }
 
     /**
      * @returns The balance in WEI of this wallet.
      */
     async getBalance(): Promise<BigNumberish> {
-        return await this.provider.getBalance(this.wallet.address);
+        return this.provider.getBalance(this.wallet.address);
     }
 
     /**
      * @returns The singleton address. The master copy where all logic is handled.
      */
     async getSingleton(): Promise<Address> {
-        return await this.wallet.singleton();
+        return this.wallet.singleton();
     }
 
     /**
@@ -94,7 +95,7 @@ export class View implements IView {
      * @notice If the wallet is locked, the recovery procedure comes in play.
      */
     async isWalletLocked(): Promise<boolean> {
-        return await this.wallet.isLocked();
+        return this.wallet.isLocked();
     }
 
     /**
@@ -102,7 +103,7 @@ export class View implements IView {
      * @notice In case guardians are misbehaving, the owner + recovery owner can lock the wallet.
      */
     async areGuardiansBlocked(): Promise<boolean> {
-        return await this.wallet.guardiansBlocked();
+        return this.wallet.guardiansBlocked();
     }
 
     /**

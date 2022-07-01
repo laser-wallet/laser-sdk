@@ -11,6 +11,17 @@ const laserWallet = new laser.Laser(provider, owner, walletAddress);
 
 ```
 
+## Building: 
+
+```
+npm i
+```
+### Generate types: 
+
+```
+npm run generate-types
+```
+
 ## License
 
 #### LGPL-3.0 License.
