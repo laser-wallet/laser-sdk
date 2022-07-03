@@ -1,5 +1,11 @@
 # laser-sdk
 
+## 0.3.2
+
+### Patch Changes
+
+-   ebb3093: Fix Ropsten and Kovan addresses
+
 ## 0.3.1
 
 ### Patch Changes
