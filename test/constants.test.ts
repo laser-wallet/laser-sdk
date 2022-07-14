@@ -10,9 +10,7 @@ describe("Constants", () => {
     });
 
     it("should have correct magic value", async () => {
-        const hash = ethers.utils.keccak256(
-            ethers.utils.toUtf8Bytes("isValidSignature(bytes32,bytes)")
-        );
+        const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("isValidSignature(bytes32,bytes)"));
         const magicValue = hash.slice(0, 10);
         expect(magicValue).to.equal(MAGIC_VALUE);
     });

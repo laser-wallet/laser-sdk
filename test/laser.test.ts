@@ -27,9 +27,7 @@ describe("Laser Wallet", () => {
     it("should have correct owner", async () => {
         const walletOwner = await wallet.getOwner();
         if (walletOwner.toLowerCase() !== owner.address.toLowerCase()) {
-            throw Error(
-                "Wallet owner is not the same as the provided owner, tests will not work properly."
-            );
+            throw Error("Wallet owner is not the same as the provided owner, tests will not work properly.");
         }
     });
 

@@ -15,10 +15,7 @@ export const emptyTransaction: Transaction = {
     nonce: "",
     maxFeePerGas: "",
     maxPriorityFeePerGas: "",
-    gasTip: "",
+    gasLimit: "",
+    relayer: ethers.constants.AddressZero,
     signatures: "",
-    chainInfo: {
-        chainId: "",
-        name: "",
-    },
 };

@@ -1,9 +1,9 @@
 import { Laser } from "./sdk/Laser";
-import { Factory } from "./sdk/Factory";
+import { LaserFactory } from "./sdk/LaserFactory";
 import { Helper } from "./sdk/Helper";
-import { View } from "./sdk/View";
+import { LaserView } from "./sdk/LaserView";
 import * as constants from "./constants";
 import * as abis from "./abis";
 import * as utils from "./utils";
 
-export { Laser, Factory, Helper, View, constants, abis, utils };
+export { Laser, LaserFactory, Helper, LaserView, constants, abis, utils };

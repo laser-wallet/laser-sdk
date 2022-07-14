@@ -1,62 +1,31 @@
 import { BigNumberish, Contract, ethers, utils, BigNumber } from "ethers";
-import { View } from "./View";
 import { Provider } from "@ethersproject/providers";
 import { Address } from "../types";
 import { LaserWallet__factory, LaserWallet } from "../typechain";
 import { MAGIC_VALUE, ZERO } from "../constants";
-import { TransactionInfo, Transaction, LASER_FUNCS, BlockOutput } from "../types";
+import { TransactionInfo, Transaction } from "../types";
 import erc20Abi from "../abis/erc20.abi.json";
 
-interface SimulationResults {
-    preOpGas: BigNumberish;
-    prefund: BigNumberish;
-}
-
 /**
- * @dev Helper methods for Laser.
+ * @dev Helper methods for Laser class and paralel classes.
  */
-export class Helper extends View {
-    readonly provider: Provider;
-    readonly walletAddress: Address;
-    readonly wallet: LaserWallet;
-
-    constructor(_provider: Provider, _walletAddress: Address) {
-        super(_provider, _walletAddress);
-        this.provider = _provider;
-        this.walletAddress = _walletAddress;
-        this.wallet = LaserWallet__factory.connect(_walletAddress, this.provider);
-    }
-
-    /**
-     * @dev Encodes data.
-     * @param funcName The name of the function.
-     * @param _params The parameters inside of an array. Empty array if there are no params.
-     * @returns Encoded data payload.
-     */
-    encodeFunctionData(abi: any, funcName: string, ..._params: any[]): string {
+export class Helper {
+    static encodeFunctionData(abi: any, funcName: string, ..._params: any[]): string {
         const params = _params[0];
         return new utils.Interface(abi).encodeFunctionData(funcName, params);
     }
 
-    /**
-     * @returns True if the address is a contract, false if not.
-     */
-    async isContract(_address: Address): Promise<boolean> {
-        const address = await this.verifyAddress(_address);
-        const code = await this.provider.getCode(address);
+    static async isContract(provider: Provider, _address: Address): Promise<boolean> {
+        const address = await Helper.verifyAddress(provider, _address);
+        const code = await provider.getCode(address);
+
         return code.length > 2 ? true : false;
     }
 
-    /**
-     * @returns The given value in ETH or value / 10 * 10 **18.
-     */
     static toEth(amount: BigNumberish): BigNumberish {
-        return utils.formatEther(amount).toString();
+        return utils.formatEther(amount);
     }
 
-    /**
-     * @returns The given value in WEI or value * 10 ** 18.
-     */
     static toWei(amount: BigNumberish): BigNumberish {
         return ethers.utils.parseEther(amount.toString());
     }
@@ -66,9 +35,9 @@ export class Helper extends View {
      * @param address ENS or regular ethereum address to verify.
      * @returns The correct address.
      */
-    async verifyAddress(address: Address): Promise<Address> {
+    static async verifyAddress(provider: Provider, address: Address): Promise<Address> {
         if (address.includes(".")) {
-            const result = await this.provider.resolveName(address);
+            const result = await provider.resolveName(address);
             if (!result) throw Error("Invalid ENS");
             else return result;
         } else if (address.length === 42) {
@@ -78,72 +47,30 @@ export class Helper extends View {
         }
     }
 
-    /**
-     * @param _address  Address to check if it is an owner of the current wallet.
-     * @returns true if owner, false if not.
-     */
-    async isOwner(_address: string): Promise<boolean> {
-        const address = await this.verifyAddress(_address);
-        const owner = await this.getOwner();
-        return address.toLowerCase() === owner.toLowerCase();
-    }
-
-    /**
-     * @param _address  Address to check if it is a guardian of the current wallet.
-     * @returns true if guardian, false if not.
-     */
-    async isGuardian(_address: string): Promise<boolean> {
-        const address = await this.verifyAddress(_address);
-        return this.wallet.isGuardian(address);
-    }
-
-    /**
-     * @param hash that was signed by the owners.
-     * @param signatures of the message.
-     * @returns true if the signature is valid for the wallet.
-     */
-    async isValidSignature(hash: string, signatures: string): Promise<boolean> {
+    static async simulateTransaction(
+        provider: Provider,
+        laserAddress: Address,
+        transaction: Transaction
+    ): Promise<BigNumberish> {
+        const walletForSimulation = LaserWallet__factory.connect(laserAddress, provider);
         try {
-            const res = await this.wallet.isValidSignature(hash, signatures);
-            return res.toLowerCase() === MAGIC_VALUE.toLowerCase();
-        } catch (e) {
-            throw Error(`Error in isValidSignature, probably not valid: ${e}`);
-        }
-    }
-
-    /**
-     * @param transaction Transaction type.
-     * @returns The has of the transaction to sign.
-     */
-    async getHash(transaction: Transaction): Promise<string> {
-        return this.wallet.operationHash(
-            transaction.to,
-            transaction.value,
-            transaction.callData,
-            transaction.nonce,
-            transaction.maxFeePerGas,
-            transaction.maxPriorityFeePerGas,
-            transaction.gasTip
-        );
-    }
-
-    async simulateTransaction(transaction: Transaction): Promise<BigNumberish> {
-        const walletForSimulation = LaserWallet__factory.connect(this.walletAddress, this.provider);
-        try {
-            const callGas = await walletForSimulation.callStatic.simulateTransaction(
+            const totalGas = await walletForSimulation.callStatic.simulateTransaction(
                 transaction.to,
                 transaction.value,
                 transaction.callData,
                 transaction.nonce,
                 transaction.maxFeePerGas,
                 transaction.maxPriorityFeePerGas,
-                transaction.gasTip,
+                transaction.gasLimit,
                 transaction.signatures,
                 {
                     from: ZERO,
+                    gasLimit: transaction.gasLimit,
+                    maxFeePerGas: transaction.maxFeePerGas,
+                    maxPriorityFeePerGas: transaction.maxPriorityFeePerGas,
                 }
             );
-            return callGas;
+            return totalGas;
         } catch (e) {
             throw Error(`Error in transaction simulation ${e}`);
         }
@@ -152,8 +79,8 @@ export class Helper extends View {
     /**
      * @returns The base fee of the latest block.
      */
-    async getBaseFee(): Promise<BigNumberish> {
-        const latestBlock = await this.provider.getBlock("latest");
+    static async getBaseFee(provider: Provider): Promise<BigNumberish> {
+        const latestBlock = await provider.getBlock("latest");
         const baseFeePerGas = latestBlock.baseFeePerGas;
         if (baseFeePerGas) {
             return baseFeePerGas.toString();
@@ -187,63 +114,43 @@ export class Helper extends View {
      * @param _tokenAddress The address of the required token.
      * @returns The token balance of the connected wallet.
      */
-    async getTokenBalance(_tokenAddress: Address): Promise<BigNumberish> {
-        const tokenAddress = await this.verifyAddress(_tokenAddress);
+    static async getTokenBalance(
+        provider: Provider,
+        requested: Address,
+        _tokenAddress: Address
+    ): Promise<BigNumberish> {
+        const tokenAddress = await Helper.verifyAddress(provider, _tokenAddress);
 
-        // The tokenAddress needs to be a contract.
-        if (!(await this.isContract(tokenAddress))) {
-            throw Error("Token address is not a contract.");
-        }
-
-        const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, this.provider);
+        const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, provider);
         try {
-            return tokenContract.balanceOf(this.wallet.address);
+            return tokenContract.balanceOf(requested);
         } catch (e) {
-            throw Error(
-                `Invalid balance call, probably the address is not ERC-20 compatible: ${e}`
-            );
+            throw Error(`Invalid balance call, probably the address is not ERC-20 compatible: ${e}`);
         }
     }
 
     /**
-     * @param _tokenAddress The address of the required token.
      * @returns The token balance of the connected wallet without decimals.
      */
-    async getConvertedTokenBalance(_tokenAddress: Address): Promise<BigNumberish> {
-        const balance = await this.getTokenBalance(_tokenAddress);
-        const tokenContract = new ethers.Contract(_tokenAddress, erc20Abi, this.provider);
-        const decimals = await tokenContract.decimals();
-        return ethers.utils.formatUnits(balance, decimals);
-    }
+    // static async getConvertedTokenBalance(_tokenAddress: Address): Promise<BigNumberish> {
+    //     const balance = await this.getTokenBalance(_tokenAddress);
+    //     const tokenContract = new ethers.Contract(_tokenAddress, erc20Abi, this.provider);
+    //     const decimals = await tokenContract.decimals();
+    //     return ethers.utils.formatUnits(balance, decimals);
+    // }
 
-    /**
-     * @dev Checks that the wallet has enough gas for the transaction.
-     * @note NOT FINAL !!
-     */
-    checkGas(txInfo: TransactionInfo, walletBalance: BigNumberish) {
-        const baseGas = 40000; // This should be properly calculated, not final!!!
-        const totalGas = BigNumber.from(baseGas).add(txInfo.gasTip);
-        const ethCost = totalGas.mul(txInfo.maxFeePerGas);
-        const balance = Helper.toWei(walletBalance);
+    // /**
+    //  * @dev Checks that the wallet has enough gas for the transaction.
+    //  * @note NOT FINAL !!
+    //  */
+    // checkGas(txInfo: TransactionInfo, walletBalance: BigNumberish) {
+    //     const baseGas = 40000; // This should be properly calculated, not final!!!
+    //     const totalGas = BigNumber.from(baseGas).add(txInfo.gasTip);
+    //     const ethCost = totalGas.mul(txInfo.maxFeePerGas);
+    //     const balance = Helper.toWei(walletBalance);
 
-        if (BigNumber.from(balance).lt(BigNumber.from(ethCost))) {
-            throw Error("Insufficient gas cost.");
-        }
-    }
-
-    /**
-     * @dev Listens each block and logs the block's result if the connected wallet
-     * sent or received a transaction.
-     */
-    async listenBlocks(): Promise<void> {
-        this.provider.on("block", async (blockNumber) => {
-            const blockWithTransactions = await this.provider.getBlockWithTransactions(blockNumber);
-            const transactions = blockWithTransactions.transactions;
-            const target = this.wallet.address.toLowerCase();
-            const targetBlock = transactions.filter(
-                (tx) => tx.to?.toLowerCase() === target || tx.from.toLowerCase() === target
-            );
-            console.log(targetBlock);
-        });
-    }
+    //     if (BigNumber.from(balance).lt(BigNumber.from(ethCost))) {
+    //         throw Error("Insufficient gas cost.");
+    //     }
+    // }
 }

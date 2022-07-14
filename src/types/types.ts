@@ -10,13 +10,8 @@ export const types = {
         { type: "uint256", name: "nonce" },
         { type: "uint256", name: "maxFeePerGas" },
         { type: "uint256", name: "maxPriorityFeePerGas" },
-        { type: "uint256", name: "gasTip" },
+        { type: "uint256", name: "gasLimit" },
     ],
-};
-
-export type ChainInfo = {
-    chainId: number | string;
-    name: string;
 };
 
 export type Domain = {
@@ -38,9 +33,9 @@ export interface Transaction {
     nonce: BigNumberish;
     maxFeePerGas: BigNumberish;
     maxPriorityFeePerGas: BigNumberish;
-    gasTip: BigNumberish;
+    gasLimit: BigNumberish;
+    relayer: Address;
     signatures: string;
-    chainInfo: ChainInfo;
 }
 
 export interface LaserTypes {
@@ -50,28 +45,12 @@ export interface LaserTypes {
     nonce: BigNumberish;
     maxFeePerGas: BigNumberish;
     maxPriorityFeePerGas: BigNumberish;
-    gasTip: BigNumberish;
+    gasLimit: BigNumberish;
 }
 
 export interface TransactionInfo {
     maxFeePerGas: BigNumberish;
     maxPriorityFeePerGas: BigNumberish;
-    gasTip: BigNumberish;
-}
-
-export interface BlockOutput {
-    hash: string;
-    type: BigNumberish;
-    blockHash: string;
-    blockNumber: BigNumberish;
-    confirmations: BigNumberish;
-    from: Address;
-    gasPrice: BigNumberish;
-    maxPriorityFeePerGas: BigNumberish;
-    maxFeePerGas: BigNumberish;
     gasLimit: BigNumberish;
-    to: Address;
-    value: BigNumberish;
-    nonce: BigNumberish;
-    data: string;
+    relayer: Address;
 }

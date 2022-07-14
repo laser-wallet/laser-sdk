@@ -1,4 +1,1 @@
-import * as laser from "./laser";
-
-export { laser };
-export { Laser, Factory, Helper, View, constants, abis, utils } from "./laser";
+export { Laser, LaserFactory, Helper, LaserView, constants, abis, utils } from "./laser";
