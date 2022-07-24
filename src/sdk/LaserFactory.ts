@@ -96,7 +96,6 @@ export class LaserFactory implements ILaserFactory {
         // The wallet is not created yet.
         const preComputedAddress = await this.preComputeAddress(owner, recoveryOwners, guardians, saltNumber);
         const balance = await this.provider.getBalance(preComputedAddress);
-
         const latestBlock = await this.provider.getBlock("latest");
         const baseFee = BigNumber.from(latestBlock.baseFeePerGas);
 
@@ -113,7 +112,6 @@ export class LaserFactory implements ILaserFactory {
                 : maxPriorityFeePerGas.add(baseFee);
         }
         const refundAmount = gasLimit.mul(gasPrice);
-
         if (balance.lt(refundAmount)) {
             throw Error("Wallet does not have enough ETH to pay the relayer for wallet creation.");
         }
@@ -243,7 +241,7 @@ export class LaserFactory implements ILaserFactory {
         saltNumber: BigNumberish,
         relayer: Address,
         ownerSignature: string
-    ): Promise<ContractReceipt> {
+    ): Promise<any> {
         // Checks the correctness of all the parameters.
         await this.checkParams(
             owner,
@@ -257,38 +255,29 @@ export class LaserFactory implements ILaserFactory {
             ownerSignature
         );
 
-        if (gasLimit > 0) {
-            // If gas limit is 0, the wallet does not refund the relayer.
-            // Therefore, we don't need to check if the wallet has funds to payback.
-            await this.verifyPayment(
-                owner,
-                recoveryOwners,
-                guardians,
-                maxFeePerGas,
-                maxPriorityFeePerGas,
-                gasLimit,
-                saltNumber
-            );
-        }
+        await this.verifyPayment(
+            owner,
+            recoveryOwners,
+            guardians,
+            maxFeePerGas,
+            maxPriorityFeePerGas,
+            gasLimit,
+            saltNumber
+        );
+        const price = BigNumber.from(gasLimit).mul(maxFeePerGas);
 
-        try {
-            const transaction = await this.factory.deployProxyAndRefund(
-                owner,
-                recoveryOwners,
-                guardians,
-                maxFeePerGas,
-                maxPriorityFeePerGas,
-                gasLimit,
-                relayer,
-                saltNumber,
-                ownerSignature,
-                { gasLimit: gasLimit, maxFeePerGas: maxFeePerGas, maxPriorityFeePerGas: maxPriorityFeePerGas }
-            );
-            const receipt = await transaction.wait();
-            return receipt;
-        } catch (e) {
-            throw Error(`Error with createProxy: ${e}`);
-        }
+        return this.factory.deployProxyAndRefund(
+            owner,
+            recoveryOwners,
+            guardians,
+            maxFeePerGas,
+            maxPriorityFeePerGas,
+            gasLimit,
+            relayer,
+            saltNumber,
+            ownerSignature,
+            { gasLimit: gasLimit, maxFeePerGas: maxFeePerGas, maxPriorityFeePerGas: maxPriorityFeePerGas }
+        );
     }
 
     /**

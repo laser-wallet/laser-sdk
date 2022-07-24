@@ -1,5 +1,5 @@
 import { Address, Transaction, TransactionInfo } from "../../types";
-import { BigNumberish, providers } from "ethers";
+import { BigNumberish, providers, ContractReceipt } from "ethers";
 
 /**
  * @title ILaser - interface for Laser's core logic.
@@ -7,19 +7,19 @@ import { BigNumberish, providers } from "ethers";
  */
 export interface ILaser {
     ///@dev Generic Laser transaction
-    execTransaction(transaction: Transaction): Promise<providers.TransactionResponse>;
+    execTransaction(transaction: Transaction): Promise<any>;
 
-    changeOwner(newOwner: Address, txInfo: TransactionInfo): Promise<Transaction>;
+    lockWallet(txInfo: TransactionInfo): Promise<Transaction>;
 
-    lock(txInfo: TransactionInfo): Promise<Transaction>;
-
-    unlock(txInfo: TransactionInfo): Promise<Transaction>;
+    unlockWallet(txInfo: TransactionInfo): Promise<Transaction>;
 
     recoveryUnlock(txInfo: TransactionInfo): Promise<Transaction>;
 
     unlockGuardians(txInfo: TransactionInfo): Promise<Transaction>;
 
     recover(newOwner: Address, txInfo: TransactionInfo): Promise<Transaction>;
+
+    changeOwner(newOwner: Address, txInfo: TransactionInfo): Promise<Transaction>;
 
     addGuardian(newGuardian: Address, txInfo: TransactionInfo): Promise<Transaction>;
 

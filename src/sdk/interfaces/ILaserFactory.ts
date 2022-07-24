@@ -23,7 +23,7 @@ export interface ILaserFactory {
         relayer: Address,
         saltNumber: BigNumberish,
         ownerSignature: string
-    ): Promise<ContractReceipt>;
+    ): Promise<any>;
 
     ///@dev Precomputes the address that will be deployed with 'createWallet'.
     ///The proxy is created through 'create2', so any change will output a different address.

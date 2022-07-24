@@ -4,18 +4,26 @@ import { Laser } from "../src/sdk/Laser";
 import { Helper } from "../src/sdk/Helper";
 import { TransactionInfo } from "../src/types";
 
+import {
+    RELAYER,
+    GUARDIAN1,
+    GUARDIAN2,
+    GUARDIANS,
+    RECOVERY_OWNER1,
+    RECOVERY_OWNER2,
+    RECOVERY_OWNERS,
+} from "./constants";
+
 dotenv.config();
 
-// We create the relayer ...
-// The relayer pays for gas costs, in this case, it would be us ...
-const relayer = new ethers.Wallet(`${process.env.PK}`);
-
-const owner = new ethers.Wallet(`${process.env.PK}`);
+const owner = new ethers.Wallet("6e509eb668b2f09f6253d7dbe7cfbf14a6131a2f0ed44ae623ca12635af7f5eb");
+// const RELAYER = owner;
 
 const providerUrl = `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`;
+const localHost = "http://127.0.0.1:8545/";
 
-const provider = new ethers.providers.JsonRpcProvider(providerUrl);
-const walletAddress = "0x3D0ED98DBF7614417257172B7834F314e940ED3D";
+const provider = new ethers.providers.JsonRpcProvider(localHost);
+const walletAddress = "0x227A1b90e1Dcdb59116997a0d37d4C33E80C113A";
 
 const laser = new Laser(provider, owner, walletAddress);
 
@@ -27,27 +35,44 @@ const laser = new Laser(provider, owner, walletAddress);
     const baseFee = latestBlock.baseFeePerGas;
     const feeData = await provider.getFeeData();
     const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
-    const maxFeePerGas = BigNumber.from(2).mul(BigNumber.from(baseFee)).mul(BigNumber.from(maxPriorityFeePerGas));
-    const gasLimit = 400000;
+    const maxFeePerGas = BigNumber.from(2).mul(BigNumber.from(baseFee)).add(BigNumber.from(maxPriorityFeePerGas));
+    const gasLimit = 300000;
 
     const txInfo: TransactionInfo = {
         maxFeePerGas: maxFeePerGas,
         maxPriorityFeePerGas: maxPriorityFeePerGas ? maxPriorityFeePerGas : 2000000000,
         gasLimit: gasLimit,
-        relayer: relayer.address,
+        relayer: RELAYER.address,
     };
 
-    const newOwner = "0x1d303ee27641b83E103d0977BAA9c5993A8743D9";
-    const transaction = await laser.changeOwner(newOwner, txInfo);
+    const guardians = await laser.getGuardians();
+    const transaction = await laser.sendEth(guardians[0], 0.01, txInfo);
 
-    const relayerLaser = new Laser(provider, relayer, walletAddress);
+    const relayerLaser = new Laser(provider, RELAYER, walletAddress);
 
-    // reverts on error
+    const relayerBal = await provider.getBalance(RELAYER.address);
+
     await Helper.simulateTransaction(provider, walletAddress, transaction);
 
     try {
-        await relayerLaser.execTransaction(transaction);
+        const tx = await relayerLaser.execTransaction(transaction);
+        const receipt = await tx.wait();
+        const gasPrice = receipt.effectiveGasPrice.toString();
+        const relayerPostBalance = await provider.getBalance(RELAYER.address);
+        const diff = BigNumber.from(relayerBal).sub(relayerPostBalance);
+        const gasDiff = diff.div(gasPrice);
+        console.log("gas dif -->", gasDiff.toString());
+        console.log("gas price -->", gasPrice.toString());
+        const ethDiff = relayerBal.sub(relayerPostBalance);
+
+        console.log("eth dif -->", ethers.utils.formatEther(ethDiff));
     } catch (e) {
         throw Error(`Error in execTransaction: ${e}`);
     }
 })();
+
+// sending eth: 63123
+// adding recovery owner (guardian): 93895
+// eliminating a recovery owner (guardian): 71 k.
+
+// 351219

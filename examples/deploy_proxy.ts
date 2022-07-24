@@ -1,52 +1,41 @@
 import { ethers, utils, BigNumber } from "ethers";
 import dotenv from "dotenv";
 import { LaserFactory } from "../src/sdk/LaserFactory";
-import { address as FACTORY_GOERLI } from "../src/deployments/goerli/LaserFactory.json";
 import { sign } from "../src/utils/signatures";
 
-dotenv.config();
+import {
+    RELAYER,
+    GUARDIAN1,
+    GUARDIAN2,
+    GUARDIANS,
+    RECOVERY_OWNER1,
+    RECOVERY_OWNER2,
+    RECOVERY_OWNERS,
+} from "./constants";
 
-// We create the relayer ...
-// The relayer pays for gas costs, in this case, it would be us ...
-const relayer = new ethers.Wallet(`${process.env.PK}`);
+const owner = new ethers.Wallet("6e509eb668b2f09f6253d7dbe7cfbf14a6131a2f0ed44ae623ca12635af7f5eb");
+
+// const RELAYER = owner;
+dotenv.config();
 
 const providerUrl = `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`;
 
-const provider = new ethers.providers.JsonRpcProvider(providerUrl);
-
-const factory = new LaserFactory(provider, relayer, FACTORY_GOERLI);
+const localHost = "http://127.0.0.1:8545/";
+const provider = new ethers.providers.JsonRpcProvider(localHost);
 
 // This function creates a new wallet and logs the address to the terminal.
 (async function () {
     // Wallet initialization params.
-    const owner = new ethers.Wallet(`${process.env.PK}`);
-
-    // There needs to be at least 2 recovery owners.
-    const recoveryOwner = new ethers.Wallet("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80")
-        .address;
-    const recoveryOwner2 = new ethers.Wallet("0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d")
-        .address;
-    const recoveryOwners = [recoveryOwner, recoveryOwner2];
-
-    // There needs to be at least 2 guardians.
-    const guardian = new ethers.Wallet("0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba").address;
-    const guardian2 = new ethers.Wallet("0xf214f2b2cd398c806f84e317254e0f0b801d0643303237d97a22a48e01628897").address;
-    const guardians = [guardian, guardian2];
-
+    const factory = new LaserFactory(provider, RELAYER, "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0");
     // gas params.
     const latestBlock = await provider.getBlock("latest");
     const baseFee = latestBlock.baseFeePerGas;
     const feeData = await provider.getFeeData();
     const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
-    const maxFeePerGas = BigNumber.from(2).mul(BigNumber.from(baseFee)).mul(BigNumber.from(maxPriorityFeePerGas));
-    const gasLimit = 400000; // If there are a lot of owners this can change.
-
-    // The relayer's address.
-    const _relayer = relayer.address;
-
+    const maxFeePerGas = BigNumber.from(2).mul(BigNumber.from(baseFee)).add(BigNumber.from(maxPriorityFeePerGas));
+    const gasLimit = 500000; // If there are a lot of owners this can change.
     // The salt. It needs to be kept in the database (if it changes, the address will be different on deployment).
-    const salt = 12312342321;
-
+    const salt = Math.floor(Math.random() * 1000);
     // The signature
     const abiCoder = new ethers.utils.AbiCoder();
     const chainId = (await provider.getNetwork()).chainId;
@@ -57,25 +46,41 @@ const factory = new LaserFactory(provider, relayer, FACTORY_GOERLI);
         )
     );
     const signature = await sign(owner, dataHash);
-
     // Pre computing the address.
     // We only need the owner, recovery owners, guardians, and salt.
     // The other parameters will change upon creation (that is why we don't use them here).
-    const preComputedAddress = await factory.preComputeAddress(owner.address, recoveryOwners, guardians, salt);
-    console.log("precomputed address: ", preComputedAddress);
+    const preComputedAddress = await factory.preComputeAddress(owner.address, RECOVERY_OWNERS, GUARDIANS, salt);
+    console.log("precomputed address -->", preComputedAddress);
 
-    factory.on();
+    await GUARDIAN1.connect(provider).sendTransaction({ to: preComputedAddress, value: utils.parseEther("1") });
 
+    const relayerBal = await provider.getBalance(RELAYER.address);
+    console.log("relayer balance: ", ethers.utils.formatEther(relayerBal));
     // The wallet needs to have funds to pay the relayer back.
-    await factory.createWallet(
+    const tx = await factory.createWallet(
         owner.address,
-        recoveryOwners,
-        guardians,
+        RECOVERY_OWNERS,
+        GUARDIANS,
         maxFeePerGas,
         BigNumber.from(maxPriorityFeePerGas),
         gasLimit,
         salt,
-        _relayer,
+        RELAYER.address,
         signature
     );
+
+    const receipt = await tx.wait();
+
+    const gasPrice = receipt.effectiveGasPrice;
+    const relayerPostBalance = await provider.getBalance(RELAYER.address);
+
+    const diff = relayerBal.sub(relayerPostBalance);
+
+    const gasDiff = diff.div(gasPrice);
+
+    console.log("gas dif -->", gasDiff.toString());
+
+    const ethDiff = relayerBal.sub(relayerPostBalance);
+
+    console.log("eth dif -->", ethers.utils.formatEther(ethDiff));
 })();

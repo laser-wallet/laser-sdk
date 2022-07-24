@@ -2,7 +2,20 @@ import { ethers, utils, BigNumberish } from "ethers";
 import { Provider } from "@ethersproject/providers";
 import { Address, Transaction } from "../types";
 import { LaserWallet__factory, LaserWallet } from "../typechain";
+import { LaserHelper__factory, LaserHelper } from "../typechain";
+
 import { ILaserView } from "./interfaces/ILaserView";
+
+export type WalletState = {
+    owner: string;
+    singleton: string;
+    timeLock: BigNumberish;
+    isLocked: boolean;
+    guardians: Address[];
+    recoveryOwners: Address[];
+    nonce: BigNumberish;
+    balance: BigNumberish;
+};
 
 /**
  * @dev Class that contains all the relevant view methods to interact with a Laser wallet.
@@ -11,11 +24,13 @@ export class LaserView implements ILaserView {
     provider: Provider;
     walletAddress: Address;
     wallet: LaserWallet;
+    laserHelper: LaserHelper;
 
     constructor(_provider: Provider, _walletAddress: Address) {
         this.provider = _provider;
         this.walletAddress = _walletAddress;
         this.wallet = LaserWallet__factory.connect(_walletAddress, this.provider);
+        this.laserHelper = LaserHelper__factory.connect("0x5FbDB2315678afecb367f032d93F642f64180aa3", this.provider);
     }
 
     /**
@@ -23,6 +38,23 @@ export class LaserView implements ILaserView {
      */
     getAddress(): Address {
         return this.wallet.address;
+    }
+
+    async getWalletState(): Promise<WalletState> {
+        const { owner, singleton, timeLock, isLocked, guardiansLocked, guardians, recoveryOwners, nonce, balance } =
+            await this.laserHelper.getWalletState(this.wallet.address);
+
+        return {
+            owner,
+            singleton,
+            timeLock,
+            isLocked,
+            guardiansLocked,
+            guardians,
+            recoveryOwners,
+            nonce,
+            balance,
+        };
     }
 
     async getSingleton(): Promise<Address> {
