@@ -5,9 +5,19 @@
 ## Usage: 
 
 ```js
-import { laser } from "laser";
+import { Laser } from "laser-sdk";
 
-const laserWallet = new laser.Laser(provider, owner, walletAddress);
+const owner = new ethers.Wallet(pk);
+const provider = new ethers.providers.JsonRpcProvider(providerUrl);
+const walletAddress = "0x..";
+const LASER_MODULE = "0x..";
+const LASER_HELPER = "0X..";
+
+const laser = new Laser(provider, owner, walletAddress, LASER_MODULE, LASER_HELPER);
+
+
+// Gets the state
+await laser.getWalletState();
 
 ```
 
