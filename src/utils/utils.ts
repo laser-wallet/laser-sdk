@@ -1,6 +1,6 @@
 import { BigNumberish, utils, Contract, ethers } from "ethers";
 import { Provider } from "@ethersproject/providers";
-import { Address, Transaction } from "../types";
+import { Address, Transaction, PackedSignatures } from "../types";
 import { abi as SSRAbi } from "../deployments/localhost/LaserModuleSSR.json";
 import { LaserHelper__factory } from "../typechain";
 
@@ -101,4 +101,17 @@ export async function getBaseFee(provider: Provider): Promise<BigNumberish> {
     } else {
         throw Error("Could not get base fee per gas.");
     }
+}
+
+export function packSignatures(packedSigs: PackedSignatures): string {
+    ///@todo Do the process automatic.
+    if (packedSigs.signature1.length < 132) {
+        throw Error("Invalid signature1 length");
+    }
+
+    if (packedSigs.signature2.length < 132) {
+        throw Error("Invalid signature2 length");
+    }
+
+    return packedSigs.signature1 + packedSigs.signature2.slice(2);
 }

@@ -2,11 +2,11 @@ import { ethers, Contract, utils, ContractReceipt, BigNumberish, BigNumber } fro
 import { Wallet } from "@ethersproject/wallet";
 import { Provider } from "@ethersproject/providers";
 import { Address } from "../types";
-import { ZERO, SALT } from "../constants/constants";
+import { ZERO } from "../constants/constants";
 import { LaserFactory__factory, LaserFactory as _LaserFactory } from "../typechain";
 import { LaserWallet__factory, LaserWallet as _LaserWallet } from "../typechain";
 import { ILaserFactory } from "./interfaces/ILaserFactory";
-import { encodeFunctionData, initSSR } from "../utils";
+import { encodeFunctionData, initSSR, verifyAddress, isContract } from "../utils";
 
 /**
  * @title LaserFactory
@@ -66,18 +66,6 @@ export class LaserFactory implements ILaserFactory {
         // }
     }
 
-    async checksum(address: Address): Promise<Address> {
-        if (address.includes(".")) {
-            const result = await this.provider.resolveName(address);
-            if (!result) throw Error("Invalid ENS");
-            else return result;
-        } else if (address.length === 42) {
-            return utils.getAddress(address);
-        } else {
-            throw Error("Invalid address");
-        }
-    }
-
     /**
      * @dev Verifies that the wallet has balance to refund the relayer.
      */
@@ -131,11 +119,11 @@ export class LaserFactory implements ILaserFactory {
         relayer: Address,
         ownerSignature: string
     ): Promise<void> {
-        const owner = await this.checksum(_owner);
+        const owner = await verifyAddress(this.provider, _owner);
         if (owner.toLowerCase() === ZERO.toLowerCase()) {
             throw Error("Owner cannot be address 0.");
         }
-        if (await this.isContract(owner)) {
+        if (await isContract(this.provider, owner)) {
             throw Error("Owner cannot be a contract.");
         }
         if (guardians.length < 1) {
@@ -152,7 +140,7 @@ export class LaserFactory implements ILaserFactory {
         let dupRecoveryOwners: string[] = [];
 
         for (let i = 0; i < recoveryOwners.length; i++) {
-            const recoveryOwner = await this.checksum(recoveryOwners[i]);
+            const recoveryOwner = await verifyAddress(this.provider, recoveryOwners[i]);
             dupRecoveryOwners.push(recoveryOwner.toLowerCase());
             if (recoveryOwner.toLowerCase() === ZERO.toLowerCase()) {
                 throw Error("Recovery owner cannot be address 0.");
@@ -169,7 +157,7 @@ export class LaserFactory implements ILaserFactory {
         let dupGuardians: string[] = [];
 
         for (let i = 0; i < guardians.length; i++) {
-            const guardian = await this.checksum(guardians[i]);
+            const guardian = await verifyAddress(this.provider, guardians[i]);
             dupGuardians.push(guardian.toLowerCase());
             if (guardian.toLowerCase() === ZERO.toLowerCase()) {
                 throw Error("Guardian cannot be address 0.");
@@ -217,15 +205,6 @@ export class LaserFactory implements ILaserFactory {
     }
 
     /**
-     * @returns True if the address is a contract, false if it is an EOA.
-     */
-    async isContract(_address: Address): Promise<boolean> {
-        const address = await this.checksum(_address);
-        const code = await this.provider.getCode(address);
-        return code.length > 2 ? true : false;
-    }
-
-    /**
      * @dev Creates a new proxy (a new Laser wallet).
      * @param owner The owner of the wallet.
      * @param recoveryOwners The  addresses for the recovery owners (2 minimum).
@@ -267,7 +246,6 @@ export class LaserFactory implements ILaserFactory {
             gasLimit,
             saltNumber
         );
-        const price = BigNumber.from(gasLimit).mul(maxFeePerGas);
 
         const initData = initSSR(guardians, recoveryOwners);
         return this.factory.deployProxyAndRefund(

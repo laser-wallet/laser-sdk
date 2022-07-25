@@ -54,3 +54,10 @@ export type TransactionInfo = {
     gasLimit: BigNumberish;
     relayer: Address;
 };
+
+export type ModuleFuncs = "lock" | "unlock" | "recover";
+export type PackedSignatures = {
+    funcName: ModuleFuncs;
+    signature1: string;
+    signature2: string;
+};

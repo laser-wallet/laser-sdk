@@ -1,6 +1,6 @@
 import { BigNumber, BigNumberish, constants } from "ethers";
 import { Provider } from "@ethersproject/providers";
-import { WalletState } from "../sdk/LaserView";
+import { WalletState } from "../sdk/interfaces/ILaserView";
 import { Address } from "../types";
 import { addressEq, isContract, supports1271 } from "./utils";
 
