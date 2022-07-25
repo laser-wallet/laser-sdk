@@ -281,7 +281,11 @@ export function removeRecoveryOwnerVerifier(signer: Address, recoveryOwner: Addr
     }
 }
 
-export function sendEthVerifier(transferAmount: BigNumber, walletState: WalletState) {
+export function sendEthVerifier(signer: Address, transferAmount: BigNumber, walletState: WalletState) {
+    if (!addressEq(signer, walletState.owner)) {
+        throw Error("Invalid operation 'sendEth': only the owner can send eth.");
+    }
+
     if (transferAmount.eq(BigNumber.from(0)) || transferAmount.lt(0)) {
         throw Error("Invalid opearation 'sendEth': invalid amount.");
     }
@@ -295,4 +299,21 @@ export function sendEthVerifier(transferAmount: BigNumber, walletState: WalletSt
     }
 }
 
-export function transferERC20Verifier(transferAmount: BigNumber, walletState: WalletState) {}
+export function transferERC20Verifier(
+    signer: Address,
+    transferAmount: BigNumber,
+    walletBalance: BigNumber,
+    walletState: WalletState
+) {
+    if (!addressEq(signer, walletState.owner)) {
+        throw Error("Invalid operation 'sendEth': only the owner can send eth.");
+    }
+
+    if (walletState.isLocked) {
+        throw Error("Invalid operation 'transferERC20': wallet is locked.");
+    }
+
+    if (transferAmount.gt(walletBalance)) {
+        throw Error("Invalid operation 'transferERC20': insufficient balance.");
+    }
+}

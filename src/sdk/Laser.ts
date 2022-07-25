@@ -22,6 +22,7 @@ import {
     addRecoveryOwnerVerifier,
     toWei,
     encodeFunctionData,
+    transferERC20Verifier,
 } from "../utils";
 import { LaserView } from "./LaserView";
 import { ILaser } from "./interfaces/ILaser";
@@ -269,7 +270,7 @@ export class Laser extends LaserView {
         const to = await verifyAddress(this.provider, _to);
         const amount = BigNumber.from(toWei(_amount));
 
-        sendEthVerifier(amount, walletState);
+        sendEthVerifier(this.signer.address, amount, walletState);
 
         return this.signTransaction(
             {
@@ -282,38 +283,39 @@ export class Laser extends LaserView {
         );
     }
 
-    // async transferERC20(
-    //     _tokenAddress: Address,
-    //     _to: Address,
-    //     amount: BigNumberish,
-    //     txInfo: TransactionInfo
-    // ): Promise<Transaction> {
-    //     const signer = this.signer.address;
-    //     const tokenAddress = await verifyAddress(this.provider, _tokenAddress);
-    //     const to = await verifyAddress(this.provider, _to);
+    async transferERC20(
+        _tokenAddress: Address,
+        _to: Address,
+        amount: BigNumberish,
+        txInfo: TransactionInfo
+    ): Promise<Transaction> {
+        const walletState = await this.getWalletState();
+        const tokenAddress = await verifyAddress(this.provider, _tokenAddress);
+        const to = await verifyAddress(this.provider, _to);
 
-    //     const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, this.provider);
-    //     const walletBalance = await Helper.getTokenBalance(this.provider, this.wallet.address, tokenAddress);
+        const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, this.provider);
+        const walletBalance = await tokenContract.balanceOf(this.wallet.address);
 
-    //     let decimals: BigNumberish;
-    //     try {
-    //         // We check how many decimals the token has.
-    //         decimals = await tokenContract.decimals();
-    //     } catch (e) {
-    //         throw Error(`Could not get the token's decimals: ${e}`);
-    //     }
+        let decimals: number;
 
-    //     const amountToTransfer = ethers.utils.parseUnits(amount.toString(), decimals);
+        try {
+            decimals = await tokenContract.decimals();
+        } catch (e) {
+            throw Error(`Could not get the token's decimals: ${e}`);
+        }
 
-    //     if (BigNumber.from(amountToTransfer).gt(BigNumber.from(walletBalance))) {
-    //         throw Error("Insufficient balance.");
-    //     }
+        const transferAmount = ethers.utils.parseUnits(amount.toString(), decimals);
 
-    //     return this.signTransaction({
-    //         to: tokenAddress,
-    //         value: 0,
-    //         callData: Helper.encodeFunctionData(erc20Abi, "transfer", [to, amountToTransfer]),
-    //         txInfo,
-    //     });
-    // }
+        transferERC20Verifier(this.signer.address, transferAmount, walletBalance, walletState);
+
+        return this.signTransaction(
+            {
+                to: tokenAddress,
+                value: 0,
+                callData: encodeFunctionData(erc20Abi, "transfer", [to, transferAmount]),
+                txInfo,
+            },
+            Number(walletState.nonce)
+        );
+    }
 }
