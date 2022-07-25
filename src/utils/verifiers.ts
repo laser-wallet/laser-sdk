@@ -306,7 +306,7 @@ export function transferERC20Verifier(
     walletState: WalletState
 ) {
     if (!addressEq(signer, walletState.owner)) {
-        throw Error("Invalid operation 'sendEth': only the owner can send eth.");
+        throw Error("Invalid operation 'transferERC20': only the owner can send eth.");
     }
 
     if (walletState.isLocked) {
