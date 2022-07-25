@@ -6,6 +6,7 @@ import { ZERO, SALT } from "../constants/constants";
 import { LaserFactory__factory, LaserFactory as _LaserFactory } from "../typechain";
 import { LaserWallet__factory, LaserWallet as _LaserWallet } from "../typechain";
 import { ILaserFactory } from "./interfaces/ILaserFactory";
+import { encodeFunctionData, initSSR } from "../utils";
 
 /**
  * @title LaserFactory
@@ -15,6 +16,7 @@ import { ILaserFactory } from "./interfaces/ILaserFactory";
 export class LaserFactory implements ILaserFactory {
     readonly provider: Provider;
     readonly relayer: Wallet;
+    readonly laserModule: Address;
     readonly factory: _LaserFactory;
 
     /**
@@ -22,9 +24,10 @@ export class LaserFactory implements ILaserFactory {
      * @param relayer Deployer of the wallet.
      * @param factoryAddress The address of the deployed factory.
      */
-    constructor(_provider: Provider, relayer: Wallet, factoryAddress: Address) {
+    constructor(_provider: Provider, relayer: Wallet, factoryAddress: Address, laserModule: Address) {
         this.provider = _provider;
         this.relayer = relayer;
+        this.laserModule = laserModule;
         this.factory = LaserFactory__factory.connect(factoryAddress, this.relayer.connect(this.provider));
     }
 
@@ -56,11 +59,11 @@ export class LaserFactory implements ILaserFactory {
         );
 
         ///@todo This can be done through ethers.js so we save the rpc request..
-        const signer = await singleton.returnSigner(dataHash, r, s, v, signature);
+        // const signer = await singleton.returnSigner(dataHash, r, s, v, signature);
 
-        if (owner.toLowerCase() !== signer.toLowerCase()) {
-            throw Error("Invalid init signature.");
-        }
+        // if (owner.toLowerCase() !== signer.toLowerCase()) {
+        //     throw Error("Invalid init signature.");
+        // }
     }
 
     async checksum(address: Address): Promise<Address> {
@@ -135,11 +138,11 @@ export class LaserFactory implements ILaserFactory {
         if (await this.isContract(owner)) {
             throw Error("Owner cannot be a contract.");
         }
-        if (guardians.length < 2) {
-            throw Error("There needs to be at least 2 guardians.");
+        if (guardians.length < 1) {
+            throw Error("There needs to be at least 1 guardian.");
         }
-        if (recoveryOwners.length < 2) {
-            throw Error("There needs to be at least 2 recovery owners.");
+        if (recoveryOwners.length < 1) {
+            throw Error("There needs to be at least 1 recovery owner.");
         }
 
         if (gasLimit < 180000 && gasLimit > 0) {
@@ -266,14 +269,15 @@ export class LaserFactory implements ILaserFactory {
         );
         const price = BigNumber.from(gasLimit).mul(maxFeePerGas);
 
+        const initData = initSSR(guardians, recoveryOwners);
         return this.factory.deployProxyAndRefund(
             owner,
-            recoveryOwners,
-            guardians,
             maxFeePerGas,
             maxPriorityFeePerGas,
             gasLimit,
             relayer,
+            this.laserModule,
+            initData,
             saltNumber,
             ownerSignature,
             { gasLimit: gasLimit, maxFeePerGas: maxFeePerGas, maxPriorityFeePerGas: maxPriorityFeePerGas }
@@ -303,6 +307,7 @@ export class LaserFactory implements ILaserFactory {
         guardians: Address[],
         saltNumber: BigNumberish
     ): Promise<Address> {
-        return this.factory.preComputeAddress(owner, recoveryOwners, guardians, saltNumber);
+        const initData = initSSR(guardians, recoveryOwners);
+        return this.factory.preComputeAddress(owner, this.laserModule, initData, saltNumber);
     }
 }

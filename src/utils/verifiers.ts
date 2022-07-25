@@ -12,12 +12,18 @@ export function lockWalletVerifier(signer: Address, walletState: WalletState) {
         throw Error("Invalid operation 'lockWallet': wallet is locked.");
     }
 
-    let isGuardian = false;
-    walletState.guardians.map((guardian) => {
-        if (addressEq(guardian, signer)) isGuardian = true;
+    let isRecoveryOwnerOrGuardian = false;
+
+    walletState.recoveryOwners.map((recoveryOwner) => {
+        if (addressEq(recoveryOwner, signer)) isRecoveryOwnerOrGuardian = true;
     });
-    if (!isGuardian) {
-        throw Error("Invalid operation 'lockWallet': only a guardian can lock the wallet.");
+
+    walletState.guardians.map((guardian) => {
+        if (addressEq(guardian, signer)) isRecoveryOwnerOrGuardian = true;
+    });
+
+    if (!isRecoveryOwnerOrGuardian) {
+        throw Error("Invalid operation 'lockWallet': only a recovery owner or guardian can lock the wallet.");
     }
 }
 
@@ -29,45 +35,20 @@ export function unlockWalletVerifier(signer: Address, walletState: WalletState) 
         throw Error("Invalid operation 'unlockWallet': wallet is not locked.");
     }
 
-    let isOwnerOrGuardian = false;
+    let isOwnerOrRecoveryOwnerOrGuardian = false;
 
-    if (addressEq(signer, walletState.owner)) isOwnerOrGuardian = true;
-
-    walletState.guardians.map((guardian) => {
-        if (addressEq(guardian, signer)) isOwnerOrGuardian = true;
-    });
-    if (!isOwnerOrGuardian) {
-        throw Error("Invalid operation 'unlockWallet': only the owner or guardian can sign this.");
-    }
-}
-
-/**
- * @dev Checks that the parameters are ok to recovery unlock the wallet.
- */
-export function recoveryUnlockVerifier(signer: Address, walletState: WalletState) {
-    let isOwnerOrRecoveryOwner = false;
-
-    if (addressEq(signer, walletState.owner)) isOwnerOrRecoveryOwner = true;
+    if (addressEq(signer, walletState.owner)) isOwnerOrRecoveryOwnerOrGuardian = true;
 
     walletState.recoveryOwners.map((recoveryOwner) => {
-        if (addressEq(recoveryOwner, signer)) isOwnerOrRecoveryOwner = true;
+        if (addressEq(recoveryOwner, signer)) isOwnerOrRecoveryOwnerOrGuardian = true;
     });
 
-    if (!isOwnerOrRecoveryOwner) {
-        throw Error("Invalid operation 'recoveryUnlock': only the owner or recovery owner can sign this.");
-    }
-}
+    walletState.guardians.map((guardian) => {
+        if (addressEq(guardian, signer)) isOwnerOrRecoveryOwnerOrGuardian = true;
+    });
 
-/**
- * @dev Checks that the parameters are ok to unlock the guardians.
- */
-export function unlockGuardiansVerifier(signer: Address, walletState: WalletState) {
-    if (!addressEq(signer, walletState.owner)) {
-        throw Error("Invalid operation 'unlockGuardians': only the owner can unlock the guardians.");
-    }
-
-    if (!walletState.guardiansLocked) {
-        throw Error("Invalid operation 'unlockGuardians': guardians are not locked.");
+    if (!isOwnerOrRecoveryOwnerOrGuardian) {
+        throw Error("Invalid operation 'unlockWallet': only the owner or recovery owner or guardian can sign this.");
     }
 }
 
@@ -199,7 +180,7 @@ export function removeGuardianVerifier(signer: Address, guardian: Address, walle
         throw Error("Invalid operation 'removeGuardian': address is not a guardian.");
     }
 
-    if (walletState.guardians.length < 3) {
+    if (walletState.guardians.length < 2) {
         throw Error("Invalid operation 'removeGuardian': there needs to be at least 2 guardians.");
     }
 }
@@ -288,14 +269,14 @@ export function removeRecoveryOwnerVerifier(signer: Address, recoveryOwner: Addr
     }
 
     let isRecoveryOwner = false;
-    walletState.guardians.map((_guardian) => {
-        if (addressEq(_guardian, recoveryOwner)) isRecoveryOwner = true;
+    walletState.recoveryOwners.map((_recoveryOwner) => {
+        if (addressEq(_recoveryOwner, recoveryOwner)) isRecoveryOwner = true;
     });
     if (!isRecoveryOwner) {
         throw Error("Invalid operation 'removeRecoveryOwner': address is not a recovery owner.");
     }
 
-    if (walletState.recoveryOwners.length < 3) {
+    if (walletState.recoveryOwners.length < 2) {
         throw Error("Invalid operation 'removeRecoveryOwner': there needs to be at least 2 recovery owners.");
     }
 }
@@ -314,4 +295,4 @@ export function sendEthVerifier(transferAmount: BigNumber, walletState: WalletSt
     }
 }
 
-
+export function transferERC20Verifier(transferAmount: BigNumber, walletState: WalletState) {}

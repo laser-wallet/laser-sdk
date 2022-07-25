@@ -1,7 +1,6 @@
 import { ethers, utils, BigNumber } from "ethers";
 import dotenv from "dotenv";
 import { Laser } from "../src/sdk/Laser";
-import { Helper } from "../src/sdk/Helper";
 import { TransactionInfo } from "../src/types";
 
 import {
@@ -14,18 +13,21 @@ import {
     RECOVERY_OWNERS,
 } from "./constants";
 
+import { simulateLaserTransaction } from "../src/utils";
+
 dotenv.config();
 
-const owner = new ethers.Wallet("6e509eb668b2f09f6253d7dbe7cfbf14a6131a2f0ed44ae623ca12635af7f5eb");
+const owner = new ethers.Wallet(`${process.env.PK}`);
 // const RELAYER = owner;
 
 const providerUrl = `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`;
 const localHost = "http://127.0.0.1:8545/";
 
 const provider = new ethers.providers.JsonRpcProvider(localHost);
-const walletAddress = "0x227A1b90e1Dcdb59116997a0d37d4C33E80C113A";
+const walletAddress = "0x8931335e0db8E39767c6d84b59a8Df71223F3Da4";
 
-const laser = new Laser(provider, owner, walletAddress);
+const LASER_MODULE = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+const laser = new Laser(provider, owner, walletAddress, LASER_MODULE);
 
 /**
  * @dev Example to exec a Laser transaction.
@@ -45,14 +47,14 @@ const laser = new Laser(provider, owner, walletAddress);
         relayer: RELAYER.address,
     };
 
-    const guardians = await laser.getGuardians();
-    const transaction = await laser.sendEth(guardians[0], 0.01, txInfo);
-
-    const relayerLaser = new Laser(provider, RELAYER, walletAddress);
+    const random = ethers.Wallet.createRandom().address;
+    const transaction = await laser.sendEth(random, 0.001, txInfo);
+    const relayerLaser = new Laser(provider, RELAYER, walletAddress, LASER_MODULE);
 
     const relayerBal = await provider.getBalance(RELAYER.address);
 
-    await Helper.simulateTransaction(provider, walletAddress, transaction);
+    // const simulationResult = await simulateLaserTransaction(provider, walletAddress, transaction);
+    // console.log("simulation result -->", simulationResult.toString());
 
     try {
         const tx = await relayerLaser.execTransaction(transaction);

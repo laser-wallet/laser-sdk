@@ -13,7 +13,7 @@ import {
     RECOVERY_OWNERS,
 } from "./constants";
 
-const owner = new ethers.Wallet("6e509eb668b2f09f6253d7dbe7cfbf14a6131a2f0ed44ae623ca12635af7f5eb");
+const owner = new ethers.Wallet(`${process.env.PK}`);
 
 // const RELAYER = owner;
 dotenv.config();
@@ -23,10 +23,20 @@ const providerUrl = `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`;
 const localHost = "http://127.0.0.1:8545/";
 const provider = new ethers.providers.JsonRpcProvider(localHost);
 
+const LASER_MODULE = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+const FACTORY = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9";
+
+const r: string[] = [];
+
+for (let i = 0; i < 5; i++) {
+    const rec = ethers.Wallet.createRandom().address;
+    r.push(rec);
+}
+
 // This function creates a new wallet and logs the address to the terminal.
 (async function () {
     // Wallet initialization params.
-    const factory = new LaserFactory(provider, RELAYER, "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0");
+    const factory = new LaserFactory(provider, RELAYER, FACTORY, LASER_MODULE);
     // gas params.
     const latestBlock = await provider.getBlock("latest");
     const baseFee = latestBlock.baseFeePerGas;
@@ -72,15 +82,16 @@ const provider = new ethers.providers.JsonRpcProvider(localHost);
     const receipt = await tx.wait();
 
     const gasPrice = receipt.effectiveGasPrice;
+    console.log("gas price 2 -->", gasPrice.toString());
     const relayerPostBalance = await provider.getBalance(RELAYER.address);
 
-    const diff = relayerBal.sub(relayerPostBalance);
+    const diff = relayerPostBalance.sub(relayerBal);
 
     const gasDiff = diff.div(gasPrice);
 
     console.log("gas dif -->", gasDiff.toString());
 
-    const ethDiff = relayerBal.sub(relayerPostBalance);
+    const ethDiff = relayerPostBalance.sub(relayerBal);
 
     console.log("eth dif -->", ethers.utils.formatEther(ethDiff));
 })();
