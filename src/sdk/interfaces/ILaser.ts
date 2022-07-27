@@ -1,10 +1,8 @@
 import { Address, Transaction, TransactionInfo } from "../../types";
 import { BigNumberish, providers, ContractReceipt } from "ethers";
 
-/**
- * @title ILaser - interface for Laser's core logic.
- * contract's source: https://github.com/laser-wallet/laser-wallet-contracts
- */
+///@title ILaser - interface for Laser's core logic.
+///contract's source: https://github.com/laser-wallet/laser-wallet-contracts
 export interface ILaser {
     ///@dev Generic Laser transaction.
     execTransaction(transaction: Transaction): Promise<any>;

@@ -11,10 +11,12 @@ const owner = new ethers.Wallet(`0x${process.env.PK}`);
 
 const providerUrl = `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`;
 
-const provider = new ethers.providers.JsonRpcProvider(providerUrl);
+const localHost = "http://127.0.0.1:8545/"; // Hardhat network.
 
-const LASER_MODULE = "";
-const FACTORY = "";
+const provider = new ethers.providers.JsonRpcProvider(localHost);
+
+const LASER_MODULE = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+const FACTORY = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9";
 
 // This function creates a new wallet and logs the address to the terminal.
 (async function () {

@@ -1,9 +1,7 @@
 import { Address } from "../../types";
 import { BigNumberish, ContractReceipt } from "ethers";
 
-/**
- * @title ILaserFactory - interface for LaserFactory.
- */
+///@title ILaserFactory - interface for LaserFactory.
 export interface ILaserFactory {
     ///@dev Mastercopy of the proxies, Laser core logic.
     getSingleton(): Promise<Address>;

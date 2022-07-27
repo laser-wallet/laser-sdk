@@ -4,33 +4,22 @@ import { LaserWallet__factory, LaserWallet } from "../typechain";
 import { LaserHelper__factory, LaserHelper } from "../typechain";
 import { ILaserView, WalletState } from "./interfaces/ILaserView";
 
-/**
- * @dev Class that contains all the relevant view methods to interact with a Laser wallet.
- */
+///@dev Class that contains all the relevant view methods to interact with a Laser wallet.
 export class LaserView implements ILaserView {
     readonly provider: Provider;
     readonly walletAddress: Address;
     readonly wallet: LaserWallet;
-    readonly laserHelper: LaserHelper;
-    readonly laserModuleAddress: Address;
 
-    constructor(
-        _provider: Provider,
-        _walletAddress: Address,
-        _laserModuleAddress: Address,
-        _laserHelperAddress: Address
-    ) {
+    constructor(_provider: Provider, _walletAddress: Address) {
         this.provider = _provider;
         this.walletAddress = _walletAddress;
         this.wallet = LaserWallet__factory.connect(_walletAddress, this.provider);
-        this.laserHelper = LaserHelper__factory.connect(_laserHelperAddress, this.provider);
-        this.laserModuleAddress = _laserModuleAddress;
     }
 
     ///@dev Returns the state of the wallet and SSR Module <WalletState>
-    async getWalletState(): Promise<WalletState> {
+    async _getWalletState(laserHelper: LaserHelper, laserModuleAddress: Address): Promise<WalletState> {
         const { owner, singleton, isLocked, guardians, recoveryOwners, nonce, balance } =
-            await this.laserHelper.getWalletState(this.wallet.address, this.laserModuleAddress);
+            await laserHelper.getWalletState(this.wallet.address, laserModuleAddress);
 
         return {
             owner,

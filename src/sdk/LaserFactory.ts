@@ -8,11 +8,9 @@ import { LaserWallet__factory, LaserWallet as _LaserWallet } from "../typechain"
 import { ILaserFactory } from "./interfaces/ILaserFactory";
 import { encodeFunctionData, initSSR, verifyAddress, isContract } from "../utils";
 
-/**
- * @title LaserFactory
- * @dev Factory that deploys proxies that delegate all calls to the main implementation
- * https://github.com/laser-wallet/laser-wallet-contracts/tree/master/contracts
- */
+///@title LaserFactory
+///@dev Factory that deploys proxies that delegate all calls to the main implementation
+///https://github.com/laser-wallet/laser-wallet-contracts/tree/master/contracts
 export class LaserFactory implements ILaserFactory {
     readonly provider: Provider;
     readonly relayer: Wallet;
