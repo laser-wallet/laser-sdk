@@ -5,21 +5,22 @@ import { TransactionInfo } from "../src/types";
 
 dotenv.config();
 
+// Hardhat account.
+const relayer = new ethers.Wallet("");
 /**
  * Example to send eth.
  */
 async function addGuardian() {
     const owner = new ethers.Wallet(`${process.env.PK}`);
 
-    const relayer = new ethers.Wallet("");
-    const providerUrl = "";
-    const provider = new ethers.providers.JsonRpcProvider(providerUrl);
+    const providerUrl = `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`;
+    const localHost = "http://127.0.0.1:8545/"; // Hardhat network.
+    const provider = new ethers.providers.JsonRpcProvider(localHost);
 
     const walletAddress = "";
-    const LASER_MODULE = "";
-    const LASER_HELPER = "";
 
-    const laser = new Laser(provider, owner, walletAddress, LASER_MODULE, LASER_HELPER);
+    const laser = new Laser(provider, owner, walletAddress);
+    await laser.init();
 
     /// fee data.
     const latestBlock = await provider.getBlock("latest");
@@ -36,7 +37,8 @@ async function addGuardian() {
         relayer: relayer.address,
     };
 
-    const relayerLaser = new Laser(provider, relayer, walletAddress, LASER_MODULE, LASER_HELPER);
+    const relayerLaser = new Laser(provider, relayer, walletAddress);
+    await relayerLaser.init();
 
     // We get the signed transaction.
     const newGuardian = ethers.Wallet.createRandom().address;

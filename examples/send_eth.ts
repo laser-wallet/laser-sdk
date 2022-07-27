@@ -12,14 +12,17 @@ async function sendEth() {
     const owner = new ethers.Wallet(`${process.env.PK}`);
 
     const relayer = new ethers.Wallet("");
-    const providerUrl = "";
-    const provider = new ethers.providers.JsonRpcProvider(providerUrl);
 
-    const walletAddress = "";
-    const LASER_MODULE = "";
-    const LASER_HELPER = "";
+    const providerUrl = `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`;
+    const localHost = "http://127.0.0.1:8545/"; // Hardhat network.
+    const provider = new ethers.providers.JsonRpcProvider(localHost);
 
-    const laser = new Laser(provider, owner, walletAddress, LASER_MODULE, LASER_HELPER);
+    const walletAddress = "0x88dBa4d67952cDFfeb401363E1387ED76489ad03";
+
+    const laser = new Laser(provider, owner, walletAddress);
+
+    // init the wallet
+    await laser.init();
 
     /// fee data.
     const latestBlock = await provider.getBlock("latest");
@@ -36,7 +39,8 @@ async function sendEth() {
         relayer: relayer.address,
     };
 
-    const relayerLaser = new Laser(provider, relayer, walletAddress, LASER_MODULE, LASER_HELPER);
+    const relayerLaser = new Laser(provider, relayer, walletAddress);
+    await relayerLaser.init();
 
     // We get the signed transaction.
     const transaction = await laser.sendEth(owner.address, 0.01, txInfo);

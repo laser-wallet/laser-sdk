@@ -2,10 +2,17 @@ import { Provider } from "@ethersproject/providers";
 import { Wallet } from "@ethersproject/wallet";
 import { BigNumber, BigNumberish, Contract, ContractReceipt, ethers, providers } from "ethers";
 import erc20Abi from "../abis/erc20.abi.json";
-import { LaserWallet__factory, LaserWallet } from "../typechain";
+import {
+    LaserWallet__factory,
+    LaserWallet,
+    LaserModuleSSR__factory,
+    LaserModuleSSR,
+    LaserHelper__factory,
+    LaserHelper,
+} from "../typechain";
 import { abi as walletAbi } from "../deployments/localhost/LaserWallet.json";
 import { abi as moduleAbi } from "../deployments/localhost/LaserModuleSSR.json";
-import { emptyTransaction } from "../constants";
+import { emptyTransaction, ZERO, DEPLOYED_ADDRESSES } from "../constants";
 import { Address, SignTransactionOptions, Transaction, TransactionInfo, ModuleFuncs } from "../types";
 import {
     sign,
@@ -25,57 +32,52 @@ import {
 } from "../utils";
 import { LaserView } from "./LaserView";
 import { ILaser } from "./interfaces/ILaser";
+import { WalletState } from "./interfaces/ILaserView";
 
-/**
- * @dev Class that has all the methods to read/write to a Laser wallet.
- */
+///@dev Class that has all the methods to read/write to a Laser wallet.
 export class Laser extends LaserView implements ILaser {
     readonly provider: Provider;
     readonly signer: Wallet;
     readonly wallet: LaserWallet;
-    readonly laserModuleAddress: Address;
 
-    constructor(
-        _provider: Provider,
-        _signer: Wallet,
-        walletAddress: string,
-        _laserModuleAddress: Address,
-        laserHelperAddress: Address
-    ) {
-        super(_provider, walletAddress, _laserModuleAddress, laserHelperAddress);
+    private laserModule: LaserModuleSSR = LaserModuleSSR__factory.connect(ZERO, this.provider);
+    protected laserHelper: LaserHelper = LaserHelper__factory.connect(ZERO, this.provider);
+    private initialized = false;
+
+    constructor(_provider: Provider, _signer: Wallet, walletAddress: string) {
+        super(_provider, walletAddress);
         this.provider = _provider;
         this.signer = _signer;
         this.wallet = LaserWallet__factory.connect(walletAddress, this.signer.connect(this.provider));
-        this.laserModuleAddress = _laserModuleAddress;
     }
 
-    /**
-     * @dev Signs a transaction and returns the complete Transaction object.
-     * Proper checks need to be done prior to calling this function.
-     */
-    private async signTransaction(
-        { to, value, callData, txInfo }: SignTransactionOptions,
-        nonce: number
-    ): Promise<Transaction> {
-        const transaction = {
-            ...emptyTransaction,
-            ...txInfo,
-            to,
-            value,
-            callData,
-            nonce: nonce,
-        };
-        const hash = await this.getOperationHash(transaction);
-        transaction.signatures = await sign(this.signer, hash);
-        ///@todo Check that the signature is correct depending on the signer.
-        return transaction;
+    ///@dev Inits the SDK to initialize it with proper state.
+    async init() {
+        const chainId = (await this.provider.getNetwork()).chainId;
+        const deployedAddressess = DEPLOYED_ADDRESSES;
+
+        switch (chainId.toString()) {
+            case "31337": {
+                this.laserModule = LaserModuleSSR__factory.connect(
+                    deployedAddressess[31337].laserModuleSSR,
+                    this.provider
+                );
+                this.laserHelper = LaserHelper__factory.connect(deployedAddressess[31337].laserHelper, this.provider);
+                return;
+            }
+            default: {
+                throw Error("Laser does not support the connected chain id.");
+            }
+        }
     }
 
-    /**
-     * @dev Calls the wallet in order to execute a Laser transaction.
-     * Proper checks need to be done prior to calling this function.
-     * This is a generic non-opinionated function to call 'exec' in Laser's smart contracts.
-     */
+    async getWalletState(): Promise<WalletState> {
+        return this._getWalletState(this.laserHelper, this.laserModule.address);
+    }
+
+    ///@dev Calls the wallet in order to execute a Laser transaction.
+    ///Proper checks need to be done prior to calling this function.
+    ///This is a generic non-opinionated function to call 'exec' in Laser's smart contracts.
     async execTransaction(transaction: Transaction): Promise<any> {
         return this.wallet.exec(
             transaction.to,
@@ -110,7 +112,7 @@ export class Laser extends LaserView implements ILaser {
         ]);
 
         return this.signer.connect(this.provider).sendTransaction({
-            to: this.laserModuleAddress,
+            to: this.laserModule.address,
             value: 0,
             data: txData,
         });
@@ -197,7 +199,7 @@ export class Laser extends LaserView implements ILaser {
 
         return this.signTransaction(
             {
-                to: this.laserModuleAddress,
+                to: this.laserModule.address,
                 value: 0,
                 callData: encodeFunctionData(moduleAbi, "addGuardian", [this.wallet.address, newGuardian]),
                 txInfo,
@@ -227,7 +229,7 @@ export class Laser extends LaserView implements ILaser {
 
         return this.signTransaction(
             {
-                to: this.laserModuleAddress,
+                to: this.laserModule.address,
                 value: 0,
                 callData: encodeFunctionData(moduleAbi, "removeGuardian", [
                     this.wallet.address,
@@ -250,7 +252,7 @@ export class Laser extends LaserView implements ILaser {
 
         return this.signTransaction(
             {
-                to: this.laserModuleAddress,
+                to: this.laserModule.address,
                 value: 0,
                 callData: encodeFunctionData(moduleAbi, "addRecoveryOwner", [this.wallet.address, newRecoveryOwner]),
                 txInfo,
@@ -282,7 +284,7 @@ export class Laser extends LaserView implements ILaser {
 
         return this.signTransaction(
             {
-                to: this.laserModuleAddress,
+                to: this.laserModule.address,
                 value: 0,
                 callData: encodeFunctionData(moduleAbi, "removeRecoveryOwner", [
                     this.wallet.address,
@@ -349,5 +351,25 @@ export class Laser extends LaserView implements ILaser {
             },
             Number(walletState.nonce)
         );
+    }
+
+    ///@dev Signs a transaction and returns the complete Transaction object.
+    ///Proper checks need to be done prior to calling this function.
+    private async signTransaction(
+        { to, value, callData, txInfo }: SignTransactionOptions,
+        nonce: number
+    ): Promise<Transaction> {
+        const transaction = {
+            ...emptyTransaction,
+            ...txInfo,
+            to,
+            value,
+            callData,
+            nonce: nonce,
+        };
+        const hash = await this.getOperationHash(transaction);
+        transaction.signatures = await sign(this.signer, hash);
+        ///@todo Check that the signature is correct depending on the signer.
+        return transaction;
     }
 }
