@@ -7,7 +7,7 @@ export interface ILaser {
     ///@dev Generic Laser transaction.
     execTransaction(transaction: Transaction): Promise<any>;
 
-    ///@dev Returns the transaction type to locks the wallet. Can only be called by the recovery owner or guardian.
+    ///@dev Returns the transaction type to locks the wallet. Can only be called by the recovery owner and guardian.
     lockWallet(txInfo: TransactionInfo): Promise<Transaction>;
 
     ///@dev Returns the transaction type  to unlock the wallets. Can only be called by the owner + recovery owner
