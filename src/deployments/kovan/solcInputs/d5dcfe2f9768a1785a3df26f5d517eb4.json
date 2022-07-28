@@ -1,0 +1,35 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/helper/LaserHelper.sol": {
+      "content": "// SPDX-License-Identifier: LGPL-3.0-only\npragma solidity 0.8.15;\n\ninterface ILaser {\n    function owner() external view returns (address);\n\n    function singleton() external view returns (address);\n\n    function timeLock() external view returns (uint256);\n\n    function isLocked() external view returns (bool);\n\n    function nonce() external view returns (uint256);\n\n    function exec(\n        address to,\n        uint256 value,\n        bytes calldata callData,\n        uint256 _nonce,\n        uint256 maxFeePerGas,\n        uint256 maxPriorityFeePerGas,\n        uint256 gasLimit,\n        address relayer,\n        bytes calldata ownerSignature\n    ) external;\n}\n\ninterface ILaserModuleSSR {\n    function getRecoveryOwners(address wallet) external view returns (address[] memory);\n\n    function getGuardians(address wallet) external view returns (address[] memory);\n}\n\n/**\n * @title LaserHelper - Helper contract that outputs multiple results in a single call.\n */\ncontract LaserHelper {\n    /**\n     * @dev Returns the wallet state + SSR module.\n     */\n    function getWalletState(address laserWallet, address SSRModule)\n        external\n        view\n        returns (\n            address owner,\n            address singleton,\n            bool isLocked,\n            address[] memory guardians,\n            address[] memory recoveryOwners,\n            uint256 nonce,\n            uint256 balance\n        )\n    {\n        ILaser laser = ILaser(laserWallet);\n        ILaserModuleSSR laserModule = ILaserModuleSSR(SSRModule);\n        owner = laser.owner();\n        singleton = laser.singleton();\n        isLocked = laser.isLocked();\n        guardians = laserModule.getGuardians(laserWallet);\n        recoveryOwners = laserModule.getRecoveryOwners(laserWallet);\n        nonce = laser.nonce();\n        balance = address(laserWallet).balance;\n    }\n\n    function simulateTransaction(\n        address to,\n        bytes calldata callData,\n        uint256 value,\n        uint256 gasLimit\n    ) external returns (uint256 totalGas) {\n        totalGas = gasLimit - gasleft();\n\n        (bool success, ) = payable(to).call{value: value}(callData);\n        require(success, \"main execution failed.\");\n\n        totalGas = totalGas - gasleft();\n        require(msg.sender == address(0), \"Must be called off-chain from address zero.\");\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 800
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "storageLayout",
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}

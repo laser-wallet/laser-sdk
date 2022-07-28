@@ -2,22 +2,66 @@
 
 ### SDK to interact with a Laser wallet.
 
-## Usage: 
+## Usage:
+
 
 ```js
-import { Laser } from "laser-sdk";
+import { Laser, LaserFactory } from "laser-sdk";
 
-const owner = new ethers.Wallet(pk);
-const provider = new ethers.providers.JsonRpcProvider(providerUrl);
-const walletAddress = "0x..";
-const LASER_MODULE = "0x..";
-const LASER_HELPER = "0X..";
+async function laserExample() {
+    const provider = new ethers.providers.JsonRpcProvider("ke..");
 
-const laser = new Laser(provider, owner, walletAddress, LASER_MODULE, LASER_HELPER);
+    const walletAddress = "0x...";
+
+    const signer = new ethers.Wallet("private key..");
+
+    const laser = new Laser(provider, signer, walletAddress);
+
+    // initialize the sdk. 
+    await laser.init();
+
+    // get state
+    await laser.getWalletState();
+
+    // send eth (get tx object so the relayer can forward it)
+    await laser.sendEth(signer.address, 0.1, txInfo);
+}
 
 
-// Gets the state
-await laser.getWalletState();
+async function factoryExample() {
+    const provider = new ethers.providers.JsonRpcProvider("ke..");
+
+    // wallet owner
+    const signer = new ethers.Wallet("private key..");
+
+    const factory = new LaserFactory(provider, signer);
+
+    // init the factory
+    await factory.init();
+
+    const gasLimit = 500000;
+    const recoveryOwners = ["0x.."];
+    const guardians = ["0x.."];
+
+    // 0 while using infura's relayer
+    const maxFeePerGas = 0;
+    const maxPriorityFeePerGas = 0;
+    const salt = "random number per user..";
+
+    const preComputeAddress = await factory.preComputeAddress(signer.address, recoveryOwners, guardians, salt);
+    console.log("address: ", preComputeAddress);
+
+    const result = await factory.createWallet(
+            signer.address,
+            recoveryOwners,
+            guardians,
+            maxFeePerGas,
+            maxPriorityFeePerGas,
+            gasLimit,
+            salt,
+            signer.address
+    );
+}
 
 ```
 

@@ -1,32 +1,115 @@
-import { ethers, Contract, utils, ContractReceipt, BigNumberish, BigNumber } from "ethers";
+import { ethers, Contract, utils, ContractReceipt, BigNumberish, BigNumber, Signer } from "ethers";
 import { Wallet } from "@ethersproject/wallet";
 import { Provider } from "@ethersproject/providers";
 import { Address } from "../types";
-import { ZERO } from "../constants/constants";
-import { LaserFactory__factory, LaserFactory as _LaserFactory } from "../typechain";
+import { ZERO, DEPLOYED_ADDRESSES } from "../constants/constants";
+import {
+    LaserFactory__factory,
+    LaserFactory as _LaserFactory,
+    LaserModuleSSR__factory,
+    LaserModuleSSR,
+} from "../typechain";
 import { LaserWallet__factory, LaserWallet as _LaserWallet } from "../typechain";
 import { ILaserFactory } from "./interfaces/ILaserFactory";
-import { encodeFunctionData, initSSR, verifyAddress, isContract } from "../utils";
+import { encodeFunctionData, initSSR, verifyAddress, isContract, sign } from "../utils";
+
+export type FactoryTransaction = {
+    owner: Address;
+    maxFeePerGas: BigNumberish;
+    maxPriorityFeePerGas: BigNumberish;
+    gasLimit: BigNumberish;
+    relayer: Address;
+    laserModule: Address;
+    laserModuleData: string;
+    saltNumber: BigNumberish;
+    ownerSignature: string;
+};
 
 ///@title LaserFactory
-///@dev Factory that deploys proxies that delegate all calls to the main implementation
+///@dev Factory that deploys proxies that delegate all calls to the main implementation.
 ///https://github.com/laser-wallet/laser-wallet-contracts/tree/master/contracts
 export class LaserFactory implements ILaserFactory {
     readonly provider: Provider;
-    readonly relayer: Wallet;
-    readonly laserModule: Address;
-    readonly factory: _LaserFactory;
+    readonly signer: Wallet;
 
-    /**
-     * @chainId The id of the chain for this connection (e.g 1 for mainnet).
-     * @param relayer Deployer of the wallet.
-     * @param factoryAddress The address of the deployed factory.
-     */
-    constructor(_provider: Provider, relayer: Wallet, factoryAddress: Address, laserModule: Address) {
+    private factory!: _LaserFactory;
+    private laserModule!: LaserModuleSSR;
+    private initialized = false;
+
+    constructor(_provider: Provider, _signer: Wallet) {
         this.provider = _provider;
-        this.relayer = relayer;
-        this.laserModule = laserModule;
-        this.factory = LaserFactory__factory.connect(factoryAddress, this.relayer.connect(this.provider));
+        this.signer = _signer;
+    }
+
+    ///@dev Inits Laser factory with proper state.
+    async init() {
+        const chainId = (await this.provider.getNetwork()).chainId.toString();
+
+        const deployedAddressess = DEPLOYED_ADDRESSES;
+
+        switch (chainId.toString()) {
+            case "1": {
+                this.factory = LaserFactory__factory.connect(deployedAddressess["1"].laserFactory, this.provider);
+                this.laserModule = LaserModuleSSR__factory.connect(
+                    deployedAddressess["1"].laserModuleSSR,
+                    this.provider
+                );
+                this.initialized = true;
+                break;
+            }
+            case "5": {
+                this.factory = LaserFactory__factory.connect(deployedAddressess["5"].laserFactory, this.provider);
+                this.laserModule = LaserModuleSSR__factory.connect(
+                    deployedAddressess["5"].laserModuleSSR,
+                    this.provider
+                );
+                this.initialized = true;
+                break;
+            }
+            case "42": {
+                this.factory = LaserFactory__factory.connect(deployedAddressess["42"].laserFactory, this.provider);
+                this.laserModule = LaserModuleSSR__factory.connect(
+                    deployedAddressess["42"].laserModuleSSR,
+                    this.provider
+                );
+                this.initialized = true;
+                break;
+            }
+            case "3": {
+                this.factory = LaserFactory__factory.connect(deployedAddressess["3"].laserFactory, this.provider);
+                this.laserModule = LaserModuleSSR__factory.connect(
+                    deployedAddressess["3"].laserModuleSSR,
+                    this.provider
+                );
+                this.initialized = true;
+                break;
+            }
+            default: {
+                throw Error("Laser does not support the connected network.");
+            }
+        }
+    }
+
+    ///@dev The address of the factory.
+    async getAddress(): Promise<Address> {
+        if (!this.initialized) await this.init();
+        return this.factory.address;
+    }
+
+    async getInitHash(
+        maxFeePerGas: BigNumberish,
+        maxPriorityFeePerGas: BigNumberish,
+        gasLimit: BigNumberish
+    ): Promise<string> {
+        const chainId = (await this.provider.getNetwork()).chainId;
+        const abiCoder = new utils.AbiCoder();
+        const dataHash = utils.keccak256(
+            abiCoder.encode(
+                ["uint256", "uint256", "uint256", "uint256"],
+                [maxFeePerGas, maxPriorityFeePerGas, gasLimit, chainId]
+            )
+        );
+        return dataHash;
     }
 
     async verifySignature(
@@ -36,8 +119,6 @@ export class LaserFactory implements ILaserFactory {
         maxPriorityFeePerGas: BigNumberish,
         gasLimit: BigNumberish
     ): Promise<void> {
-        const _singleton = await this.getSingleton();
-        const singleton = LaserWallet__factory.connect(_singleton, this.provider);
         if (signature.length !== 132) {
             throw Error("Invalid init signature length");
         }
@@ -47,15 +128,6 @@ export class LaserFactory implements ILaserFactory {
         const s = `0x${signature.slice(66, 130)}`; // second 32 bytes.
         const v = `0x${signature.slice(130)}`; // last byte.
 
-        const chainId = (await this.provider.getNetwork()).chainId;
-        const abiCoder = new utils.AbiCoder();
-        const dataHash = utils.keccak256(
-            abiCoder.encode(
-                ["uint256", "uint256", "uint256", "uint256"],
-                [maxFeePerGas, maxPriorityFeePerGas, gasLimit, chainId]
-            )
-        );
-
         ///@todo This can be done through ethers.js so we save the rpc request..
         // const signer = await singleton.returnSigner(dataHash, r, s, v, signature);
 
@@ -64,9 +136,7 @@ export class LaserFactory implements ILaserFactory {
         // }
     }
 
-    /**
-     * @dev Verifies that the wallet has balance to refund the relayer.
-     */
+    ///@dev Verifies that the wallet has balance to refund the relayer.
     async verifyPayment(
         owner: Address,
         recoveryOwners: Address[],
@@ -76,10 +146,14 @@ export class LaserFactory implements ILaserFactory {
         _gasLimit: BigNumberish,
         saltNumber: BigNumberish
     ) {
+        if (!this.initialized) await this.init();
         // We use ethers BigNumber for precision (very likely exceeds js max safety).
-        const maxFeePerGas = BigNumber.from(_maxFeePerGas);
-        const maxPriorityFeePerGas = BigNumber.from(_maxFeePerGas);
+        // const maxFeePerGas = BigNumber.from(_maxFeePerGas);
+        // const maxPriorityFeePerGas = BigNumber.from(_maxFeePerGas);
         const gasLimit = BigNumber.from(_gasLimit);
+        const feeData = await this.provider.getFeeData();
+        const maxFeePerGas = BigNumber.from(feeData.maxFeePerGas);
+        const maxPriorityFeePerGas = BigNumber.from(feeData.maxPriorityFeePerGas);
 
         // The first thing we need to do, is to precompute the address.
         // The wallet is not created yet.
@@ -117,6 +191,7 @@ export class LaserFactory implements ILaserFactory {
         relayer: Address,
         ownerSignature: string
     ): Promise<void> {
+        if (!this.initialized) await this.init();
         const owner = await verifyAddress(this.provider, _owner);
         if (owner.toLowerCase() === ZERO.toLowerCase()) {
             throw Error("Owner cannot be address 0.");
@@ -185,6 +260,7 @@ export class LaserFactory implements ILaserFactory {
      * @dev Returns the base contract, where all the delegatecalls are forwarded.
      */
     async getSingleton(): Promise<Address> {
+        if (!this.initialized) await this.init();
         return this.factory.singleton();
     }
 
@@ -192,6 +268,7 @@ export class LaserFactory implements ILaserFactory {
      * @dev Allows to retrieve the runtime code of a deployed Proxy. This can be used to check that the expected Proxy was deployed.
      */
     async proxyRuntimeCode(): Promise<string> {
+        if (!this.initialized) await this.init();
         return this.factory.proxyRuntimeCode();
     }
 
@@ -199,18 +276,10 @@ export class LaserFactory implements ILaserFactory {
      * @dev Allows to retrieve the creation code used for the Proxy deployment. With this it is easily possible to calculate predicted address.
      */
     async proxyCreationCode(): Promise<string> {
+        if (!this.initialized) await this.init();
         return this.factory.proxyCreationCode();
     }
 
-    /**
-     * @dev Creates a new proxy (a new Laser wallet).
-     * @param owner The owner of the wallet.
-     * @param recoveryOwners The  addresses for the recovery owners (2 minimum).
-     * @param guardians The addresses for the guardians (2 minimum).
-     * @returns The address of the new wallet or reverts on error.
-     * @notice gasLimit needs to be the same as the transaction gas limit.
-     * @notice If gas limit = 0, the wallet won't refund.
-     */
     async createWallet(
         owner: Address,
         recoveryOwners: Address[],
@@ -219,9 +288,11 @@ export class LaserFactory implements ILaserFactory {
         maxPriorityFeePerGas: BigNumberish,
         gasLimit: BigNumberish,
         saltNumber: BigNumberish,
-        relayer: Address,
-        ownerSignature: string
-    ): Promise<any> {
+        relayer: Address
+    ): Promise<FactoryTransaction> {
+        if (!this.initialized) await this.init();
+        const hash = await this.getInitHash(maxFeePerGas, maxPriorityFeePerGas, gasLimit);
+        const ownerSignature = await sign(this.signer, hash);
         // Checks the correctness of all the parameters.
         await this.checkParams(
             owner,
@@ -245,25 +316,26 @@ export class LaserFactory implements ILaserFactory {
             saltNumber
         );
 
-        const initData = initSSR(guardians, recoveryOwners);
-        return this.factory.deployProxyAndRefund(
+        const laserModuleData = initSSR(guardians, recoveryOwners);
+
+        return {
             owner,
             maxFeePerGas,
             maxPriorityFeePerGas,
             gasLimit,
             relayer,
-            this.laserModule,
-            initData,
+            laserModule: this.laserModule.address,
+            laserModuleData,
             saltNumber,
             ownerSignature,
-            { gasLimit: gasLimit, maxFeePerGas: maxFeePerGas, maxPriorityFeePerGas: maxPriorityFeePerGas }
-        );
+        };
     }
 
     /**
      * @dev Listens for the event 'ProxyCreation'.
      */
     async on(): Promise<void> {
+        if (!this.initialized) await this.init();
         console.log("Listening ...");
         this.factory.on("ProxyCreation", async (proxy, singleton) => {
             console.log("New wallet creation");
@@ -283,7 +355,8 @@ export class LaserFactory implements ILaserFactory {
         guardians: Address[],
         saltNumber: BigNumberish
     ): Promise<Address> {
+        if (!this.initialized) await this.init();
         const initData = initSSR(guardians, recoveryOwners);
-        return this.factory.preComputeAddress(owner, this.laserModule, initData, saltNumber);
+        return this.factory.preComputeAddress(owner, this.laserModule.address, initData, saltNumber);
     }
 }

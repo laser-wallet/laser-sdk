@@ -1,0 +1,70 @@
+import { BigNumberish, ethers, BigNumber } from "ethers";
+import { Laser, LaserView } from "../src";
+import dotenv from "dotenv";
+import { Address } from "../src/types";
+
+import { encodeWalletData } from "../src/utils/utils";
+
+dotenv.config();
+
+const provider = new ethers.providers.JsonRpcProvider(`https://goerli.infura.io/v3/${process.env.INFURA_KEY}`);
+const signer = new ethers.Wallet(`0x${process.env.PK}`, provider);
+
+const itx = new ethers.providers.InfuraProvider(
+    "goerli", // or 'ropsten', 'rinkeby', 'kovan', 'mainnet'
+    `${process.env.INFURA_KEY}`
+);
+
+///@dev From Infura's docs:
+`
+*** fast targets getting your transaction mined in ~6 blocks (1:30 min)
+*** slow targets getting your transaction mined in ~200 blocks (1 hour)
+`;
+type Schedule = "fast" | "slow";
+type InfuraTransaction = {
+    to: Address;
+    data: string;
+    gas: BigNumberish;
+    signature: string;
+    schedule: Schedule;
+};
+
+const walletAddress = "0x0007cC1a95cCB714A0c2e5A693B19A6fbb2ab9e2";
+const schedule = "fast";
+
+const laser = new Laser(provider, signer, walletAddress);
+
+async function signRequest(tx: any) {
+    const relayTransactionHash = ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+            ["address", "bytes", "uint", "uint", "string"],
+            [tx.to, tx.data, tx.gas, 5, tx.schedule] // Goerli chainId is 5
+        )
+    );
+    return await signer.signMessage(ethers.utils.arrayify(relayTransactionHash));
+}
+
+async function executeTransaction() {
+    const gasLimit = 300000;
+    const txInfo = {
+        maxFeePerGas: 0,
+        maxPriorityFeePerGas: 0,
+        gasLimit,
+        relayer: signer.address,
+    };
+    const data = encodeWalletData(await laser.sendEth(signer.address, 0.001, txInfo));
+
+    const tx = {
+        to: walletAddress,
+        data: data,
+        gas: gasLimit.toString(),
+        schedule: "fast",
+    };
+    const signature = await signRequest(tx);
+
+    const relayTransactionHash = await itx.send("relay_sendTransaction", [tx, signature]);
+    console.log(`ITX relay hash: ${relayTransactionHash}`);
+    return relayTransactionHash;
+}
+
+executeTransaction();

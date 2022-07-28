@@ -1,8 +1,11 @@
 import { BigNumberish, utils, Contract, ethers } from "ethers";
 import { Provider } from "@ethersproject/providers";
 import { Address, Transaction, PackedSignatures } from "../types";
-import { abi as SSRAbi } from "../deployments/localhost/LaserModuleSSR.json";
+import { abi as SSRAbi } from "../deployments/mainnet/LaserModuleSSR.json";
+import { abi as walletAbi } from "../deployments/mainnet/LaserWallet.json";
+import { abi as factoryAbi } from "../deployments/mainnet/LaserFactory.json";
 import { LaserHelper__factory } from "../typechain";
+import { FactoryTransaction } from "../sdk/LaserFactory";
 
 export function encodeFunctionData(abi: any, funcName: string, ..._params: any[]): string {
     const params = _params[0];
@@ -114,4 +117,38 @@ export function packSignatures(packedSigs: PackedSignatures): string {
     }
 
     return packedSigs.signature1 + packedSigs.signature2.slice(2);
+}
+
+export function encodeWalletData(txData: Transaction): string {
+    return encodeFunctionData(walletAbi, "exec", [
+        txData.to,
+        txData.value,
+        txData.callData,
+        txData.nonce,
+        txData.maxFeePerGas,
+        txData.maxPriorityFeePerGas,
+        txData.gasLimit,
+        txData.relayer,
+        txData.signatures,
+    ]);
+}
+
+export function encodeFactoryData(txData: FactoryTransaction): string {
+    return encodeFunctionData(factoryAbi, "deployProxyAndRefund", [
+        txData.owner,
+        txData.maxFeePerGas,
+        txData.maxPriorityFeePerGas,
+        txData.gasLimit,
+        txData.relayer,
+        txData.laserModule,
+        txData.laserModuleData,
+        txData.saltNumber,
+        txData.ownerSignature,
+    ]);
+}
+
+export function encodeModuleData(txData: Transaction): string {
+    const LOCK = ethers.utils.keccak256("lock()");
+    console.log(LOCK);
+    return LOCK;
 }

@@ -8,11 +8,9 @@ const providerUrl = `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`;
 
 const localHost = "http://127.0.0.1:8545/"; // Hardhat network.
 
-const provider = new ethers.providers.JsonRpcProvider(localHost);
+const provider = new ethers.providers.JsonRpcProvider(providerUrl);
 
-const walletAddress = "0xD0BfC10c842804DA2a060bc9E5E7AfC5700d5e40";
-const LASER_MODULE = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
-const LASER_HELPER = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+const walletAddress = "0x999aA618c0732DD1a3235d01E6C6c76C9D8617f8";
 
 const laser = new Laser(provider, ethers.Wallet.createRandom(), walletAddress);
 

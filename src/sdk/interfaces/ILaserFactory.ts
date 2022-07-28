@@ -1,5 +1,6 @@
 import { Address } from "../../types";
 import { BigNumberish, ContractReceipt } from "ethers";
+import { FactoryTransaction } from "../LaserFactory";
 
 ///@title ILaserFactory - interface for LaserFactory.
 export interface ILaserFactory {
@@ -19,9 +20,8 @@ export interface ILaserFactory {
         maxPriorityFeePerGas: BigNumberish,
         gasLimit: BigNumberish,
         relayer: Address,
-        saltNumber: BigNumberish,
-        ownerSignature: string
-    ): Promise<any>;
+        saltNumber: BigNumberish
+    ): Promise<FactoryTransaction>;
 
     ///@dev Precomputes the address that will be deployed with 'createWallet'.
     ///The proxy is created through 'create2', so any change will output a different address.

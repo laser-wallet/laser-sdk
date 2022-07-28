@@ -4,9 +4,6 @@ import { BigNumberish, providers, ContractReceipt } from "ethers";
 ///@title ILaser - interface for Laser's core logic.
 ///contract's source: https://github.com/laser-wallet/laser-wallet-contracts
 export interface ILaser {
-    ///@dev Generic Laser transaction.
-    execTransaction(transaction: Transaction): Promise<any>;
-
     ///@dev Returns the transaction type to locks the wallet. Can only be called by the recovery owner and guardian.
     lockWallet(txInfo: TransactionInfo): Promise<Transaction>;
 

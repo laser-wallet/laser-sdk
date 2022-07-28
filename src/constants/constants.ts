@@ -1,6 +1,26 @@
 import { ethers } from "ethers";
 import { Transaction } from "../types";
 
+///@dev mainnet deployed addresses.
+import { address as mainnetFactory } from "../deployments/mainnet/LaserFactory.json";
+import { address as mainnetHelper } from "../deployments/mainnet/LaserHelper.json";
+import { address as mainnetModule } from "../deployments/mainnet/LaserModuleSSR.json";
+
+///@dev goerli deployed addresses.
+import { address as goerliFactory } from "../deployments/goerli/LaserFactory.json";
+import { address as goerliHelper } from "../deployments/goerli/LaserHelper.json";
+import { address as goerliModule } from "../deployments/goerli/LaserModuleSSR.json";
+
+///@dev kovan deployed addresses.
+import { address as kovanFactory } from "../deployments/kovan/LaserFactory.json";
+import { address as kovanHelper } from "../deployments/kovan/LaserHelper.json";
+import { address as kovanModule } from "../deployments/kovan/LaserModuleSSR.json";
+
+///@dev ropsten deployed addresses.
+import { address as ropstenFactory } from "../deployments/ropsten/LaserFactory.json";
+import { address as ropstenHelper } from "../deployments/ropsten/LaserHelper.json";
+import { address as ropstenModule } from "../deployments/ropsten/LaserModuleSSR.json";
+
 export const ZERO = ethers.constants.AddressZero;
 
 export const MAGIC_VALUE = "0x1626ba7e";
@@ -17,12 +37,25 @@ export const emptyTransaction: Transaction = {
     signatures: "",
 };
 
-
 export const DEPLOYED_ADDRESSES = {
-    "31337": {
-        laserFactory: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
-        laserHelper: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-        laserModuleSSR: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-        
+    "1": {
+        laserFactory: mainnetFactory,
+        laserHelper: mainnetHelper,
+        laserModuleSSR: mainnetModule,
+    },
+    "5": {
+        laserFactory: goerliFactory,
+        laserHelper: goerliHelper,
+        laserModuleSSR: goerliModule,
+    },
+    "42": {
+        laserFactory: kovanFactory,
+        laserHelper: kovanHelper,
+        laserModuleSSR: kovanModule,
+    },
+    "3": {
+        laserFactory: ropstenFactory,
+        laserHelper: ropstenHelper,
+        laserModuleSSR: ropstenModule,
     },
 };

@@ -10,8 +10,8 @@ import {
     LaserHelper__factory,
     LaserHelper,
 } from "../typechain";
-import { abi as walletAbi } from "../deployments/localhost/LaserWallet.json";
-import { abi as moduleAbi } from "../deployments/localhost/LaserModuleSSR.json";
+import { abi as walletAbi } from "../deployments/mainnet/LaserWallet.json";
+import { abi as moduleAbi } from "../deployments/mainnet/LaserModuleSSR.json";
 import { emptyTransaction, ZERO, DEPLOYED_ADDRESSES } from "../constants";
 import { Address, SignTransactionOptions, Transaction, TransactionInfo, ModuleFuncs } from "../types";
 import {
@@ -29,6 +29,7 @@ import {
     toWei,
     encodeFunctionData,
     transferERC20Verifier,
+    encodeWalletData,
 } from "../utils";
 import { LaserView } from "./LaserView";
 import { ILaser } from "./interfaces/ILaser";
@@ -40,8 +41,8 @@ export class Laser extends LaserView implements ILaser {
     readonly signer: Wallet;
     readonly wallet: LaserWallet;
 
-    private laserModule: LaserModuleSSR = LaserModuleSSR__factory.connect(ZERO, this.provider);
-    protected laserHelper: LaserHelper = LaserHelper__factory.connect(ZERO, this.provider);
+    private laserModule!: LaserModuleSSR;
+    private laserHelper!: LaserHelper;
     private initialized = false;
 
     constructor(_provider: Provider, _signer: Wallet, walletAddress: string) {
@@ -51,75 +52,64 @@ export class Laser extends LaserView implements ILaser {
         this.wallet = LaserWallet__factory.connect(walletAddress, this.signer.connect(this.provider));
     }
 
-    ///@dev Inits the SDK to initialize it with proper state.
+    ///@dev Inits Laser with proper state.
     async init() {
-        const chainId = (await this.provider.getNetwork()).chainId;
+        const chainId = (await this.provider.getNetwork()).chainId.toString();
+
         const deployedAddressess = DEPLOYED_ADDRESSES;
 
         switch (chainId.toString()) {
-            case "31337": {
+            case "1": {
                 this.laserModule = LaserModuleSSR__factory.connect(
-                    deployedAddressess[31337].laserModuleSSR,
+                    deployedAddressess["1"].laserModuleSSR,
                     this.provider
                 );
-                this.laserHelper = LaserHelper__factory.connect(deployedAddressess[31337].laserHelper, this.provider);
-                return;
+                this.laserHelper = LaserHelper__factory.connect(deployedAddressess["1"].laserHelper, this.provider);
+                this.initialized = true;
+                break;
+            }
+            case "5": {
+                this.laserModule = LaserModuleSSR__factory.connect(
+                    deployedAddressess["5"].laserModuleSSR,
+                    this.provider
+                );
+                this.laserHelper = LaserHelper__factory.connect(deployedAddressess["5"].laserHelper, this.provider);
+                this.initialized = true;
+                break;
+            }
+            case "42": {
+                this.laserModule = LaserModuleSSR__factory.connect(
+                    deployedAddressess["42"].laserModuleSSR,
+                    this.provider
+                );
+                this.laserHelper = LaserHelper__factory.connect(deployedAddressess["42"].laserHelper, this.provider);
+                this.initialized = true;
+                break;
+            }
+            case "3": {
+                this.laserModule = LaserModuleSSR__factory.connect(
+                    deployedAddressess["3"].laserModuleSSR,
+                    this.provider
+                );
+                this.laserHelper = LaserHelper__factory.connect(deployedAddressess["3"].laserHelper, this.provider);
+                this.initialized = true;
+                break;
             }
             default: {
-                throw Error("Laser does not support the connected chain id.");
+                throw Error("Laser does not support the connected network.");
             }
         }
     }
 
+    ///@dev Returns the wallet's main state + the recovery module's state.
     async getWalletState(): Promise<WalletState> {
+        if (!this.initialized) await this.init();
         return this._getWalletState(this.laserHelper, this.laserModule.address);
     }
 
-    ///@dev Calls the wallet in order to execute a Laser transaction.
-    ///Proper checks need to be done prior to calling this function.
-    ///This is a generic non-opinionated function to call 'exec' in Laser's smart contracts.
-    async execTransaction(transaction: Transaction): Promise<any> {
-        return this.wallet.exec(
-            transaction.to,
-            transaction.value,
-            transaction.callData,
-            transaction.nonce,
-            transaction.maxFeePerGas,
-            transaction.maxPriorityFeePerGas,
-            transaction.gasLimit,
-            transaction.relayer,
-            transaction.signatures,
-            {
-                gasLimit: transaction.gasLimit,
-                maxFeePerGas: transaction.maxFeePerGas,
-                maxPriorityFeePerGas: transaction.maxPriorityFeePerGas,
-            }
-        );
-    }
-
-    ///@dev Executes a transaction from the SSR module.
-    ///@notice It can only be 'lock', 'unlock', or 'recover'.
-    ///@notice The rest (addGuardian, etc..) are done through the wallet.
-    async execFromModule(transaction: Transaction, funcName: ModuleFuncs): Promise<any> {
-        const txData = encodeFunctionData(moduleAbi, funcName, [
-            this.wallet.address,
-            transaction.callData,
-            transaction.maxFeePerGas,
-            transaction.maxPriorityFeePerGas,
-            transaction.gasLimit,
-            transaction.relayer,
-            transaction.signatures,
-        ]);
-
-        return this.signer.connect(this.provider).sendTransaction({
-            to: this.laserModule.address,
-            value: 0,
-            data: txData,
-        });
-    }
-
-    ///@dev Returns the transaction type to locks the wallet. Can only be called by the recovery owner or guardian.
+    ///@dev Returns the transaction type to locks the wallet. Can only be called by the recovery owner + guardian.
     async lockWallet(txInfo: TransactionInfo): Promise<Transaction> {
+        if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
 
         lockWalletVerifier(this.signer.address, walletState);
@@ -138,13 +128,14 @@ export class Laser extends LaserView implements ILaser {
     ///@dev Returns the transaction type  to unlock the wallets. Can only be called by the owner + recovery owner
     /// or owner + guardian.
     async unlockWallet(txInfo: TransactionInfo): Promise<Transaction> {
+        if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
 
         unlockWalletVerifier(this.signer.address, walletState);
 
         return this.signTransaction(
             {
-                to: this.wallet.address,
+                to: this.laserModule.address,
                 value: 0,
                 callData: encodeFunctionData(walletAbi, "unlock", []),
                 txInfo,
@@ -155,6 +146,7 @@ export class Laser extends LaserView implements ILaser {
 
     ///@dev Returns the transaction type to recover the wallet. Can only be called by a recovery owner or guardian.
     async recover(_newOwner: Address, txInfo: TransactionInfo): Promise<Transaction> {
+        if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
         const newOwner = await verifyAddress(this.provider, _newOwner);
 
@@ -162,9 +154,9 @@ export class Laser extends LaserView implements ILaser {
 
         return this.signTransaction(
             {
-                to: this.wallet.address,
+                to: this.laserModule.address,
                 value: 0,
-                callData: encodeFunctionData(walletAbi, "recover", [newOwner]),
+                callData: encodeFunctionData(moduleAbi, "recover", [newOwner]),
                 txInfo,
             },
             Number(walletState.nonce)
@@ -173,6 +165,7 @@ export class Laser extends LaserView implements ILaser {
 
     ///@dev Returns the transaction type  to change the owner. Can only be called by the owner.
     async changeOwner(_newOwner: Address, txInfo: TransactionInfo): Promise<Transaction> {
+        if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
         const newOwner = await verifyAddress(this.provider, _newOwner);
 
@@ -192,6 +185,7 @@ export class Laser extends LaserView implements ILaser {
     ///@dev Returns the transaction type to add a guardian. Can only be called by the owner.
     ///@notice The state is in the SSR module, not in the wallet itself.
     async addGuardian(_newGuardian: Address, txInfo: TransactionInfo): Promise<Transaction> {
+        if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
         const newGuardian = await verifyAddress(this.provider, _newGuardian);
 
@@ -211,6 +205,7 @@ export class Laser extends LaserView implements ILaser {
     ///@dev Returns the transaction type to remove a guardian. Can only be called by the owner.
     ///@notice The state is in the SSR module, not in the wallet itself.
     async removeGuardian(_guardian: Address, txInfo: TransactionInfo): Promise<Transaction> {
+        if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
         const guardian = await verifyAddress(this.provider, _guardian);
 
@@ -245,6 +240,7 @@ export class Laser extends LaserView implements ILaser {
     ///@dev Returns the transaction type add a recovery owner. Can only be called by the owenr.
     ///@notice The state is in the SSR module, not in the wallet itself.
     async addRecoveryOwner(_newRecoveryOwner: Address, txInfo: TransactionInfo): Promise<Transaction> {
+        if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
         const newRecoveryOwner = await verifyAddress(this.provider, _newRecoveryOwner);
 
@@ -264,6 +260,7 @@ export class Laser extends LaserView implements ILaser {
     ///@dev Returns the transaction type to remove a recovery owner. Can only be called by the owner.
     ///@notice The state is in the SSR module, not in the wallet itself.
     async removeRecoveryOwner(_recoveryOwner: Address, txInfo: TransactionInfo): Promise<Transaction> {
+        if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
         const recoveryOwner = await verifyAddress(this.provider, _recoveryOwner);
 
@@ -299,16 +296,17 @@ export class Laser extends LaserView implements ILaser {
 
     ///@dev Returns the transaction type to send eth. Can only be called by the owner.
     async sendEth(_to: Address, _amount: BigNumberish, txInfo: TransactionInfo): Promise<Transaction> {
+        if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
         const to = await verifyAddress(this.provider, _to);
-        const amount = BigNumber.from(toWei(_amount));
+        const value = BigNumber.from(toWei(_amount));
 
-        sendEthVerifier(this.signer.address, amount, walletState);
+        sendEthVerifier(this.signer.address, value, walletState);
 
         return this.signTransaction(
             {
                 to,
-                value: amount,
+                value,
                 callData: "0x",
                 txInfo,
             },
@@ -323,6 +321,7 @@ export class Laser extends LaserView implements ILaser {
         amount: BigNumberish,
         txInfo: TransactionInfo
     ): Promise<Transaction> {
+        if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
         const tokenAddress = await verifyAddress(this.provider, _tokenAddress);
         const to = await verifyAddress(this.provider, _to);
@@ -365,10 +364,11 @@ export class Laser extends LaserView implements ILaser {
             to,
             value,
             callData,
-            nonce: nonce,
+            nonce,
         };
         const hash = await this.getOperationHash(transaction);
         transaction.signatures = await sign(this.signer, hash);
+
         ///@todo Check that the signature is correct depending on the signer.
         return transaction;
     }
