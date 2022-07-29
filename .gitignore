@@ -5,3 +5,4 @@ test
 dist
 .npmignore
 package-lock.json
+src/typechain/
