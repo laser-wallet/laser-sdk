@@ -1,5 +1,11 @@
 # laser-sdk
 
+## 0.4.1
+
+### Patch Changes
+
+-   56d5f0c: Fix build
+
 ## 0.4.0
 
 ### Minor Changes
