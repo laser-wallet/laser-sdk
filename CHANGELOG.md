@@ -1,5 +1,11 @@
 # laser-sdk
 
+## 0.4.0
+
+### Minor Changes
+
+-   b865e6c: Complete recovery methods
+
 ## 0.3.2
 
 ### Patch Changes
