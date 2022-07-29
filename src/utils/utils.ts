@@ -65,37 +65,6 @@ export function initSSR(guardians: Address[], recoveryOwners: Address[]): string
     return encodeFunctionData(SSRAbi, "initSSR", [guardians, recoveryOwners]);
 }
 
-export async function simulateLaserTransaction(
-    provider: Provider,
-    walletAddress: Address,
-    transaction: Transaction
-): Promise<BigNumberish> {
-    const walletForSimulation = LaserHelper__factory.connect(walletAddress, provider);
-
-    try {
-        return walletForSimulation.callStatic.simulateTransaction(
-            walletAddress,
-            transaction.to,
-            transaction.value,
-            transaction.callData,
-            transaction.nonce,
-            transaction.maxFeePerGas,
-            transaction.maxPriorityFeePerGas,
-            transaction.gasLimit,
-            transaction.relayer,
-            transaction.signatures,
-            {
-                from: ethers.constants.AddressZero,
-                gasLimit: transaction.gasLimit,
-                maxFeePerGas: transaction.maxFeePerGas,
-                maxPriorityFeePerGas: transaction.maxPriorityFeePerGas,
-            }
-        );
-    } catch (e) {
-        throw Error(`Error in transaction simulation: ${e}`);
-    }
-}
-
 export async function getBaseFee(provider: Provider): Promise<BigNumberish> {
     const latestBlock = await provider.getBlock("latest");
     const baseFeePerGas = latestBlock.baseFeePerGas;
