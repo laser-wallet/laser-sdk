@@ -7,9 +7,9 @@
     "scripts": {
         "prettier:write": "npx prettier --write src/ && npx prettier --write test/",
         "test": "ts-mocha test/*.ts --timeout 100000",
-        "build": "tsc",
+        "build": "yarn generate && tsc",
         "release": "yarn build && changeset publish",
-        "postinstall": "typechain --target=ethers-v5 'src/deployments/mainnet/*.json' --out-dir src/typechain"
+        "generate": "typechain --target=ethers-v5 'src/deployments/mainnet/*.json' --out-dir src/typechain"
     },
     "author": "Rodrigo Herrera I",
     "license": "LGPL-3.0",
