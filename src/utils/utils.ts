@@ -1,4 +1,4 @@
-import { BigNumberish, utils, Contract, ethers } from "ethers";
+import { BigNumberish, utils, Contract, ethers, BigNumber } from "ethers";
 import { Provider } from "@ethersproject/providers";
 import { Address, Transaction, PackedSignatures } from "../types";
 import { abi as SSRAbi } from "../deployments/mainnet/LaserModuleSSR.json";
@@ -120,4 +120,63 @@ export function encodeModuleData(txData: Transaction): string {
     const LOCK = ethers.utils.keccak256("lock()");
     console.log(LOCK);
     return LOCK;
+}
+
+type DeploymentCost = {
+    wei: BigNumberish;
+    eth: BigNumberish;
+    gas: BigNumberish;
+};
+///@dev Calculates the approx. deployment costs for a wallet (in wei and gas).
+export async function calculateDeploymentCost(
+    provider: Provider,
+    guardians: Address[],
+    recoveryOwners: Address[]
+): Promise<DeploymentCost> {
+    ///@dev upper bound.
+    const baseGas = 325233;
+
+    const increment = 30000;
+
+    const guardiansLength = guardians.length;
+    const recoveryOwnersLength = recoveryOwners.length;
+
+    const baseFee = await getBaseFee(provider);
+    const feeData = await provider.getFeeData();
+    const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
+
+    const totalFee = BigNumber.from(baseFee).add(BigNumber.from(maxPriorityFeePerGas));
+
+    if (guardiansLength === 1 && recoveryOwnersLength === 1) {
+        return {
+            wei: totalFee.mul(BigNumber.from(baseGas)),
+            eth: utils.formatEther(totalFee.mul(BigNumber.from(baseGas))),
+            gas: baseGas,
+        };
+    } else {
+        const newStorageSlots = guardiansLength + recoveryOwnersLength - 2;
+
+        const extraGas = BigNumber.from(increment).mul(newStorageSlots);
+        const totalGas = extraGas.add(baseGas);
+
+        return {
+            wei: totalFee.mul(totalGas),
+            eth: utils.formatEther(totalFee.mul(totalGas)),
+            gas: totalGas,
+        };
+    }
+}
+
+///@dev Returns true if the wallet has enough funds to deploy or false if not.
+export async function canWalletDeploy(
+    provider: Provider,
+    walletAddress: Address,
+    guardians: Address[],
+    recoveryOwners: Address[]
+): Promise<boolean> {
+    const walletBalance = await provider.getBalance(walletAddress);
+
+    const { wei, gas } = await calculateDeploymentCost(provider, guardians, recoveryOwners);
+
+    return walletBalance.gt(wei);
 }
