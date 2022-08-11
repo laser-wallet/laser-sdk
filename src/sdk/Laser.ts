@@ -10,8 +10,9 @@ import {
     LaserHelper__factory,
     LaserHelper,
 } from "../typechain";
-import { abi as walletAbi } from "../deployments/mainnet/LaserWallet.json";
-import { abi as moduleAbi } from "../deployments/mainnet/LaserModuleSSR.json";
+import { abi as walletAbi } from "../deployments/localhost/LaserWallet.json";
+import { abi as ssrAbi } from "../deployments/localhost/LaserModuleSSR.json";
+import { abi as vaultAbi } from "../deployments/localhost/LaserVault.json";
 import { emptyTransaction, ZERO, DEPLOYED_ADDRESSES } from "../constants";
 import { Address, SignTransactionOptions, Transaction, TransactionInfo, ModuleFuncs } from "../types";
 import {
@@ -30,6 +31,8 @@ import {
     encodeFunctionData,
     transferERC20Verifier,
     encodeWalletData,
+    estimateLaserGas,
+    verifyWalletCanPayGas,
 } from "../utils";
 import { LaserView } from "./LaserView";
 import { ILaser } from "./interfaces/ILaser";
@@ -41,9 +44,10 @@ export class Laser extends LaserView implements ILaser {
     readonly signer: Wallet;
     readonly wallet: LaserWallet;
 
-    private laserModule!: LaserModuleSSR;
-    private laserHelper!: LaserHelper;
-    private initialized = false;
+    public ssrModule!: Address;
+    public laserVault!: Address;
+    public laserHelper!: LaserHelper;
+    public initialized = false;
 
     constructor(_provider: Provider, _signer: Wallet, walletAddress: string) {
         super(_provider, walletAddress);
@@ -60,38 +64,34 @@ export class Laser extends LaserView implements ILaser {
 
         switch (chainId.toString()) {
             case "1": {
-                this.laserModule = LaserModuleSSR__factory.connect(
-                    deployedAddressess["1"].laserModuleSSR,
-                    this.provider
-                );
+                this.ssrModule = deployedAddressess["1"].laserModuleSSR;
                 this.laserHelper = LaserHelper__factory.connect(deployedAddressess["1"].laserHelper, this.provider);
                 this.initialized = true;
                 break;
             }
             case "5": {
-                this.laserModule = LaserModuleSSR__factory.connect(
-                    deployedAddressess["5"].laserModuleSSR,
-                    this.provider
-                );
+                this.ssrModule = deployedAddressess["5"].laserModuleSSR;
+                this.laserVault = deployedAddressess["5"].laserVault;
                 this.laserHelper = LaserHelper__factory.connect(deployedAddressess["5"].laserHelper, this.provider);
                 this.initialized = true;
                 break;
             }
             case "42": {
-                this.laserModule = LaserModuleSSR__factory.connect(
-                    deployedAddressess["42"].laserModuleSSR,
-                    this.provider
-                );
+                this.ssrModule = deployedAddressess["42"].laserModuleSSR;
                 this.laserHelper = LaserHelper__factory.connect(deployedAddressess["42"].laserHelper, this.provider);
                 this.initialized = true;
                 break;
             }
             case "3": {
-                this.laserModule = LaserModuleSSR__factory.connect(
-                    deployedAddressess["3"].laserModuleSSR,
-                    this.provider
-                );
+                this.ssrModule = deployedAddressess["3"].laserModuleSSR;
                 this.laserHelper = LaserHelper__factory.connect(deployedAddressess["3"].laserHelper, this.provider);
+                this.initialized = true;
+                break;
+            }
+            case "31337": {
+                this.ssrModule = deployedAddressess["31337"].laserModuleSSR;
+                this.laserVault = deployedAddressess["31337"].laserVault;
+                this.laserHelper = LaserHelper__factory.connect(deployedAddressess["31337"].laserHelper, this.provider);
                 this.initialized = true;
                 break;
             }
@@ -101,20 +101,71 @@ export class Laser extends LaserView implements ILaser {
         }
     }
 
+    /*//////////////////////////////////////////////////////////////
+                Estimates the gas for a Laser transaction
+    //////////////////////////////////////////////////////////////*/
+
+    async estimateLaserGas(tx: Transaction): Promise<BigNumber> {
+        return estimateLaserGas(this.wallet, this.provider, tx);
+    }
+
+    ///@dev Generic Laser transaction. Returns Transaction type to send to the relayer.
+    async execTransaction(
+        _to: Address,
+        value: BigNumber,
+        callData: string,
+        txInfo: TransactionInfo
+    ): Promise<Transaction> {
+        if (!this.initialized) await this.init();
+        const walletState = await this.getWalletState();
+
+        const to = await verifyAddress(this.provider, _to);
+
+        const transaction = await this.signTransaction(
+            {
+                to,
+                value,
+                callData,
+                txInfo,
+            },
+            Number(walletState.nonce)
+        );
+
+        // Here we simulate the transaction (will revert if it fails) and get the approx gas with buffer.
+        const estimateGas = await estimateLaserGas(this.wallet, this.provider, transaction);
+
+        await verifyWalletCanPayGas(
+            this.provider,
+            BigNumber.from(walletState.balance),
+            estimateGas,
+            BigNumber.from(value)
+        );
+
+        if (estimateGas.gt(txInfo.gasLimit)) {
+            throw Error("Gas limit too low, transaction will revert.");
+        }
+
+        return transaction;
+    }
+
     ///@dev Returns the wallet's main state + the recovery module's state.
     async getWalletState(): Promise<WalletState> {
         if (!this.initialized) await this.init();
-        return this._getWalletState(this.laserHelper, this.laserModule.address);
+        return this._getWalletState(this.laserHelper, this.ssrModule);
     }
 
-    ///@dev Returns the transaction type to locks the wallet. Can only be called by the recovery owner + guardian.
+    /*//////////////////////////////////////////////////////////////
+                          Smart Social Recovery
+    //////////////////////////////////////////////////////////////*/
+
+    ///@dev Returns the transaction type to lock the wallet. Can only be called by the recovery owner + guardian.
     async lockWallet(txInfo: TransactionInfo): Promise<Transaction> {
         if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
 
         lockWalletVerifier(this.signer.address, walletState);
 
-        return this.signTransaction(
+        const transaction = await this.signTransaction(
             {
                 to: this.wallet.address,
                 value: 0,
@@ -123,9 +174,19 @@ export class Laser extends LaserView implements ILaser {
             },
             Number(walletState.nonce)
         );
+
+        const estimateGas = await estimateLaserGas(this.wallet, this.provider, transaction);
+
+        await verifyWalletCanPayGas(this.provider, BigNumber.from(walletState.balance), estimateGas, BigNumber.from(0));
+
+        if (estimateGas.gt(txInfo.gasLimit)) {
+            throw Error("Gas limit too low, transaction will revert.");
+        }
+
+        return transaction;
     }
 
-    ///@dev Returns the transaction type  to unlock the wallets. Can only be called by the owner + recovery owner
+    ///@dev Returns the transaction type  to unlock the wallet. Can only be called by the owner + recovery owner
     /// or owner + guardian.
     async unlockWallet(txInfo: TransactionInfo): Promise<Transaction> {
         if (!this.initialized) await this.init();
@@ -133,15 +194,25 @@ export class Laser extends LaserView implements ILaser {
 
         unlockWalletVerifier(this.signer.address, walletState);
 
-        return this.signTransaction(
+        const transaction = await this.signTransaction(
             {
-                to: this.laserModule.address,
+                to: this.ssrModule,
                 value: 0,
                 callData: encodeFunctionData(walletAbi, "unlock", []),
                 txInfo,
             },
             Number(walletState.nonce)
         );
+
+        const estimateGas = await estimateLaserGas(this.wallet, this.provider, transaction);
+
+        await verifyWalletCanPayGas(this.provider, BigNumber.from(walletState.balance), estimateGas, BigNumber.from(0));
+
+        if (estimateGas.gt(txInfo.gasLimit)) {
+            throw Error("Gas limit too low, transaction will revert.");
+        }
+
+        return transaction;
     }
 
     ///@dev Returns the transaction type to recover the wallet. Can only be called by a recovery owner or guardian.
@@ -152,15 +223,25 @@ export class Laser extends LaserView implements ILaser {
 
         recoverVerifier(this.signer.address, newOwner, this.provider, walletState);
 
-        return this.signTransaction(
+        const transaction = await this.signTransaction(
             {
-                to: this.laserModule.address,
+                to: this.ssrModule,
                 value: 0,
-                callData: encodeFunctionData(moduleAbi, "recover", [newOwner]),
+                callData: encodeFunctionData(ssrAbi, "recover", [newOwner]),
                 txInfo,
             },
             Number(walletState.nonce)
         );
+
+        const estimateGas = await estimateLaserGas(this.wallet, this.provider, transaction);
+
+        await verifyWalletCanPayGas(this.provider, BigNumber.from(walletState.balance), estimateGas, BigNumber.from(0));
+
+        if (estimateGas.gt(txInfo.gasLimit)) {
+            throw Error("Gas limit too low, transaction will revert.");
+        }
+
+        return transaction;
     }
 
     ///@dev Returns the transaction type  to change the owner. Can only be called by the owner.
@@ -171,7 +252,7 @@ export class Laser extends LaserView implements ILaser {
 
         await changeOwnerVerifier(this.signer.address, this.provider, newOwner, walletState);
 
-        return this.signTransaction(
+        const transaction = await this.signTransaction(
             {
                 to: this.wallet.address,
                 value: 0,
@@ -180,6 +261,16 @@ export class Laser extends LaserView implements ILaser {
             },
             Number(walletState.nonce)
         );
+
+        const estimateGas = await estimateLaserGas(this.wallet, this.provider, transaction);
+
+        await verifyWalletCanPayGas(this.provider, BigNumber.from(walletState.balance), estimateGas, BigNumber.from(0));
+
+        if (estimateGas.gt(txInfo.gasLimit)) {
+            throw Error("Gas limit too low, transaction will revert.");
+        }
+
+        return transaction;
     }
 
     ///@dev Returns the transaction type to add a guardian. Can only be called by the owner.
@@ -191,15 +282,25 @@ export class Laser extends LaserView implements ILaser {
 
         addGuardianVerifier(this.signer.address, this.provider, newGuardian, walletState);
 
-        return this.signTransaction(
+        const transaction = await this.signTransaction(
             {
-                to: this.laserModule.address,
+                to: this.ssrModule,
                 value: 0,
-                callData: encodeFunctionData(moduleAbi, "addGuardian", [this.wallet.address, newGuardian]),
+                callData: encodeFunctionData(ssrAbi, "addGuardian", [this.wallet.address, newGuardian]),
                 txInfo,
             },
             Number(walletState.nonce)
         );
+
+        const estimateGas = await estimateLaserGas(this.wallet, this.provider, transaction);
+
+        await verifyWalletCanPayGas(this.provider, BigNumber.from(walletState.balance), estimateGas, BigNumber.from(0));
+
+        if (estimateGas.gt(txInfo.gasLimit)) {
+            throw Error("Gas limit too low, transaction will revert.");
+        }
+
+        return transaction;
     }
 
     ///@dev Returns the transaction type to remove a guardian. Can only be called by the owner.
@@ -222,19 +323,25 @@ export class Laser extends LaserView implements ILaser {
         prevGuardian =
             prevGuardianIndex === -1 ? "0x0000000000000000000000000000000000000001" : guardians[prevGuardianIndex];
 
-        return this.signTransaction(
+        const transaction = await this.signTransaction(
             {
-                to: this.laserModule.address,
+                to: this.ssrModule,
                 value: 0,
-                callData: encodeFunctionData(moduleAbi, "removeGuardian", [
-                    this.wallet.address,
-                    prevGuardian,
-                    guardian,
-                ]),
+                callData: encodeFunctionData(ssrAbi, "removeGuardian", [this.wallet.address, prevGuardian, guardian]),
                 txInfo,
             },
             Number(walletState.nonce)
         );
+
+        const estimateGas = await estimateLaserGas(this.wallet, this.provider, transaction);
+
+        await verifyWalletCanPayGas(this.provider, BigNumber.from(walletState.balance), estimateGas, BigNumber.from(0));
+
+        if (estimateGas.gt(txInfo.gasLimit)) {
+            throw Error("Gas limit too low, transaction will revert.");
+        }
+
+        return transaction;
     }
 
     ///@dev Returns the transaction type add a recovery owner. Can only be called by the owenr.
@@ -246,15 +353,24 @@ export class Laser extends LaserView implements ILaser {
 
         addRecoveryOwnerVerifier(this.signer.address, this.provider, newRecoveryOwner, walletState);
 
-        return this.signTransaction(
+        const transaction = await this.signTransaction(
             {
-                to: this.laserModule.address,
+                to: this.ssrModule,
                 value: 0,
-                callData: encodeFunctionData(moduleAbi, "addRecoveryOwner", [this.wallet.address, newRecoveryOwner]),
+                callData: encodeFunctionData(ssrAbi, "addRecoveryOwner", [this.wallet.address, newRecoveryOwner]),
                 txInfo,
             },
             Number(walletState.nonce)
         );
+        const estimateGas = await estimateLaserGas(this.wallet, this.provider, transaction);
+
+        await verifyWalletCanPayGas(this.provider, BigNumber.from(walletState.balance), estimateGas, BigNumber.from(0));
+
+        if (estimateGas.gt(txInfo.gasLimit)) {
+            throw Error("Gas limit too low, transaction will revert.");
+        }
+
+        return transaction;
     }
 
     ///@dev Returns the transaction type to remove a recovery owner. Can only be called by the owner.
@@ -279,11 +395,11 @@ export class Laser extends LaserView implements ILaser {
                 ? "0x0000000000000000000000000000000000000001"
                 : recoveryOwners[prevRecoveryOwnerIndex];
 
-        return this.signTransaction(
+        const transaction = await this.signTransaction(
             {
-                to: this.laserModule.address,
+                to: this.ssrModule,
                 value: 0,
-                callData: encodeFunctionData(moduleAbi, "removeRecoveryOwner", [
+                callData: encodeFunctionData(ssrAbi, "removeRecoveryOwner", [
                     this.wallet.address,
                     prevRecoveryOwner,
                     recoveryOwner,
@@ -292,6 +408,117 @@ export class Laser extends LaserView implements ILaser {
             },
             Number(walletState.nonce)
         );
+
+        const estimateGas = await estimateLaserGas(this.wallet, this.provider, transaction);
+
+        await verifyWalletCanPayGas(this.provider, BigNumber.from(walletState.balance), estimateGas, BigNumber.from(0));
+
+        if (estimateGas.gt(txInfo.gasLimit)) {
+            throw Error("Gas limit too low, transaction will revert.");
+        }
+
+        return transaction;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            Laser Vault
+    //////////////////////////////////////////////////////////////*/
+
+    ///@dev Adds ERC-20 tokens to the vault.
+    ///@dev Returns the trasaction type to add tokens. Can only be called by the owner.
+    async addTokensToVault(
+        _tokenAddress: Address,
+        amount: BigNumberish,
+        txInfo: TransactionInfo
+    ): Promise<Transaction> {
+        if (!this.initialized) await this.init();
+        const walletState = await this.getWalletState();
+        const tokenAddress = await verifyAddress(this.provider, _tokenAddress);
+
+        const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, this.provider);
+
+        let decimals: number;
+
+        try {
+            decimals = await tokenContract.decimals();
+        } catch (e) {
+            throw Error(`Could not get the token's decimals for address: ${tokenAddress}: ${e}`);
+        }
+
+        const amountToVault = ethers.utils.parseUnits(amount.toString(), decimals);
+
+        const transaction = await this.signTransaction(
+            {
+                to: this.laserVault,
+                value: 0,
+                callData: encodeFunctionData(vaultAbi, "addTokensToVault", [tokenAddress, amountToVault]),
+                txInfo,
+            },
+            Number(walletState.nonce)
+        );
+
+        const estimateGas = await estimateLaserGas(this.wallet, this.provider, transaction);
+
+        await verifyWalletCanPayGas(this.provider, BigNumber.from(walletState.balance), estimateGas, BigNumber.from(0));
+
+        if (estimateGas.gt(txInfo.gasLimit)) {
+            throw Error("Gas limit too low, transaction will revert.");
+        }
+
+        return transaction;
+    }
+
+    ///@dev Removes ERC-20 tokens from the vault.
+    ///@dev Returns the trasaction type to remove tokens. Can only be called by the owner + guardian.
+    async removeTokensFromVault(
+        _tokenAddress: Address,
+        amount: BigNumberish,
+        guardianSignature: string,
+        txInfo: TransactionInfo
+    ): Promise<Transaction> {
+        if (!this.initialized) await this.init();
+        const walletState = await this.getWalletState();
+        const tokenAddress = await verifyAddress(this.provider, _tokenAddress);
+
+        const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, this.provider);
+
+        let decimals: number;
+
+        try {
+            decimals = await tokenContract.decimals();
+        } catch (e) {
+            throw Error(`Could not get the token's decimals for address: ${tokenAddress}: ${e}`);
+        }
+
+        const amountOffTheVault = ethers.utils.parseUnits(amount.toString(), decimals);
+
+        const transaction = await this.signTransaction(
+            {
+                to: this.laserVault,
+                value: 0,
+                callData: encodeFunctionData(vaultAbi, "removeTokensFromVault", [
+                    tokenAddress,
+                    amountOffTheVault,
+                    guardianSignature,
+                ]),
+                txInfo,
+            },
+            Number(walletState.nonce)
+        );
+
+        const estimateGas = await estimateLaserGas(this.wallet, this.provider, transaction);
+
+        await verifyWalletCanPayGas(this.provider, BigNumber.from(walletState.balance), estimateGas, BigNumber.from(0));
+
+        if (estimateGas.gt(txInfo.gasLimit)) {
+            throw Error("Gas limit too low, transaction will revert.");
+        }
+        return transaction;
+    }
+
+    ///@dev Returns the amount of tokens that are in the vault for a given token address.
+    async getTokensInVault(tokenAddress: Address): Promise<BigNumber> {
+        return this._getTokensInVault(this.laserVault, this.wallet.address, tokenAddress);
     }
 
     ///@dev Returns the transaction type to send eth. Can only be called by the owner.
@@ -303,7 +530,7 @@ export class Laser extends LaserView implements ILaser {
 
         sendEthVerifier(this.signer.address, value, walletState);
 
-        return this.signTransaction(
+        const transaction = await this.signTransaction(
             {
                 to,
                 value,
@@ -312,6 +539,21 @@ export class Laser extends LaserView implements ILaser {
             },
             Number(walletState.nonce)
         );
+
+        const estimateGas = await estimateLaserGas(this.wallet, this.provider, transaction);
+
+        await verifyWalletCanPayGas(
+            this.provider,
+            BigNumber.from(walletState.balance),
+            estimateGas,
+            BigNumber.from(value)
+        );
+
+        if (estimateGas.gt(txInfo.gasLimit)) {
+            throw Error("Gas limit too low, transaction will revert.");
+        }
+
+        return transaction;
     }
 
     ///@dev Returns the transaction type to transfer an ERC-20 token. Can only be called by the owner.
@@ -330,18 +572,17 @@ export class Laser extends LaserView implements ILaser {
         const walletBalance = await tokenContract.balanceOf(this.wallet.address);
 
         let decimals: number;
-
         try {
             decimals = await tokenContract.decimals();
         } catch (e) {
-            throw Error(`Could not get the token's decimals: ${e}`);
+            throw Error(`Could not get the token's decimals for address: ${tokenAddress}: ${e}`);
         }
 
         const transferAmount = ethers.utils.parseUnits(amount.toString(), decimals);
 
         transferERC20Verifier(this.signer.address, transferAmount, walletBalance, walletState);
 
-        return this.signTransaction(
+        const transaction = await this.signTransaction(
             {
                 to: tokenAddress,
                 value: 0,
@@ -350,11 +591,25 @@ export class Laser extends LaserView implements ILaser {
             },
             Number(walletState.nonce)
         );
+
+        const estimateGas = await estimateLaserGas(this.wallet, this.provider, transaction);
+
+        await verifyWalletCanPayGas(this.provider, BigNumber.from(walletState.balance), estimateGas, BigNumber.from(0));
+
+        if (estimateGas.gt(txInfo.gasLimit)) {
+            throw Error("Gas limit too low, transaction will revert.");
+        }
+
+        return transaction;
     }
+
+    /*//////////////////////////////////////////////////////////////
+                        Signing a Laser transaction
+    //////////////////////////////////////////////////////////////*/
 
     ///@dev Signs a transaction and returns the complete Transaction object.
     ///Proper checks need to be done prior to calling this function.
-    private async signTransaction(
+    async signTransaction(
         { to, value, callData, txInfo }: SignTransactionOptions,
         nonce: number
     ): Promise<Transaction> {

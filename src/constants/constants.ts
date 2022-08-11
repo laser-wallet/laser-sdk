@@ -9,7 +9,9 @@ import { address as mainnetModule } from "../deployments/mainnet/LaserModuleSSR.
 ///@dev goerli deployed addresses.
 import { address as goerliFactory } from "../deployments/goerli/LaserFactory.json";
 import { address as goerliHelper } from "../deployments/goerli/LaserHelper.json";
-import { address as goerliModule } from "../deployments/goerli/LaserModuleSSR.json";
+import { address as goerlissrModule } from "../deployments/goerli/LaserModuleSSR.json";
+import { address as goerliVault } from "../deployments/goerli/LaserVault.json";
+import { address as goerliRegistry } from "../deployments/goerli/LaserRegistry.json";
 
 ///@dev kovan deployed addresses.
 import { address as kovanFactory } from "../deployments/kovan/LaserFactory.json";
@@ -20,6 +22,13 @@ import { address as kovanModule } from "../deployments/kovan/LaserModuleSSR.json
 import { address as ropstenFactory } from "../deployments/ropsten/LaserFactory.json";
 import { address as ropstenHelper } from "../deployments/ropsten/LaserHelper.json";
 import { address as ropstenModule } from "../deployments/ropsten/LaserModuleSSR.json";
+
+///@dev localhost deployed addresses.
+import { address as localhostFactory } from "../deployments/localhost/LaserFactory.json";
+import { address as localhostHelper } from "../deployments/localhost/LaserHelper.json";
+import { address as localhostssrModule } from "../deployments/localhost/LaserModuleSSR.json";
+import { address as localhostVault } from "../deployments/localhost/LaserVault.json";
+import { address as localhostRegistry } from "../deployments/localhost/LaserRegistry.json";
 
 export const ZERO = ethers.constants.AddressZero;
 
@@ -46,7 +55,9 @@ export const DEPLOYED_ADDRESSES = {
     "5": {
         laserFactory: goerliFactory,
         laserHelper: goerliHelper,
-        laserModuleSSR: goerliModule,
+        laserModuleSSR: goerlissrModule,
+        laserVault: goerliVault,
+        laserRegistry: goerliRegistry,
     },
     "42": {
         laserFactory: kovanFactory,
@@ -57,5 +68,12 @@ export const DEPLOYED_ADDRESSES = {
         laserFactory: ropstenFactory,
         laserHelper: ropstenHelper,
         laserModuleSSR: ropstenModule,
+    },
+    "31337": {
+        laserFactory: localhostFactory,
+        laserHelper: localhostHelper,
+        laserModuleSSR: localhostssrModule,
+        laserVault: localhostVault,
+        laserRegistry: localhostRegistry,
     },
 };

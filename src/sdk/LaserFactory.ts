@@ -19,8 +19,9 @@ export type FactoryTransaction = {
     maxPriorityFeePerGas: BigNumberish;
     gasLimit: BigNumberish;
     relayer: Address;
-    laserModule: Address;
-    laserModuleData: string;
+    ssrModule: Address;
+    laserVault: Address;
+    ssrInitData: string;
     saltNumber: BigNumberish;
     ownerSignature: string;
 };
@@ -32,8 +33,11 @@ export class LaserFactory implements ILaserFactory {
     readonly provider: Provider;
     readonly signer: Wallet;
 
+    public ssrModule!: Address;
+    public laserVault!: Address;
+    public laserRegistry!: Address;
+
     private factory!: _LaserFactory;
-    private laserModule!: LaserModuleSSR;
     private initialized = false;
 
     constructor(_provider: Provider, _signer: Wallet) {
@@ -50,37 +54,35 @@ export class LaserFactory implements ILaserFactory {
         switch (chainId.toString()) {
             case "1": {
                 this.factory = LaserFactory__factory.connect(deployedAddressess["1"].laserFactory, this.provider);
-                this.laserModule = LaserModuleSSR__factory.connect(
-                    deployedAddressess["1"].laserModuleSSR,
-                    this.provider
-                );
+                this.ssrModule = deployedAddressess["1"].laserModuleSSR;
                 this.initialized = true;
                 break;
             }
             case "5": {
                 this.factory = LaserFactory__factory.connect(deployedAddressess["5"].laserFactory, this.provider);
-                this.laserModule = LaserModuleSSR__factory.connect(
-                    deployedAddressess["5"].laserModuleSSR,
-                    this.provider
-                );
+                this.ssrModule = deployedAddressess["5"].laserModuleSSR;
+                this.laserVault = deployedAddressess["5"].laserVault;
+                this.laserRegistry = deployedAddressess["5"].laserRegistry;
                 this.initialized = true;
                 break;
             }
             case "42": {
                 this.factory = LaserFactory__factory.connect(deployedAddressess["42"].laserFactory, this.provider);
-                this.laserModule = LaserModuleSSR__factory.connect(
-                    deployedAddressess["42"].laserModuleSSR,
-                    this.provider
-                );
+                this.ssrModule = deployedAddressess["42"].laserModuleSSR;
                 this.initialized = true;
                 break;
             }
             case "3": {
                 this.factory = LaserFactory__factory.connect(deployedAddressess["3"].laserFactory, this.provider);
-                this.laserModule = LaserModuleSSR__factory.connect(
-                    deployedAddressess["3"].laserModuleSSR,
-                    this.provider
-                );
+                this.ssrModule = deployedAddressess["3"].laserModuleSSR;
+                this.initialized = true;
+                break;
+            }
+            case "31337": {
+                this.factory = LaserFactory__factory.connect(deployedAddressess["31337"].laserFactory, this.provider);
+                this.ssrModule = deployedAddressess["31337"].laserModuleSSR;
+                this.laserVault = deployedAddressess["31337"].laserVault;
+                this.laserRegistry = deployedAddressess["31337"].laserRegistry;
                 this.initialized = true;
                 break;
             }
@@ -99,15 +101,14 @@ export class LaserFactory implements ILaserFactory {
     async getInitHash(
         maxFeePerGas: BigNumberish,
         maxPriorityFeePerGas: BigNumberish,
-        gasLimit: BigNumberish
+        gasLimit: BigNumberish,
+        preComputeAddress: Address
     ): Promise<string> {
         const chainId = (await this.provider.getNetwork()).chainId;
         const abiCoder = new utils.AbiCoder();
-        const dataHash = utils.keccak256(
-            abiCoder.encode(
-                ["uint256", "uint256", "uint256", "uint256"],
-                [maxFeePerGas, maxPriorityFeePerGas, gasLimit, chainId]
-            )
+        const dataHash = utils.solidityKeccak256(
+            ["uint256", "uint256", "uint256", "uint256", "address"],
+            [maxFeePerGas, maxPriorityFeePerGas, gasLimit, chainId, preComputeAddress]
         );
         return dataHash;
     }
@@ -120,7 +121,7 @@ export class LaserFactory implements ILaserFactory {
         gasLimit: BigNumberish
     ): Promise<void> {
         if (signature.length !== 132) {
-            throw Error("Invalid init signature length");
+            throw Error("Invalid init signature length.");
         }
 
         // r, s and v values.
@@ -291,7 +292,8 @@ export class LaserFactory implements ILaserFactory {
         relayer: Address
     ): Promise<FactoryTransaction> {
         if (!this.initialized) await this.init();
-        const hash = await this.getInitHash(maxFeePerGas, maxPriorityFeePerGas, gasLimit);
+        const preComputedAddress = await this.preComputeAddress(owner, recoveryOwners, guardians, saltNumber);
+        const hash = await this.getInitHash(maxFeePerGas, maxPriorityFeePerGas, gasLimit, preComputedAddress);
         const ownerSignature = await sign(this.signer, hash);
         // Checks the correctness of all the parameters.
         await this.checkParams(
@@ -316,7 +318,7 @@ export class LaserFactory implements ILaserFactory {
             saltNumber
         );
 
-        const laserModuleData = initSSR(guardians, recoveryOwners);
+        const ssrInitData = initSSR(guardians, recoveryOwners);
 
         return {
             owner,
@@ -324,8 +326,9 @@ export class LaserFactory implements ILaserFactory {
             maxPriorityFeePerGas,
             gasLimit,
             relayer,
-            laserModule: this.laserModule.address,
-            laserModuleData,
+            ssrModule: this.ssrModule,
+            laserVault: this.laserVault,
+            ssrInitData,
             saltNumber,
             ownerSignature,
         };
@@ -357,6 +360,6 @@ export class LaserFactory implements ILaserFactory {
     ): Promise<Address> {
         if (!this.initialized) await this.init();
         const initData = initSSR(guardians, recoveryOwners);
-        return this.factory.preComputeAddress(owner, this.laserModule.address, initData, saltNumber);
+        return this.factory.preComputeAddress(owner, this.ssrModule, initData, saltNumber);
     }
 }

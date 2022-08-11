@@ -3,6 +3,7 @@ import { Address, Transaction } from "../types";
 import { LaserWallet__factory, LaserWallet } from "../typechain";
 import { LaserHelper__factory, LaserHelper } from "../typechain";
 import { ILaserView, WalletState } from "./interfaces/ILaserView";
+import { BigNumber, ethers } from "ethers";
 
 ///@dev Class that contains all the relevant view methods to interact with a Laser wallet.
 export class LaserView implements ILaserView {
@@ -17,9 +18,9 @@ export class LaserView implements ILaserView {
     }
 
     ///@dev Returns the state of the wallet and SSR Module <WalletState>
-    async _getWalletState(laserHelper: LaserHelper, laserModuleAddress: Address): Promise<WalletState> {
+    async _getWalletState(laserHelper: LaserHelper, ssrModule: Address): Promise<WalletState> {
         const { owner, singleton, isLocked, guardians, recoveryOwners, nonce, balance } =
-            await laserHelper.getWalletState(this.wallet.address, laserModuleAddress);
+            await laserHelper.getWalletState(this.wallet.address, ssrModule);
 
         return {
             owner,
@@ -49,5 +50,13 @@ export class LaserView implements ILaserView {
     async isValidSignature(hash: string, signature: string): Promise<boolean> {
         const result = await this.wallet.isValidSignature(hash, signature);
         return result.toLowerCase() === "0x1626ba7e";
+    }
+
+    ///@dev The amount of tokens that are in the vault from the provided token and wallet.
+    async _getTokensInVault(laserVaultAddress: Address, wallet: Address, tokenAddress: Address): Promise<BigNumber> {
+        const abi = ["function getTokensInVault(address,address) external view returns (uint256)"];
+        const laserVault = new ethers.Contract(laserVaultAddress, abi, this.provider);
+
+        return laserVault.getTokensInVault(wallet, tokenAddress);
     }
 }
