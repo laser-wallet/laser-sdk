@@ -1,5 +1,17 @@
 # laser-sdk
 
+## 0.4.3
+
+### Patch Changes
+
+-   aea289e: Calculate deployment fees
+
+## 0.4.2
+
+### Patch Changes
+
+-   1b205fe: Remove postinstall hook
+
 ## 0.4.1
 
 ### Patch Changes
