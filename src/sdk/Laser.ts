@@ -603,6 +603,30 @@ export class Laser extends LaserView implements ILaser {
         return transaction;
     }
 
+    async sendTransaction(to: Address, data: any, value: BigNumberish, txInfo: TransactionInfo) {
+        const walletState = await this.getWalletState();
+
+        const transaction = await this.signTransaction(
+            {
+                to,
+                callData: data,
+                value,
+                txInfo,
+            },
+            Number(walletState.nonce)
+        );
+
+        const estimateGas = await estimateLaserGas(this.wallet, this.provider, transaction);
+
+        await verifyWalletCanPayGas(this.provider, BigNumber.from(walletState.balance), estimateGas, BigNumber.from(0));
+
+        if (estimateGas.gt(txInfo.gasLimit)) {
+            throw Error("Gas limit too low, transaction will revert.");
+        }
+
+        return transaction;
+    }
+
     /*//////////////////////////////////////////////////////////////
                         Signing a Laser transaction
     //////////////////////////////////////////////////////////////*/
