@@ -55,6 +55,8 @@ export class LaserFactory implements ILaserFactory {
             case "1": {
                 this.factory = LaserFactory__factory.connect(deployedAddressess["1"].laserFactory, this.provider);
                 this.ssrModule = deployedAddressess["1"].laserModuleSSR;
+                this.laserVault = deployedAddressess["1"].laserVault;
+                this.laserRegistry = deployedAddressess["1"].laserRegistry;
                 this.initialized = true;
                 break;
             }
@@ -69,12 +71,16 @@ export class LaserFactory implements ILaserFactory {
             case "42": {
                 this.factory = LaserFactory__factory.connect(deployedAddressess["42"].laserFactory, this.provider);
                 this.ssrModule = deployedAddressess["42"].laserModuleSSR;
+                this.laserVault = deployedAddressess["42"].laserVault;
+                this.laserRegistry = deployedAddressess["42"].laserRegistry;
                 this.initialized = true;
                 break;
             }
             case "3": {
                 this.factory = LaserFactory__factory.connect(deployedAddressess["3"].laserFactory, this.provider);
                 this.ssrModule = deployedAddressess["3"].laserModuleSSR;
+                this.laserVault = deployedAddressess["3"].laserVault;
+                this.laserRegistry = deployedAddressess["3"].laserRegistry;
                 this.initialized = true;
                 break;
             }

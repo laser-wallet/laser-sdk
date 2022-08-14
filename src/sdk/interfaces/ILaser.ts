@@ -43,7 +43,4 @@ export interface ILaser {
         amount: BigNumberish,
         txInfo: TransactionInfo
     ): Promise<Transaction>;
-
-    ///@dev Returns the transaction type to send an arbitrary transaction. Can only be called by the owner.
-    sendTransaction(to: Address, data: any, value: BigNumberish, txInfo: TransactionInfo): Promise<Transaction>;
 }

@@ -8,12 +8,12 @@ const url = "http://127.0.0.1:8545/";
 
 const provider = new ethers.providers.JsonRpcProvider(url);
 
-const acc0 = new ethers.Wallet("", provider);
+const acc0 = new ethers.Wallet("0x47c99abed3324a2707c28affff1267e45918ec8c3f20b8aa892e8b065d2942dd", provider);
 
 const factory = new LaserFactory(provider, acc0);
 const saltNumber = 1231;
 
-const LASER = "0xF92C76c68310e66769476F403D3d2B0825965bE0";
+const LASER = "0x5e89769bD1eAa07D884254Eb2954885a89016E32";
 async function deploy() {
     const owner = acc0.address;
     const recoveryOwners = [ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address];
@@ -67,6 +67,8 @@ async function deploy() {
     console.log(event.args?.proxy);
 }
 
+deploy();
+
 async function view() {
     const laser = new Laser(provider, acc0, LASER);
     await laser.init();
@@ -86,13 +88,13 @@ const addRecoveryOwner = async () => {
     const txInfo = {
         maxFeePerGas: 1000000000,
         maxPriorityFeePerGas: 1000000000,
-        gasLimit: 300000,
+        gasLimit: 100000,
         relayer: acc0.address,
     };
     const tr = await laser.addRecoveryOwner(newRO, txInfo);
 
     const data = encodeWalletData(tr);
-    console.log(data);
+
     await wallet.exec(
         tr.to,
         tr.value,

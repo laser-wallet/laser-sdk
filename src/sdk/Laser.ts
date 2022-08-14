@@ -65,6 +65,7 @@ export class Laser extends LaserView implements ILaser {
         switch (chainId.toString()) {
             case "1": {
                 this.ssrModule = deployedAddressess["1"].laserModuleSSR;
+                this.laserVault = deployedAddressess["1"].laserVault;
                 this.laserHelper = LaserHelper__factory.connect(deployedAddressess["1"].laserHelper, this.provider);
                 this.initialized = true;
                 break;
@@ -78,12 +79,14 @@ export class Laser extends LaserView implements ILaser {
             }
             case "42": {
                 this.ssrModule = deployedAddressess["42"].laserModuleSSR;
+                this.laserVault = deployedAddressess["42"].laserVault;
                 this.laserHelper = LaserHelper__factory.connect(deployedAddressess["42"].laserHelper, this.provider);
                 this.initialized = true;
                 break;
             }
             case "3": {
                 this.ssrModule = deployedAddressess["3"].laserModuleSSR;
+                this.laserVault = deployedAddressess["3"].laserVault;
                 this.laserHelper = LaserHelper__factory.connect(deployedAddressess["3"].laserHelper, this.provider);
                 this.initialized = true;
                 break;
@@ -587,30 +590,6 @@ export class Laser extends LaserView implements ILaser {
                 to: tokenAddress,
                 value: 0,
                 callData: encodeFunctionData(erc20Abi, "transfer", [to, transferAmount]),
-                txInfo,
-            },
-            Number(walletState.nonce)
-        );
-
-        const estimateGas = await estimateLaserGas(this.wallet, this.provider, transaction);
-
-        await verifyWalletCanPayGas(this.provider, BigNumber.from(walletState.balance), estimateGas, BigNumber.from(0));
-
-        if (estimateGas.gt(txInfo.gasLimit)) {
-            throw Error("Gas limit too low, transaction will revert.");
-        }
-
-        return transaction;
-    }
-
-    async sendTransaction(to: Address, data: any, value: BigNumberish, txInfo: TransactionInfo) {
-        const walletState = await this.getWalletState();
-
-        const transaction = await this.signTransaction(
-            {
-                to,
-                callData: data,
-                value,
                 txInfo,
             },
             Number(walletState.nonce)

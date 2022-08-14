@@ -4,7 +4,9 @@ import { Transaction } from "../types";
 ///@dev mainnet deployed addresses.
 import { address as mainnetFactory } from "../deployments/mainnet/LaserFactory.json";
 import { address as mainnetHelper } from "../deployments/mainnet/LaserHelper.json";
-import { address as mainnetModule } from "../deployments/mainnet/LaserModuleSSR.json";
+import { address as mainnetssrModule } from "../deployments/mainnet/LaserModuleSSR.json";
+import { address as mainnetVault } from "../deployments/mainnet/LaserVault.json";
+import { address as mainnetRegistry } from "../deployments/mainnet/LaserRegistry.json";
 
 ///@dev goerli deployed addresses.
 import { address as goerliFactory } from "../deployments/goerli/LaserFactory.json";
@@ -16,12 +18,16 @@ import { address as goerliRegistry } from "../deployments/goerli/LaserRegistry.j
 ///@dev kovan deployed addresses.
 import { address as kovanFactory } from "../deployments/kovan/LaserFactory.json";
 import { address as kovanHelper } from "../deployments/kovan/LaserHelper.json";
-import { address as kovanModule } from "../deployments/kovan/LaserModuleSSR.json";
+import { address as kovanssrModule } from "../deployments/kovan/LaserModuleSSR.json";
+import { address as kovanVault } from "../deployments/kovan/LaserVault.json";
+import { address as kovanRegistry } from "../deployments/kovan/LaserRegistry.json";
 
 ///@dev ropsten deployed addresses.
 import { address as ropstenFactory } from "../deployments/ropsten/LaserFactory.json";
 import { address as ropstenHelper } from "../deployments/ropsten/LaserHelper.json";
-import { address as ropstenModule } from "../deployments/ropsten/LaserModuleSSR.json";
+import { address as ropstenssrModule } from "../deployments/ropsten/LaserModuleSSR.json";
+import { address as ropstenVault } from "../deployments/ropsten/LaserVault.json";
+import { address as ropstenRegistry } from "../deployments/ropsten/LaserRegistry.json";
 
 ///@dev localhost deployed addresses.
 import { address as localhostFactory } from "../deployments/localhost/LaserFactory.json";
@@ -50,7 +56,9 @@ export const DEPLOYED_ADDRESSES = {
     "1": {
         laserFactory: mainnetFactory,
         laserHelper: mainnetHelper,
-        laserModuleSSR: mainnetModule,
+        laserModuleSSR: mainnetssrModule,
+        laserVault: mainnetVault,
+        laserRegistry: mainnetRegistry,
     },
     "5": {
         laserFactory: goerliFactory,
@@ -62,12 +70,16 @@ export const DEPLOYED_ADDRESSES = {
     "42": {
         laserFactory: kovanFactory,
         laserHelper: kovanHelper,
-        laserModuleSSR: kovanModule,
+        laserModuleSSR: kovanssrModule,
+        laserVault: kovanVault,
+        laserRegistry: kovanRegistry,
     },
     "3": {
         laserFactory: ropstenFactory,
         laserHelper: ropstenHelper,
-        laserModuleSSR: ropstenModule,
+        laserModuleSSR: ropstenssrModule,
+        laserVault: ropstenVault,
+        laserRegistry: ropstenRegistry,
     },
     "31337": {
         laserFactory: localhostFactory,
