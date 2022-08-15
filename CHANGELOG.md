@@ -1,5 +1,11 @@
 # laser-sdk
 
+## 0.5.0
+
+### Minor Changes
+
+-   da7da52: Add support for vault
+
 ## 0.4.3
 
 ### Patch Changes
