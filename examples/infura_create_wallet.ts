@@ -11,37 +11,6 @@ dotenv.config();
 const provider = new ethers.providers.JsonRpcProvider(`https://goerli.infura.io/v3/${process.env.INFURA_KEY}`);
 const signer = new ethers.Wallet(`0x${process.env.PK}`, provider);
 
-const itx = new ethers.providers.InfuraProvider(
-    "goerli", // or 'ropsten', 'rinkeby', 'kovan', 'mainnet'
-    `${process.env.INFURA_KEY}`
-);
-
-///@dev From Infura's docs:
-`
-*** fast targets getting your transaction mined in ~6 blocks (1:30 min)
-*** slow targets getting your transaction mined in ~200 blocks (1 hour)
-`;
-type Schedule = "fast" | "slow";
-type InfuraTransaction = {
-    to: Address;
-    data: string;
-    gas: BigNumberish;
-    signature: string;
-    schedule: Schedule;
-};
-
-const schedule = "fast";
-
-async function signRequest(tx: any) {
-    const relayTransactionHash = ethers.utils.keccak256(
-        ethers.utils.defaultAbiCoder.encode(
-            ["address", "bytes", "uint", "uint", "string"],
-            [tx.to, tx.data, tx.gas, 5, tx.schedule]
-        )
-    );
-    return await signer.signMessage(ethers.utils.arrayify(relayTransactionHash));
-}
-
 async function executeTransaction() {
     const factory = new LaserFactory(provider, signer);
     await factory.init();
@@ -70,17 +39,7 @@ async function executeTransaction() {
         )
     );
 
-    const tx = {
-        to: await factory.getAddress(),
-        data: data,
-        gas: gasLimit.toString(),
-        schedule: "fast",
-    };
-    const signature = await signRequest(tx);
-
-    const relayTransactionHash = await itx.send("relay_sendTransaction", [tx, signature]);
-    console.log(`ITX relay hash: ${relayTransactionHash.hash}`);
-    return relayTransactionHash;
+    console.log("owner -->", this.signer.address);
 }
 
 executeTransaction();

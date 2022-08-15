@@ -1,0 +1,360 @@
+{
+  "address": "0xD2F0d39Df9b723C76478c2ec1241a7AFD3dE4064",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "smartSocialRecovery",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "LaserVault__verifyCommonApprove__erc20InVault",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "LaserVault__verifyERC20Transfer__erc20InVault",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "LaserVault__verifyEth__ethInVault",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "Utils__returnSigner__invalidContractSignature",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "Utils__returnSigner__invalidSignature",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "TokensAdded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "TokensRemoved",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "LASER_SMART_SOCIAL_RECOVERY",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "addTokensToVault",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "wallet",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        }
+      ],
+      "name": "getTokensInVault",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "guardianSignature",
+          "type": "bytes"
+        }
+      ],
+      "name": "removeTokensFromVault",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "wallet",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "callData",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        }
+      ],
+      "name": "verifyTransaction",
+      "outputs": [],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x089b4775adacec563194ade64de97e5791491ad581dea3b55631a15bd80073f5",
+  "receipt": {
+    "to": null,
+    "from": "0x7681C78fb672024C8ACce686cc9A7Acf7F07640d",
+    "contractAddress": "0xD2F0d39Df9b723C76478c2ec1241a7AFD3dE4064",
+    "transactionIndex": 47,
+    "gasUsed": "885402",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x90d0183813501b23304d8b4d05e090b706105fe862a16488ddf322b3fb8fe30a",
+    "transactionHash": "0x089b4775adacec563194ade64de97e5791491ad581dea3b55631a15bd80073f5",
+    "logs": [],
+    "blockNumber": 15336246,
+    "cumulativeGasUsed": "6041592",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0xc8811AA0f3Fcfab3efE49d60B05ef2c277169233"
+  ],
+  "numDeployments": 1,
+  "solcInputHash": "de78a7bd8420c51032966958e96a675c",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.15+commit.e14f2714\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"smartSocialRecovery\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"LaserVault__verifyCommonApprove__erc20InVault\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"LaserVault__verifyERC20Transfer__erc20InVault\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"LaserVault__verifyEth__ethInVault\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"Utils__returnSigner__invalidContractSignature\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"Utils__returnSigner__invalidSignature\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"TokensAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"TokensRemoved\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"LASER_SMART_SOCIAL_RECOVERY\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"addTokensToVault\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"wallet\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"}],\"name\":\"getTokensInVault\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"guardianSignature\",\"type\":\"bytes\"}],\"name\":\"removeTokensFromVault\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"wallet\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"callData\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"name\":\"verifyTransaction\",\"outputs\":[],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"author\":\"Rodrigo Herrera I.\",\"kind\":\"dev\",\"methods\":{\"addTokensToVault(address,uint256)\":{\"params\":{\"amount\":\"Amount of tokens to add to the vault.\",\"token\":\"The address of the token.\"}},\"getTokensInVault(address,address)\":{\"params\":{\"token\":\"The address of the token.\",\"wallet\":\"The address of the wallet.\"},\"returns\":{\"_0\":\"The amount of tokens that are in the vault from the provided token and wallet.\"}},\"removeTokensFromVault(address,uint256,bytes)\":{\"params\":{\"amount\":\"Amount of tokens to remove to the vault.\",\"guardianSignature\":\"Signature of one of the wallet's guardians.                           In order to take tokens out of the vault, it needs to be                           signed by the owner + a guardian.\",\"token\":\"The address of the token.\"}},\"verifyTransaction(address,address,uint256,bytes,uint256,uint256,uint256,uint256,bytes)\":{\"params\":{\"callData\":\"Data payload for the transaction.\",\"to\":\"Destination address.\",\"value\":\"Amount in WEI to transfer.\",\"wallet\":\"The address of the wallet.\"}}},\"title\":\"LaserVault\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"addTokensToVault(address,uint256)\":{\"notice\":\"Adds tokens to vault.\"},\"removeTokensFromVault(address,uint256,bytes)\":{\"notice\":\"Removes tokens from vault.\"},\"verifyTransaction(address,address,uint256,bytes,uint256,uint256,uint256,uint256,bytes)\":{\"notice\":\"Verifies that the transaction doesn't spend assets from the vault.\"}},\"notice\":\"Laser guard module that locks assets of a Laser wallet for extra security.         It acts as a vault in the sense that the locked assets cannot be use unless the wallet's         owner (or authorized module) orders otherwise.\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/modules/laser-guard/LaserVault.sol\":\"LaserVault\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":800},\"remappings\":[]},\"sources\":{\"contracts/common/Utils.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity 0.8.15;\\n\\nimport \\\"../interfaces/IEIP1271.sol\\\";\\n\\n/**\\n * @title Utils - Helper functions for Laser wallet and modules.\\n */\\nlibrary Utils {\\n    /*//////////////////////////////////////////////////////////////\\n                            Errors\\n    //////////////////////////////////////////////////////////////*/\\n\\n    error Utils__returnSigner__invalidSignature();\\n\\n    error Utils__returnSigner__invalidContractSignature();\\n\\n    /**\\n     * @param signedHash  The hash that was signed.\\n     * @param signatures  Result of signing the has.\\n     * @param pos         Position of the signer.\\n     *\\n     * @return signer      Address that signed the hash.\\n     */\\n    function returnSigner(\\n        bytes32 signedHash,\\n        bytes memory signatures,\\n        uint256 pos\\n    ) internal view returns (address signer) {\\n        bytes32 r;\\n        bytes32 s;\\n        uint8 v;\\n        (r, s, v) = splitSigs(signatures, pos);\\n\\n        if (v == 0) {\\n            // If v is 0, then it is a contract signature.\\n            // The address of the contract is encoded into r.\\n            signer = address(uint160(uint256(r)));\\n\\n            // The signature(s) of the EOA's that control the target contract.\\n            bytes memory contractSignature;\\n\\n            assembly {\\n                contractSignature := add(add(signatures, s), 0x20)\\n            }\\n\\n            if (IEIP1271(signer).isValidSignature(signedHash, contractSignature) != 0x1626ba7e) {\\n                revert Utils__returnSigner__invalidContractSignature();\\n            }\\n        } else if (v > 30) {\\n            signer = ecrecover(\\n                keccak256(abi.encodePacked(\\\"\\\\x19Ethereum Signed Message:\\\\n32\\\", signedHash)),\\n                v - 4,\\n                r,\\n                s\\n            );\\n        } else {\\n            signer = ecrecover(signedHash, v, r, s);\\n        }\\n\\n        if (signer == address(0)) revert Utils__returnSigner__invalidSignature();\\n    }\\n\\n    /**\\n     * @dev Returns the r, s and v values of the signature.\\n     *\\n     * @param pos Which signature to read.\\n     */\\n    function splitSigs(bytes memory signatures, uint256 pos)\\n        internal\\n        pure\\n        returns (\\n            bytes32 r,\\n            bytes32 s,\\n            uint8 v\\n        )\\n    {\\n        assembly {\\n            let sigPos := mul(0x41, pos)\\n            r := mload(add(signatures, add(sigPos, 0x20)))\\n            s := mload(add(signatures, add(sigPos, 0x40)))\\n            v := byte(0, mload(add(signatures, add(sigPos, 0x60))))\\n        }\\n    }\\n\\n    /**\\n     * @dev Calls a target address, sends value and / or data payload.\\n     *\\n     * @param to     Destination address.\\n     * @param value  Amount in WEI to transfer.\\n     * @param callData   Data payload for the transaction.\\n     */\\n    function call(\\n        address to,\\n        uint256 value,\\n        bytes memory callData,\\n        uint256 txGas\\n    ) internal returns (bool success) {\\n        assembly {\\n            success := call(txGas, to, value, add(callData, 0x20), mload(callData), 0, 0)\\n        }\\n    }\\n\\n    /**\\n     * @dev Calculates the gas price for the transaction.\\n     */\\n    function calculateGasPrice(uint256 maxFeePerGas, uint256 maxPriorityFeePerGas) internal view returns (uint256) {\\n        if (maxFeePerGas == maxPriorityFeePerGas) {\\n            // Legacy mode (pre-EIP1559)\\n            return min(maxFeePerGas, tx.gasprice);\\n        }\\n\\n        // EIP-1559\\n        // priority_fee_per_gas = min(transaction.max_priority_fee_per_gas, transaction.max_fee_per_gas - block.base_fee_per_gas)\\n        // effective_gas_price = priority_fee_per_gas + block.base_fee_per_gas\\n        uint256 priorityFeePerGas = min(maxPriorityFeePerGas, maxFeePerGas - block.basefee);\\n\\n        // effective_gas_price\\n        return priorityFeePerGas + block.basefee;\\n    }\\n\\n    function min(uint256 a, uint256 b) internal pure returns (uint256) {\\n        return a < b ? a : b;\\n    }\\n}\\n\",\"keccak256\":\"0x9292f3676d7449d3f98db4bf2c0ca7a1460da34e3dd4d386d03f5d35919d8003\",\"license\":\"LGPL-3.0-only\"},\"contracts/interfaces/IEIP1271.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity 0.8.15;\\n\\n/**\\n * @title IEIP1271\\n * @notice Interface to call external contracts to validate signature.\\n */\\ninterface IEIP1271 {\\n    /**\\n     * @dev Implementation of EIP 1271: https://eips.ethereum.org/EIPS/eip-1271.\\n     * @param hash Hash of a message signed on behalf of address(this).\\n     * @param signature Signature byte array associated with _msgHash.\\n     * @return Magic value  or reverts with an error message.\\n     */\\n    function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4);\\n}\\n\",\"keccak256\":\"0xfcc98243eaf0e10b323a21e6aca691efec6f128e938f24e495e71cd47c421505\",\"license\":\"LGPL-3.0-only\"},\"contracts/interfaces/IERC165.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-3.0\\npragma solidity 0.8.15;\\n\\n/**\\n * @title IERC165\\n * @notice Support of ERC165.\\n */\\ninterface IERC165 {\\n    /**\\n     * @notice Query if a contract implements an interface\\n     * @param interfaceID The interface identifier, as specified in ERC-165\\n     * @dev Interface identification is specified in ERC-165. This function\\n     * uses less than 30,000 gas.\\n     * @return `true` if the contract implements `interfaceID` and\\n     * interfaceID` is not 0xffffffff, `false` otherwise\\n     */\\n    function supportsInterface(bytes4 interfaceID) external view returns (bool);\\n}\\n\",\"keccak256\":\"0xdf3ddac29884e2c1f2d2fd322bacd6a6907721d3e0909af74cdedeac5c38a9f4\",\"license\":\"GPL-3.0\"},\"contracts/interfaces/IERC20.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-3.0\\npragma solidity 0.8.15;\\n\\ninterface IERC20 {\\n    function balanceOf(address) external view returns (uint256);\\n\\n    function allowance(address, address) external view returns (uint256);\\n}\\n\",\"keccak256\":\"0x057abe0c0f9222a561b6448e1fdbd70ba9db9b3b527ebed2974d8d0de5cda1a6\",\"license\":\"GPL-3.0\"},\"contracts/interfaces/ILaserModuleSSR.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity 0.8.15;\\n\\nimport \\\"./IERC165.sol\\\";\\n\\ninterface ILaserModuleSSR {\\n    error SSR__onlyWallet__notWallet();\\n\\n    error SSR__initGuardians__underflow();\\n\\n    error SSR__initRecoveryOwners__underflow();\\n\\n    error SSR__verifyNewRecoveryOwnerOrGuardian__invalidAddress();\\n\\n    ///@dev removeGuardian() custom errors.\\n    error SSR__removeGuardian__underflow();\\n    error SSR__removeGuardian__invalidAddress();\\n    error SSR__removeGuardian__incorrectPreviousGuardian();\\n\\n    ///@dev removeRecoveryOwner() custom errors.\\n    error SSR__removeRecoveryOwner__underflow();\\n    error SSR__removeRecoveryOwner__invalidAddress();\\n    error SSR__removeRecoveryOwner__incorrectPreviousRecoveryOwner();\\n\\n    ///@dev swapGuardian() custom errors.\\n    error SSR__swapGuardian__invalidPrevGuardian();\\n    error SSR__swapGuardian__invalidOldGuardian();\\n\\n    ///@dev swapRecoveryOwner() custom errors.\\n    error SSR__swapRecoveryOwner__invalidPrevRecoveryOwner();\\n    error SSR__swapRecoveryOwner__invalidOldRecoveryOwner();\\n\\n    ///@dev Inits the module.\\n    ///@notice The target wallet is the 'msg.sender'.\\n    function initSSR(address[] calldata _guardians, address[] calldata _recoveryOwners) external;\\n\\n    function lock(\\n        address wallet,\\n        bytes calldata callData,\\n        uint256 maxFeePerGas,\\n        uint256 maxPriorityFeePerGas,\\n        uint256 gasLimit,\\n        address relayer,\\n        bytes memory signatures\\n    ) external;\\n\\n    /**\\n     * @dev Unlocks the target wallet.\\n     * @notice Can only be called with the signature of the wallet's owner + recovery owner or  owner + guardian.\\n     */\\n    function unlock(\\n        address wallet,\\n        bytes calldata callData,\\n        uint256 maxFeePerGas,\\n        uint256 maxPriorityFeePerGas,\\n        uint256 gasLimit,\\n        address relayer,\\n        bytes memory signatures\\n    ) external;\\n\\n    function recover(\\n        address wallet,\\n        bytes calldata callData,\\n        uint256 maxFeePerGas,\\n        uint256 maxPriorityFeePerGas,\\n        uint256 gasLimit,\\n        address relayer,\\n        bytes memory signatures\\n    ) external;\\n\\n    ///@dev Returns the chain id of this.\\n    function getChainId() external view returns (uint256 chainId);\\n\\n    function getGuardians(address wallet) external view returns (address[] memory);\\n\\n    function getRecoveryOwners(address wallet) external view returns (address[] memory);\\n\\n    function getWalletTimeLock(address wallet) external view returns (uint256);\\n\\n    function isGuardian(address wallet, address guardian) external view returns (bool);\\n}\\n\",\"keccak256\":\"0x93a5d48b10d7d44caf79130296d2e411d0cf5bd47481cc89c4d9826c9e9273be\",\"license\":\"LGPL-3.0-only\"},\"contracts/interfaces/ILaserState.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity 0.8.15;\\n\\ninterface ILaserState {\\n    ///@dev upgradeSingleton() custom error.\\n    error LaserState__upgradeSingleton__notLaser();\\n\\n    ///@dev initOwner() custom errors.\\n    error LaserState__initOwner__walletInitialized();\\n    error LaserState__initOwner__invalidAddress();\\n\\n    function singleton() external view returns (address);\\n\\n    function owner() external view returns (address);\\n\\n    function laserMasterGuard() external view returns (address);\\n\\n    function laserRegistry() external view returns (address);\\n\\n    function isLocked() external view returns (bool);\\n\\n    function nonce() external view returns (uint256);\\n\\n    ///@notice Restricted, can only be called by the wallet or module.\\n    function changeOwner(address newOwner) external;\\n\\n    ///@notice Restricted, can only be called by the wallet.\\n    function addLaserModule(address newModule) external;\\n}\\n\",\"keccak256\":\"0xbd6b60c41c935f3b1384ef26a5002c9c6a0d46b75ff234b60dee66f1049f2467\",\"license\":\"LGPL-3.0-only\"},\"contracts/interfaces/ILaserVault.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity 0.8.15;\\n\\n/**\\n * @title  ILaserVault\\n *\\n * @author Rodrigo Herrera I.\\n *\\n * @notice Laser guard module that locks assets of a Laser wallet for extra security.\\n *         It acts as a vault in the sense that the locked assets cannot be use unless the wallet's\\n *         owner (or authorized module) orders otherwise.\\n *\\n * @dev    This interface has all events, errors, and external function for LaserMasterGuard.\\n */\\ninterface ILaserVault {\\n    event TokensAdded(address indexed, uint256 indexed);\\n    event TokensRemoved(address indexed, uint256 indexed);\\n\\n    // verifyEth() custom error.\\n    error LaserVault__verifyEth__ethInVault();\\n\\n    // verifyERC20Transfer() custom error.\\n    error LaserVault__verifyERC20Transfer__erc20InVault();\\n\\n    // verifyCommonApprove() custom error.\\n    error LaserVault__verifyCommonApprove__erc20InVault();\\n\\n    /**\\n     * @notice Verifies that the transaction doesn't spend assets from the vault.\\n     *\\n     * @param  wallet   The address of the wallet.\\n     * @param  to       Destination address.\\n     * @param  value    Amount in WEI to transfer.\\n     * @param callData  Data payload for the transaction.\\n     */\\n    function verifyTransaction(\\n        address wallet,\\n        address to,\\n        uint256 value,\\n        bytes calldata callData,\\n        uint256,\\n        uint256,\\n        uint256,\\n        uint256,\\n        bytes calldata\\n    ) external view;\\n\\n    /**\\n     * @notice Adds tokens to vault.\\n     *\\n     * @param  token  The address of the token.\\n     * @param  amount Amount of tokens to add to the vault.\\n     */\\n    function addTokensToVault(address token, uint256 amount) external;\\n\\n    /**\\n     * @notice Removes tokens from vault.\\n     *\\n     * @param  token             The address of the token.\\n     * @param  amount            Amount of tokens to remove to the vault.\\n     * @param guardianSignature  Signature of one of the wallet's guardians.\\n     *                           In order to take tokens out of the vault, it needs to be\\n     *                           signed by the owner + a guardian.\\n     */\\n    function removeTokensFromVault(\\n        address token,\\n        uint256 amount,\\n        bytes calldata guardianSignature\\n    ) external;\\n\\n    /**\\n     * @param wallet The address of the wallet.\\n     * @param token  The address of the token.\\n     *\\n     * @return The amount of tokens that are in the vault from the provided token and wallet.\\n     */\\n    function getTokensInVault(address wallet, address token) external view returns (uint256);\\n}\\n\",\"keccak256\":\"0x446b881bb2d06888768fa1966b7729d3b7f422842ee8480d192b7efeccbe4d74\",\"license\":\"LGPL-3.0-only\"},\"contracts/modules/laser-guard/LaserVault.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity 0.8.15;\\n\\nimport \\\"../../common/Utils.sol\\\";\\nimport \\\"../../interfaces/IERC20.sol\\\";\\nimport \\\"../../interfaces/ILaserModuleSSR.sol\\\";\\nimport \\\"../../interfaces/ILaserState.sol\\\";\\nimport \\\"../../interfaces/ILaserVault.sol\\\";\\n\\n/**\\n * @title  LaserVault\\n *\\n * @author Rodrigo Herrera I.\\n *\\n * @notice Laser guard module that locks assets of a Laser wallet for extra security.\\n *         It acts as a vault in the sense that the locked assets cannot be use unless the wallet's\\n *         owner (or authorized module) orders otherwise.\\n */\\ncontract LaserVault is ILaserVault {\\n    /*//////////////////////////////////////////////////////////////\\n                          Init module \\n    //////////////////////////////////////////////////////////////*/\\n\\n    address public immutable LASER_SMART_SOCIAL_RECOVERY;\\n\\n    /*//////////////////////////////////////////////////////////////\\n                         ERC-20 function selectors\\n    //////////////////////////////////////////////////////////////*/\\n\\n    bytes4 private constant ERC20_TRANSFER = bytes4(keccak256(\\\"transfer(address,uint256)\\\"));\\n\\n    bytes4 private constant ERC20_INCREASE_ALLOWANCE = bytes4(keccak256(\\\"increaseAllowance(address,uint256)\\\"));\\n\\n    /*//////////////////////////////////////////////////////////////\\n                         ERC-721 function selectors\\n    //////////////////////////////////////////////////////////////*/\\n\\n    bytes4 private constant ERC721_SAFE_TRANSFER_FROM =\\n        bytes4(keccak256(\\\"safeTransferFrom(address,address,uint256,bytes)\\\"));\\n\\n    bytes4 private constant ERC721_SAFE_TRANSFER_FROM2 = bytes4(keccak256(\\\"safeTransferFrom(address,address,uint256)\\\"));\\n\\n    /*//////////////////////////////////////////////////////////////\\n                         ERC-1155 function selectors\\n    //////////////////////////////////////////////////////////////*/\\n\\n    bytes4 private constant ERC1155_SAFE_TRANSFER_FROM =\\n        bytes4(keccak256(\\\"safeTransferFrom(address,address,uint256,uint256,bytes)\\\"));\\n\\n    bytes4 private constant ERC1155_SAFE_BATCH_TRANSFER_FROM =\\n        bytes4(keccak256((\\\"safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)\\\")));\\n\\n    /*//////////////////////////////////////////////////////////////\\n                         Shared function selectors\\n    //////////////////////////////////////////////////////////////*/\\n\\n    bytes4 private constant COMMON_APPROVE = bytes4(keccak256(\\\"approve(address,uint256)\\\"));\\n\\n    bytes4 private constant COMMON_TRANSFER_FROM = bytes4(keccak256(\\\"transferFrom(address,address,uint256)\\\"));\\n\\n    bytes4 private constant COMMON_SET_APPROVAL_FOR_ALL = bytes4(keccak256(\\\"setApprovalForAll(address,bool)\\\"));\\n\\n    /*//////////////////////////////////////////////////////////////\\n                          ETH encoded address\\n    //////////////////////////////////////////////////////////////*/\\n\\n    address private constant ETH = address(bytes20(bytes32(keccak256(\\\"ETH.ENCODED.LASER\\\"))));\\n\\n    /*//////////////////////////////////////////////////////////////\\n                          Vault's storage\\n    //////////////////////////////////////////////////////////////*/\\n\\n    // walletAddress => tokenAddress => amount.\\n    mapping(address => mapping(address => uint256)) private tokensInVault;\\n\\n    // walletAddress => nftAddress => tokenId => boolean.\\n    mapping(address => mapping(address => mapping(uint256 => bool))) private nftsInVault;\\n\\n    constructor(address smartSocialRecovery) {\\n        //@todo Check that the smart social recovery is registred in LaserRegistry.\\n        LASER_SMART_SOCIAL_RECOVERY = smartSocialRecovery;\\n    }\\n\\n    /**\\n     * @notice Verifies that the transaction doesn't spend assets from the vault.\\n     *\\n     * @param  wallet   The address of the wallet.\\n     * @param  to       Destination address.\\n     * @param  value    Amount in WEI to transfer.\\n     * @param callData  Data payload for the transaction.\\n     */\\n    function verifyTransaction(\\n        address wallet,\\n        address to,\\n        uint256 value,\\n        bytes calldata callData,\\n        uint256,\\n        uint256,\\n        uint256,\\n        uint256,\\n        bytes calldata\\n    ) external view {\\n        bytes4 funcSelector = bytes4(callData);\\n\\n        // If value is greater than 0, then it is an ETH transfer.\\n        if (value > 0) {\\n            verifyEth(wallet, value);\\n        }\\n\\n        if (funcSelector == ERC20_TRANSFER) {\\n            verifyERC20Transfer(wallet, to, callData);\\n        }\\n\\n        if (funcSelector == COMMON_APPROVE) {\\n            verifyCommonApprove(wallet, to, callData);\\n        }\\n\\n        if (funcSelector == ERC20_INCREASE_ALLOWANCE) {\\n            verifyERC20IncreaseAllowance(wallet, to, callData);\\n        }\\n    }\\n\\n    /**\\n     * @notice Adds tokens to vault.\\n     *\\n     * @param  token  The address of the token.\\n     * @param  amount Amount of tokens to add to the vault.\\n     */\\n    function addTokensToVault(address token, uint256 amount) external {\\n        address wallet = msg.sender;\\n\\n        tokensInVault[wallet][token] += amount;\\n\\n        emit TokensAdded(token, amount);\\n    }\\n\\n    /**\\n     * @notice Removes tokens from vault.\\n     *\\n     * @param  token             The address of the token.\\n     * @param  amount            Amount of tokens to remove to the vault.\\n     * @param guardianSignature  Signature of one of the wallet's guardians.\\n     *                           In order to take tokens out of the vault, it needs to be\\n     *                           signed by the owner + a guardian.\\n     */\\n    function removeTokensFromVault(\\n        address token,\\n        uint256 amount,\\n        bytes calldata guardianSignature\\n    ) external {\\n        address wallet = msg.sender;\\n\\n        // We subtract 1 from the nonce because the nonce was incremented at the\\n        // beginning of the transaction.\\n        uint256 walletNonce = ILaserState(wallet).nonce() - 1;\\n\\n        bytes32 signedHash = keccak256(abi.encodePacked(token, amount, block.chainid, wallet, walletNonce));\\n\\n        address signer = Utils.returnSigner(signedHash, guardianSignature, 0);\\n\\n        require(ILaserModuleSSR(LASER_SMART_SOCIAL_RECOVERY).isGuardian(wallet, signer), \\\"Invalid guardian signature\\\");\\n\\n        tokensInVault[wallet][token] -= amount;\\n\\n        emit TokensRemoved(token, amount);\\n    }\\n\\n    /**\\n     * @param wallet The address of the wallet.\\n     * @param token  The address of the token.\\n     *\\n     * @return The amount of tokens that are in the vault from the provided token and wallet.\\n     */\\n    function getTokensInVault(address wallet, address token) external view returns (uint256) {\\n        return tokensInVault[wallet][token];\\n    }\\n\\n    /**\\n     * @notice Verifies that the transfer amount is in bounds.\\n     *\\n     * @param wallet   The wallet address.\\n     * @param value    Amount in 'WEI' to transfer.\\n     */\\n    function verifyEth(address wallet, uint256 value) internal view {\\n        // If value is greater than 0, then  it is ETH transfer.\\n        uint256 walletBalance = address(wallet).balance;\\n\\n        uint256 ethInVault = tokensInVault[wallet][ETH];\\n\\n        if (walletBalance - value < ethInVault) revert LaserVault__verifyEth__ethInVault();\\n    }\\n\\n    /**\\n     * @notice Verifies that the transfer amount is in bounds.\\n     *\\n     * @param wallet    The wallet address.\\n     * @param to        The address to transfer the tokens to.\\n     * @param callData  The calldata of the function.\\n     */\\n    function verifyERC20Transfer(\\n        address wallet,\\n        address to,\\n        bytes calldata callData\\n    ) internal view {\\n        (, uint256 transferAmount) = abi.decode(callData[4:], (address, uint256));\\n\\n        uint256 _tokensInVault = tokensInVault[wallet][to];\\n\\n        uint256 walletTokenBalance = IERC20(to).balanceOf(wallet);\\n\\n        if (walletTokenBalance - transferAmount < _tokensInVault) {\\n            revert LaserVault__verifyERC20Transfer__erc20InVault();\\n        }\\n    }\\n\\n    /**\\n     * @notice Verifies that the spender's allowance is in bounds with the tokens in vault.\\n     *\\n     * @param wallet   The wallet address.\\n     * @param to       The address to transfer the tokens to.\\n     * @param callData The calldata of the function.\\n     */\\n    function verifyCommonApprove(\\n        address wallet,\\n        address to,\\n        bytes calldata callData\\n    ) internal view {\\n        (address spender, uint256 amount) = abi.decode(callData[4:], (address, uint256));\\n\\n        // First we will check if it is ERC20.\\n        uint256 _tokensInVault = tokensInVault[wallet][to];\\n\\n        if (_tokensInVault > 0) {\\n            // Then it is definitely an ERC20.\\n            uint256 walletTokenBalance = IERC20(to).balanceOf(wallet);\\n\\n            uint256 spenderAllowance = IERC20(to).allowance(wallet, spender);\\n\\n            if (walletTokenBalance - (amount + spenderAllowance) < _tokensInVault) {\\n                revert LaserVault__verifyCommonApprove__erc20InVault();\\n            }\\n        }\\n    }\\n\\n    /**\\n     * @notice Verifies that the wallet has enough allowance to transfer the amount of tokens.\\n     *\\n     * @param wallet   The wallet address.\\n     * @param to       The address to transfer the tokens to.\\n     * @param callData The calldata of the function.\\n     */\\n    function verifyERC20IncreaseAllowance(\\n        address wallet,\\n        address to,\\n        bytes calldata callData\\n    ) internal view {\\n        (address spender, uint256 addedValue) = abi.decode(callData[4:], (address, uint256));\\n\\n        uint256 _tokensInVault = tokensInVault[wallet][to];\\n\\n        uint256 walletTokenBalance = IERC20(to).balanceOf(wallet);\\n\\n        uint256 spenderCurrentAllowance = IERC20(to).allowance(spender, wallet);\\n        uint256 spenderNewAllowance = spenderCurrentAllowance + addedValue;\\n\\n        require(walletTokenBalance - spenderNewAllowance > _tokensInVault, \\\"Allowance exceeds vault.\\\");\\n    }\\n}\\n\",\"keccak256\":\"0x5b1f2ff3ca72ce367a1a35da950f6459c09287c4d94c4da0829a74a490b0ae72\",\"license\":\"LGPL-3.0-only\"}},\"version\":1}",
+  "bytecode": "0x60a060405234801561001057600080fd5b50604051610f99380380610f9983398101604081905261002f91610040565b6001600160a01b0316608052610070565b60006020828403121561005257600080fd5b81516001600160a01b038116811461006957600080fd5b9392505050565b608051610f0861009160003960008181608601526103750152610f086000f3fe608060405234801561001057600080fd5b50600436106100675760003560e01c80635b3458aa116100505780635b3458aa146100c55780635f7049dd1461010a5780638e9c326d1461011d57600080fd5b8063167cd1821461006c5780631f68b4bd14610081575b600080fd5b61007f61007a366004610bb4565b610130565b005b6100a87f000000000000000000000000000000000000000000000000000000000000000081565b6040516001600160a01b0390911681526020015b60405180910390f35b6100fc6100d3366004610c86565b6001600160a01b0391821660009081526020818152604080832093909416825291909152205490565b6040519081526020016100bc565b61007f610118366004610cbf565b6101c8565b61007f61012b366004610ceb565b610239565b600061013c888a610d47565b9050891561014e5761014e8c8b6104ad565b6356fa634560e01b6001600160e01b0319821601610172576101728c8c8b8b610516565b63f6a1584d60e01b6001600160e01b0319821601610196576101968c8c8b8b6105f3565b63c6af6caf60e01b6001600160e01b03198216016101ba576101ba8c8c8b8b610766565b505050505050505050505050565b336000818152602081815260408083206001600160a01b0387168452909152812080548492906101f9908490610d8d565b909155505060405182906001600160a01b038516907f0eaac1064ee8d13f83091f388597ffb5ff2d2e59f6a16aae2a74ba7f2d13c8d990600090a3505050565b600033905060006001826001600160a01b031663affed0e06040518163ffffffff1660e01b8152600401602060405180830381865afa158015610280573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906102a49190610da5565b6102ae9190610dbe565b6040516bffffffffffffffffffffffff19606089811b821660208401526034830189905246605484015285901b1660748201526088810182905290915060009060a801604051602081830303815290604052805190602001209050600061034b8287878080601f016020809104026020016040519081016040528093929190818152602001838380828437600092018290525092506108fb915050565b60405163353ba5cd60e21b81526001600160a01b03868116600483015280831660248301529192507f00000000000000000000000000000000000000000000000000000000000000009091169063d4ee973490604401602060405180830381865afa1580156103be573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906103e29190610dd5565b6104335760405162461bcd60e51b815260206004820152601a60248201527f496e76616c696420677561726469616e207369676e617475726500000000000060448201526064015b60405180910390fd5b6001600160a01b03808516600090815260208181526040808320938c1683529290529081208054899290610468908490610dbe565b909155505060405187906001600160a01b038a16907f079bee7f865179f632bcb69702978d375656a5decc8ca5fc5c3acc636412e35d90600090a35050505050505050565b6001600160a01b03821660008181526020818152604080832073c9e6c67284a1cefbad549c4af8200e564a75ca4c8452909152902054903190806104f18484610dbe565b101561051057604051632c3ba9a560e21b815260040160405180910390fd5b50505050565b60006105258260048186610dfe565b8101906105329190610cbf565b6001600160a01b03878116600081815260208181526040808320948b16808452949091528082205490516370a0823160e01b815260048101939093529395509293506370a0823190602401602060405180830381865afa15801561059a573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906105be9190610da5565b9050816105cb8483610dbe565b10156105ea576040516355b9210760e01b815260040160405180910390fd5b50505050505050565b6000806106038360048187610dfe565b8101906106109190610cbf565b6001600160a01b03808916600090815260208181526040808320938b1683529290522054919350915080156105ea576040516370a0823160e01b81526001600160a01b038881166004830152600091908816906370a0823190602401602060405180830381865afa158015610689573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906106ad9190610da5565b604051636eb1769f60e11b81526001600160a01b038a81166004830152868116602483015291925060009189169063dd62ed3e90604401602060405180830381865afa158015610701573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906107259190610da5565b9050826107328286610d8d565b61073c9084610dbe565b101561075b5760405163d24e5c4760e01b815260040160405180910390fd5b505050505050505050565b6000806107768360048187610dfe565b8101906107839190610cbf565b6001600160a01b03888116600081815260208181526040808320948c16808452949091528082205490516370a0823160e01b815260048101939093529496509294506370a0823190602401602060405180830381865afa1580156107eb573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061080f9190610da5565b604051636eb1769f60e11b81526001600160a01b0386811660048301528a8116602483015291925060009189169063dd62ed3e90604401602060405180830381865afa158015610863573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906108879190610da5565b905060006108958583610d8d565b9050836108a28285610dbe565b116108ef5760405162461bcd60e51b815260206004820152601860248201527f416c6c6f77616e63652065786365656473207661756c742e0000000000000000604482015260640161042a565b50505050505050505050565b60008060008061092586866041020160208101516040820151606090920151909260009190911a90565b9194509250905060ff81166000036109fd57604051630b135d3f60e11b81529293508392868301602001906001600160a01b03851690631626ba7e90610971908b908590600401610e28565b602060405180830381865afa15801561098e573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906109b29190610e85565b7bffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916631626ba7e60e01b146109f7576040516340aec60f60e11b815260040160405180910390fd5b50610b22565b601e8160ff161115610ac2576040517f19457468657265756d205369676e6564204d6573736167653a0a3332000000006020820152603c8101889052600190605c0160405160208183030381529060405280519060200120600483610a629190610eaf565b6040805160008152602081018083529390935260ff90911690820152606081018590526080810184905260a0016020604051602081039080840390855afa158015610ab1573d6000803e3d6000fd5b505050602060405103519350610b22565b60408051600081526020810180835289905260ff831691810191909152606081018490526080810183905260019060a0016020604051602081039080840390855afa158015610b15573d6000803e3d6000fd5b5050506020604051035193505b6001600160a01b038416610b495760405163b9bf1d7d60e01b815260040160405180910390fd5b5050509392505050565b6001600160a01b0381168114610b6857600080fd5b50565b60008083601f840112610b7d57600080fd5b50813567ffffffffffffffff811115610b9557600080fd5b602083019150836020828501011115610bad57600080fd5b9250929050565b60008060008060008060008060008060006101208c8e031215610bd657600080fd5b610be08c35610b53565b8b359a50610bf160208d0135610b53565b60208c0135995060408c0135985067ffffffffffffffff8060608e01351115610c1957600080fd5b610c298e60608f01358f01610b6b565b909950975060808d0135965060a08d0135955060c08d0135945060e08d013593506101008d0135811015610c5c57600080fd5b50610c6e8d6101008e01358e01610b6b565b81935080925050509295989b509295989b9093969950565b60008060408385031215610c9957600080fd5b8235610ca481610b53565b91506020830135610cb481610b53565b809150509250929050565b60008060408385031215610cd257600080fd5b8235610cdd81610b53565b946020939093013593505050565b60008060008060608587031215610d0157600080fd5b8435610d0c81610b53565b935060208501359250604085013567ffffffffffffffff811115610d2f57600080fd5b610d3b87828801610b6b565b95989497509550505050565b6001600160e01b03198135818116916004851015610d6f5780818660040360031b1b83161692505b505092915050565b634e487b7160e01b600052601160045260246000fd5b60008219821115610da057610da0610d77565b500190565b600060208284031215610db757600080fd5b5051919050565b600082821015610dd057610dd0610d77565b500390565b600060208284031215610de757600080fd5b81518015158114610df757600080fd5b9392505050565b60008085851115610e0e57600080fd5b83861115610e1b57600080fd5b5050820193919092039150565b82815260006020604081840152835180604085015260005b81811015610e5c57858101830151858201606001528201610e40565b81811115610e6e576000606083870101525b50601f01601f191692909201606001949350505050565b600060208284031215610e9757600080fd5b81516001600160e01b031981168114610df757600080fd5b600060ff821660ff841680821015610ec957610ec9610d77565b9003939250505056fea2646970667358221220e0ccb27ef56b530fa7e3abca75ebc008443fcb1d468bf1964557d8891678c24764736f6c634300080f0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100675760003560e01c80635b3458aa116100505780635b3458aa146100c55780635f7049dd1461010a5780638e9c326d1461011d57600080fd5b8063167cd1821461006c5780631f68b4bd14610081575b600080fd5b61007f61007a366004610bb4565b610130565b005b6100a87f000000000000000000000000000000000000000000000000000000000000000081565b6040516001600160a01b0390911681526020015b60405180910390f35b6100fc6100d3366004610c86565b6001600160a01b0391821660009081526020818152604080832093909416825291909152205490565b6040519081526020016100bc565b61007f610118366004610cbf565b6101c8565b61007f61012b366004610ceb565b610239565b600061013c888a610d47565b9050891561014e5761014e8c8b6104ad565b6356fa634560e01b6001600160e01b0319821601610172576101728c8c8b8b610516565b63f6a1584d60e01b6001600160e01b0319821601610196576101968c8c8b8b6105f3565b63c6af6caf60e01b6001600160e01b03198216016101ba576101ba8c8c8b8b610766565b505050505050505050505050565b336000818152602081815260408083206001600160a01b0387168452909152812080548492906101f9908490610d8d565b909155505060405182906001600160a01b038516907f0eaac1064ee8d13f83091f388597ffb5ff2d2e59f6a16aae2a74ba7f2d13c8d990600090a3505050565b600033905060006001826001600160a01b031663affed0e06040518163ffffffff1660e01b8152600401602060405180830381865afa158015610280573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906102a49190610da5565b6102ae9190610dbe565b6040516bffffffffffffffffffffffff19606089811b821660208401526034830189905246605484015285901b1660748201526088810182905290915060009060a801604051602081830303815290604052805190602001209050600061034b8287878080601f016020809104026020016040519081016040528093929190818152602001838380828437600092018290525092506108fb915050565b60405163353ba5cd60e21b81526001600160a01b03868116600483015280831660248301529192507f00000000000000000000000000000000000000000000000000000000000000009091169063d4ee973490604401602060405180830381865afa1580156103be573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906103e29190610dd5565b6104335760405162461bcd60e51b815260206004820152601a60248201527f496e76616c696420677561726469616e207369676e617475726500000000000060448201526064015b60405180910390fd5b6001600160a01b03808516600090815260208181526040808320938c1683529290529081208054899290610468908490610dbe565b909155505060405187906001600160a01b038a16907f079bee7f865179f632bcb69702978d375656a5decc8ca5fc5c3acc636412e35d90600090a35050505050505050565b6001600160a01b03821660008181526020818152604080832073c9e6c67284a1cefbad549c4af8200e564a75ca4c8452909152902054903190806104f18484610dbe565b101561051057604051632c3ba9a560e21b815260040160405180910390fd5b50505050565b60006105258260048186610dfe565b8101906105329190610cbf565b6001600160a01b03878116600081815260208181526040808320948b16808452949091528082205490516370a0823160e01b815260048101939093529395509293506370a0823190602401602060405180830381865afa15801561059a573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906105be9190610da5565b9050816105cb8483610dbe565b10156105ea576040516355b9210760e01b815260040160405180910390fd5b50505050505050565b6000806106038360048187610dfe565b8101906106109190610cbf565b6001600160a01b03808916600090815260208181526040808320938b1683529290522054919350915080156105ea576040516370a0823160e01b81526001600160a01b038881166004830152600091908816906370a0823190602401602060405180830381865afa158015610689573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906106ad9190610da5565b604051636eb1769f60e11b81526001600160a01b038a81166004830152868116602483015291925060009189169063dd62ed3e90604401602060405180830381865afa158015610701573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906107259190610da5565b9050826107328286610d8d565b61073c9084610dbe565b101561075b5760405163d24e5c4760e01b815260040160405180910390fd5b505050505050505050565b6000806107768360048187610dfe565b8101906107839190610cbf565b6001600160a01b03888116600081815260208181526040808320948c16808452949091528082205490516370a0823160e01b815260048101939093529496509294506370a0823190602401602060405180830381865afa1580156107eb573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061080f9190610da5565b604051636eb1769f60e11b81526001600160a01b0386811660048301528a8116602483015291925060009189169063dd62ed3e90604401602060405180830381865afa158015610863573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906108879190610da5565b905060006108958583610d8d565b9050836108a28285610dbe565b116108ef5760405162461bcd60e51b815260206004820152601860248201527f416c6c6f77616e63652065786365656473207661756c742e0000000000000000604482015260640161042a565b50505050505050505050565b60008060008061092586866041020160208101516040820151606090920151909260009190911a90565b9194509250905060ff81166000036109fd57604051630b135d3f60e11b81529293508392868301602001906001600160a01b03851690631626ba7e90610971908b908590600401610e28565b602060405180830381865afa15801561098e573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906109b29190610e85565b7bffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916631626ba7e60e01b146109f7576040516340aec60f60e11b815260040160405180910390fd5b50610b22565b601e8160ff161115610ac2576040517f19457468657265756d205369676e6564204d6573736167653a0a3332000000006020820152603c8101889052600190605c0160405160208183030381529060405280519060200120600483610a629190610eaf565b6040805160008152602081018083529390935260ff90911690820152606081018590526080810184905260a0016020604051602081039080840390855afa158015610ab1573d6000803e3d6000fd5b505050602060405103519350610b22565b60408051600081526020810180835289905260ff831691810191909152606081018490526080810183905260019060a0016020604051602081039080840390855afa158015610b15573d6000803e3d6000fd5b5050506020604051035193505b6001600160a01b038416610b495760405163b9bf1d7d60e01b815260040160405180910390fd5b5050509392505050565b6001600160a01b0381168114610b6857600080fd5b50565b60008083601f840112610b7d57600080fd5b50813567ffffffffffffffff811115610b9557600080fd5b602083019150836020828501011115610bad57600080fd5b9250929050565b60008060008060008060008060008060006101208c8e031215610bd657600080fd5b610be08c35610b53565b8b359a50610bf160208d0135610b53565b60208c0135995060408c0135985067ffffffffffffffff8060608e01351115610c1957600080fd5b610c298e60608f01358f01610b6b565b909950975060808d0135965060a08d0135955060c08d0135945060e08d013593506101008d0135811015610c5c57600080fd5b50610c6e8d6101008e01358e01610b6b565b81935080925050509295989b509295989b9093969950565b60008060408385031215610c9957600080fd5b8235610ca481610b53565b91506020830135610cb481610b53565b809150509250929050565b60008060408385031215610cd257600080fd5b8235610cdd81610b53565b946020939093013593505050565b60008060008060608587031215610d0157600080fd5b8435610d0c81610b53565b935060208501359250604085013567ffffffffffffffff811115610d2f57600080fd5b610d3b87828801610b6b565b95989497509550505050565b6001600160e01b03198135818116916004851015610d6f5780818660040360031b1b83161692505b505092915050565b634e487b7160e01b600052601160045260246000fd5b60008219821115610da057610da0610d77565b500190565b600060208284031215610db757600080fd5b5051919050565b600082821015610dd057610dd0610d77565b500390565b600060208284031215610de757600080fd5b81518015158114610df757600080fd5b9392505050565b60008085851115610e0e57600080fd5b83861115610e1b57600080fd5b5050820193919092039150565b82815260006020604081840152835180604085015260005b81811015610e5c57858101830151858201606001528201610e40565b81811115610e6e576000606083870101525b50601f01601f191692909201606001949350505050565b600060208284031215610e9757600080fd5b81516001600160e01b031981168114610df757600080fd5b600060ff821660ff841680821015610ec957610ec9610d77565b9003939250505056fea2646970667358221220e0ccb27ef56b530fa7e3abca75ebc008443fcb1d468bf1964557d8891678c24764736f6c634300080f0033",
+  "devdoc": {
+    "author": "Rodrigo Herrera I.",
+    "kind": "dev",
+    "methods": {
+      "addTokensToVault(address,uint256)": {
+        "params": {
+          "amount": "Amount of tokens to add to the vault.",
+          "token": "The address of the token."
+        }
+      },
+      "getTokensInVault(address,address)": {
+        "params": {
+          "token": "The address of the token.",
+          "wallet": "The address of the wallet."
+        },
+        "returns": {
+          "_0": "The amount of tokens that are in the vault from the provided token and wallet."
+        }
+      },
+      "removeTokensFromVault(address,uint256,bytes)": {
+        "params": {
+          "amount": "Amount of tokens to remove to the vault.",
+          "guardianSignature": "Signature of one of the wallet's guardians.                           In order to take tokens out of the vault, it needs to be                           signed by the owner + a guardian.",
+          "token": "The address of the token."
+        }
+      },
+      "verifyTransaction(address,address,uint256,bytes,uint256,uint256,uint256,uint256,bytes)": {
+        "params": {
+          "callData": "Data payload for the transaction.",
+          "to": "Destination address.",
+          "value": "Amount in WEI to transfer.",
+          "wallet": "The address of the wallet."
+        }
+      }
+    },
+    "title": "LaserVault",
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "addTokensToVault(address,uint256)": {
+        "notice": "Adds tokens to vault."
+      },
+      "removeTokensFromVault(address,uint256,bytes)": {
+        "notice": "Removes tokens from vault."
+      },
+      "verifyTransaction(address,address,uint256,bytes,uint256,uint256,uint256,uint256,bytes)": {
+        "notice": "Verifies that the transaction doesn't spend assets from the vault."
+      }
+    },
+    "notice": "Laser guard module that locks assets of a Laser wallet for extra security.         It acts as a vault in the sense that the locked assets cannot be use unless the wallet's         owner (or authorized module) orders otherwise.",
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 2643,
+        "contract": "contracts/modules/laser-guard/LaserVault.sol:LaserVault",
+        "label": "tokensInVault",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))"
+      },
+      {
+        "astId": 2651,
+        "contract": "contracts/modules/laser-guard/LaserVault.sol:LaserVault",
+        "label": "nftsInVault",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_mapping(t_address,t_mapping(t_address,t_mapping(t_uint256,t_bool)))"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_address,t_mapping(t_address,t_mapping(t_uint256,t_bool)))": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => mapping(address => mapping(uint256 => bool)))",
+        "numberOfBytes": "32",
+        "value": "t_mapping(t_address,t_mapping(t_uint256,t_bool))"
+      },
+      "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => mapping(address => uint256))",
+        "numberOfBytes": "32",
+        "value": "t_mapping(t_address,t_uint256)"
+      },
+      "t_mapping(t_address,t_mapping(t_uint256,t_bool))": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => mapping(uint256 => bool))",
+        "numberOfBytes": "32",
+        "value": "t_mapping(t_uint256,t_bool)"
+      },
+      "t_mapping(t_address,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_mapping(t_uint256,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_uint256",
+        "label": "mapping(uint256 => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}

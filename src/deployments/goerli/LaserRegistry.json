@@ -1,0 +1,227 @@
+{
+  "address": "0xA3766d1591204959C6d370DD33a324427A0c2CD5",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_laser",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "firstSingleton",
+          "type": "address"
+        },
+        {
+          "internalType": "address[]",
+          "name": "modules",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "module",
+          "type": "address"
+        }
+      ],
+      "name": "approveModule",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "singleton",
+          "type": "address"
+        }
+      ],
+      "name": "approveSingleton",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getModules",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "module",
+          "type": "address"
+        }
+      ],
+      "name": "isModule",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "singleton",
+          "type": "address"
+        }
+      ],
+      "name": "isSingleton",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "laser",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "prevModule",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "module",
+          "type": "address"
+        }
+      ],
+      "name": "removeModule",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0xe1d0e878f9343432c09d9749cf3475e8a28b7a50d82fbe510492311c7de28835",
+  "receipt": {
+    "to": null,
+    "from": "0x7681C78fb672024C8ACce686cc9A7Acf7F07640d",
+    "contractAddress": "0xA3766d1591204959C6d370DD33a324427A0c2CD5",
+    "transactionIndex": 5,
+    "gasUsed": "550413",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x8a6687bf619ae52e7792dcd977ae7870e29d6a83e7d388d55bc723bbd68fa450",
+    "transactionHash": "0xe1d0e878f9343432c09d9749cf3475e8a28b7a50d82fbe510492311c7de28835",
+    "logs": [],
+    "blockNumber": 7399924,
+    "cumulativeGasUsed": "1301458",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0x7681C78fb672024C8ACce686cc9A7Acf7F07640d",
+    "0xB44aC30dD46eED868797BdeE13DD56D9F3E568A4",
+    [
+      "0x31439508016D1f6560FD4709c27542d9898C0Fc4"
+    ]
+  ],
+  "numDeployments": 1,
+  "solcInputHash": "fe1817edc2834b1ca7145448ea942c23",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.15+commit.e14f2714\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_laser\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"firstSingleton\",\"type\":\"address\"},{\"internalType\":\"address[]\",\"name\":\"modules\",\"type\":\"address[]\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"module\",\"type\":\"address\"}],\"name\":\"approveModule\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"singleton\",\"type\":\"address\"}],\"name\":\"approveSingleton\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getModules\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"module\",\"type\":\"address\"}],\"name\":\"isModule\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"singleton\",\"type\":\"address\"}],\"name\":\"isSingleton\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"laser\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"prevModule\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"module\",\"type\":\"address\"}],\"name\":\"removeModule\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/modules/LaserRegistry.sol\":\"LaserRegistry\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":800},\"remappings\":[]},\"sources\":{\"contracts/modules/LaserRegistry.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity 0.8.15;\\n\\ncontract LaserRegistry {\\n    address private constant POINTER = address(0x1);\\n\\n    address public laser;\\n\\n    uint256 moduleCount;\\n\\n    mapping(address => address) private approvedModules;\\n\\n    mapping(address => address) private approvedSingletons;\\n\\n    modifier onlyLaser() {\\n        require(msg.sender == laser, \\\"Only Laser\\\");\\n\\n        _;\\n    }\\n\\n    constructor(\\n        address _laser,\\n        address firstSingleton,\\n        address[] memory modules\\n    ) {\\n        laser = _laser;\\n\\n        approvedSingletons[firstSingleton] = approvedSingletons[POINTER];\\n        approvedSingletons[firstSingleton] = firstSingleton;\\n\\n        address currentModule = POINTER;\\n        uint256 modulesLength = modules.length;\\n        for (uint256 i = 0; i < modulesLength; i++) {\\n            address module = modules[i];\\n\\n            approvedModules[currentModule] = module;\\n            currentModule = module;\\n        }\\n        approvedModules[currentModule] = POINTER;\\n        moduleCount = modulesLength;\\n    }\\n\\n    function approveSingleton(address singleton) external onlyLaser {\\n        approvedSingletons[singleton] = approvedSingletons[POINTER];\\n        approvedSingletons[singleton] = singleton;\\n    }\\n\\n    function approveModule(address module) external onlyLaser {\\n        approvedModules[module] = approvedModules[POINTER];\\n        approvedModules[POINTER] = module;\\n\\n        unchecked {\\n            ++moduleCount;\\n        }\\n    }\\n\\n    function removeModule(address prevModule, address module) external onlyLaser {\\n        require(approvedModules[module] != address(0), \\\"Module not found\\\");\\n        require(module != POINTER, \\\"incorrect\\\");\\n\\n        require(approvedModules[prevModule] == module, \\\"incorrect prev module\\\");\\n\\n        approvedModules[prevModule] = approvedModules[module];\\n        approvedModules[module] = address(0);\\n\\n        unchecked {\\n            --moduleCount;\\n        }\\n    }\\n\\n    function isSingleton(address singleton) external view returns (bool) {\\n        return approvedSingletons[singleton] != address(0) && singleton != POINTER;\\n    }\\n\\n    function isModule(address module) external view returns (bool) {\\n        return approvedModules[module] != address(0) && module != POINTER;\\n    }\\n\\n    function getModules() public view returns (address[] memory) {\\n        address[] memory modulesArray = new address[](moduleCount);\\n        address currentModule = approvedModules[POINTER];\\n\\n        uint256 index;\\n        while (currentModule != POINTER) {\\n            modulesArray[index] = currentModule;\\n            currentModule = approvedModules[currentModule];\\n            unchecked {\\n                ++index;\\n            }\\n        }\\n        return modulesArray;\\n    }\\n}\\n\",\"keccak256\":\"0x3f808f6d80be7b5693fa1d12c8e78b90edcad3cb5dfa30cc8f9befe5a06e7c15\",\"license\":\"LGPL-3.0-only\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b5060405161093b38038061093b83398101604081905261002f9161013e565b600080546001600160a01b038086166001600160a01b03199283161783556003602052841680835260408320805490921617905581516001915b818110156100d457600084828151811061008557610085610226565b6020908102919091018101516001600160a01b0395861660009081526002909252604090912080546001600160a01b0319169582169590951790945550806100cc8161023c565b915050610069565b506001600160a01b03909116600090815260026020526040902080546001600160a01b03191660019081179091555550610263915050565b80516001600160a01b038116811461012357600080fd5b919050565b634e487b7160e01b600052604160045260246000fd5b60008060006060848603121561015357600080fd5b61015c8461010c565b9250602061016b81860161010c565b60408601519093506001600160401b038082111561018857600080fd5b818701915087601f83011261019c57600080fd5b8151818111156101ae576101ae610128565b8060051b604051601f19603f830116810181811085821117156101d3576101d3610128565b60405291825284820192508381018501918a8311156101f157600080fd5b938501935b82851015610216576102078561010c565b845293850193928501926101f6565b8096505050505050509250925092565b634e487b7160e01b600052603260045260246000fd5b60006001820161025c57634e487b7160e01b600052601160045260246000fd5b5060010190565b6106c9806102726000396000f3fe608060405234801561001057600080fd5b506004361061007d5760003560e01c806342f6e3891161005b57806342f6e389146100da5780636a36e3a2146100fd578063b2494df314610110578063de2e64331461012557600080fd5b806317825ef3146100825780631c1e82c81461009757806322dc1a38146100c7575b600080fd5b6100956100903660046105c5565b610138565b005b6000546100aa906001600160a01b031681565b6040516001600160a01b0390911681526020015b60405180910390f35b6100956100d53660046105c5565b6101fb565b6100ed6100e83660046105c5565b610279565b60405190151581526020016100be565b61009561010b3660046105e7565b6102b4565b610118610483565b6040516100be919061061a565b6100ed6101333660046105c5565b61056f565b6000546001600160a01b031633146101845760405162461bcd60e51b815260206004820152600a60248201526927b7363c902630b9b2b960b11b60448201526064015b60405180910390fd5b60026020527fe90b7bceb6e7df5418fb78d8ee546e97c83a08bbccc01a0644d599ccd2a7c2e080546001600160a01b0392831660008181526040812080549590931673ffffffffffffffffffffffffffffffffffffffff199586161790925560019182905282549093169092179055805481019055565b6000546001600160a01b031633146102425760405162461bcd60e51b815260206004820152600a60248201526927b7363c902630b9b2b960b11b604482015260640161017b565b60036020526001600160a01b0316600081815260409020805473ffffffffffffffffffffffffffffffffffffffff19169091179055565b6001600160a01b03818116600090815260026020526040812054909116158015906102ae57506001600160a01b038216600114155b92915050565b6000546001600160a01b031633146102fb5760405162461bcd60e51b815260206004820152600a60248201526927b7363c902630b9b2b960b11b604482015260640161017b565b6001600160a01b03818116600090815260026020526040902054166103625760405162461bcd60e51b815260206004820152601060248201527f4d6f64756c65206e6f7420666f756e6400000000000000000000000000000000604482015260640161017b565b6000196001600160a01b038216016103bc5760405162461bcd60e51b815260206004820152600960248201527f696e636f72726563740000000000000000000000000000000000000000000000604482015260640161017b565b6001600160a01b038281166000908152600260205260409020548116908216146104285760405162461bcd60e51b815260206004820152601560248201527f696e636f72726563742070726576206d6f64756c650000000000000000000000604482015260640161017b565b6001600160a01b039081166000818152600260205260408082208054958516835290822080549590941673ffffffffffffffffffffffffffffffffffffffff1995861617909355528054909116905560018054600019019055565b6060600060015467ffffffffffffffff8111156104a2576104a2610667565b6040519080825280602002602001820160405280156104cb578160200160208202803683370190505b506001600090815260026020527fe90b7bceb6e7df5418fb78d8ee546e97c83a08bbccc01a0644d599ccd2a7c2e0549192506001600160a01b03909116905b6001600160a01b038216600114610567578183828151811061052e5761052e61067d565b6001600160a01b03928316602091820292909201810191909152928116600090815260029093526040909220549091169060010161050a565b509092915050565b6001600160a01b03818116600090815260036020526040812054909116158015906102ae57506001600160a01b0382166001141592915050565b80356001600160a01b03811681146105c057600080fd5b919050565b6000602082840312156105d757600080fd5b6105e0826105a9565b9392505050565b600080604083850312156105fa57600080fd5b610603836105a9565b9150610611602084016105a9565b90509250929050565b6020808252825182820181905260009190848201906040850190845b8181101561065b5783516001600160a01b031683529284019291840191600101610636565b50909695505050505050565b634e487b7160e01b600052604160045260246000fd5b634e487b7160e01b600052603260045260246000fdfea2646970667358221220778f25476fa63c4e81a46be69aab0b7e059983cb640ef44d35a522fcd9ff96da64736f6c634300080f0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061007d5760003560e01c806342f6e3891161005b57806342f6e389146100da5780636a36e3a2146100fd578063b2494df314610110578063de2e64331461012557600080fd5b806317825ef3146100825780631c1e82c81461009757806322dc1a38146100c7575b600080fd5b6100956100903660046105c5565b610138565b005b6000546100aa906001600160a01b031681565b6040516001600160a01b0390911681526020015b60405180910390f35b6100956100d53660046105c5565b6101fb565b6100ed6100e83660046105c5565b610279565b60405190151581526020016100be565b61009561010b3660046105e7565b6102b4565b610118610483565b6040516100be919061061a565b6100ed6101333660046105c5565b61056f565b6000546001600160a01b031633146101845760405162461bcd60e51b815260206004820152600a60248201526927b7363c902630b9b2b960b11b60448201526064015b60405180910390fd5b60026020527fe90b7bceb6e7df5418fb78d8ee546e97c83a08bbccc01a0644d599ccd2a7c2e080546001600160a01b0392831660008181526040812080549590931673ffffffffffffffffffffffffffffffffffffffff199586161790925560019182905282549093169092179055805481019055565b6000546001600160a01b031633146102425760405162461bcd60e51b815260206004820152600a60248201526927b7363c902630b9b2b960b11b604482015260640161017b565b60036020526001600160a01b0316600081815260409020805473ffffffffffffffffffffffffffffffffffffffff19169091179055565b6001600160a01b03818116600090815260026020526040812054909116158015906102ae57506001600160a01b038216600114155b92915050565b6000546001600160a01b031633146102fb5760405162461bcd60e51b815260206004820152600a60248201526927b7363c902630b9b2b960b11b604482015260640161017b565b6001600160a01b03818116600090815260026020526040902054166103625760405162461bcd60e51b815260206004820152601060248201527f4d6f64756c65206e6f7420666f756e6400000000000000000000000000000000604482015260640161017b565b6000196001600160a01b038216016103bc5760405162461bcd60e51b815260206004820152600960248201527f696e636f72726563740000000000000000000000000000000000000000000000604482015260640161017b565b6001600160a01b038281166000908152600260205260409020548116908216146104285760405162461bcd60e51b815260206004820152601560248201527f696e636f72726563742070726576206d6f64756c650000000000000000000000604482015260640161017b565b6001600160a01b039081166000818152600260205260408082208054958516835290822080549590941673ffffffffffffffffffffffffffffffffffffffff1995861617909355528054909116905560018054600019019055565b6060600060015467ffffffffffffffff8111156104a2576104a2610667565b6040519080825280602002602001820160405280156104cb578160200160208202803683370190505b506001600090815260026020527fe90b7bceb6e7df5418fb78d8ee546e97c83a08bbccc01a0644d599ccd2a7c2e0549192506001600160a01b03909116905b6001600160a01b038216600114610567578183828151811061052e5761052e61067d565b6001600160a01b03928316602091820292909201810191909152928116600090815260029093526040909220549091169060010161050a565b509092915050565b6001600160a01b03818116600090815260036020526040812054909116158015906102ae57506001600160a01b0382166001141592915050565b80356001600160a01b03811681146105c057600080fd5b919050565b6000602082840312156105d757600080fd5b6105e0826105a9565b9392505050565b600080604083850312156105fa57600080fd5b610603836105a9565b9150610611602084016105a9565b90509250929050565b6020808252825182820181905260009190848201906040850190845b8181101561065b5783516001600160a01b031683529284019291840191600101610636565b50909695505050505050565b634e487b7160e01b600052604160045260246000fd5b634e487b7160e01b600052603260045260246000fdfea2646970667358221220778f25476fa63c4e81a46be69aab0b7e059983cb640ef44d35a522fcd9ff96da64736f6c634300080f0033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 9,
+        "contract": "contracts/modules/LaserRegistry.sol:LaserRegistry",
+        "label": "laser",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "astId": 11,
+        "contract": "contracts/modules/LaserRegistry.sol:LaserRegistry",
+        "label": "moduleCount",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 15,
+        "contract": "contracts/modules/LaserRegistry.sol:LaserRegistry",
+        "label": "approvedModules",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_mapping(t_address,t_address)"
+      },
+      {
+        "astId": 19,
+        "contract": "contracts/modules/LaserRegistry.sol:LaserRegistry",
+        "label": "approvedSingletons",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_mapping(t_address,t_address)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_mapping(t_address,t_address)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => address)",
+        "numberOfBytes": "32",
+        "value": "t_address"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}

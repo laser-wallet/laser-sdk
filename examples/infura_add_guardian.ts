@@ -54,19 +54,7 @@ async function executeTransaction() {
         gasLimit,
         relayer: signer.address,
     };
-    const data = encodeWalletData(await laser.addGuardian(ethers.Wallet.createRandom().address, txInfo));
-
-    const tx = {
-        to: walletAddress,
-        data: data,
-        gas: gasLimit.toString(),
-        schedule: "fast",
-    };
-    const signature = await signRequest(tx);
-
-    const relayTransactionHash = await itx.send("relay_sendTransaction", [tx, signature]);
-    console.log(`ITX relay hash: ${relayTransactionHash}`);
-    return relayTransactionHash;
+    const data = await laser.addGuardian("0xDfc653b092Ee523d7e82f86E61Cd249d7C8E3d1a", txInfo);
 }
 
 executeTransaction();
