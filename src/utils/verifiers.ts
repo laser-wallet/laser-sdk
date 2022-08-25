@@ -1,8 +1,9 @@
-import { BigNumber, BigNumberish, constants } from "ethers";
+import { BigNumber, BigNumberish, constants, ethers } from "ethers";
 import { Provider } from "@ethersproject/providers";
-import { WalletState } from "../sdk/interfaces/ILaserView";
+import { WalletState } from "../types";
 import { Address } from "../types";
-import { addressEq, isContract, supports1271 } from "./utils";
+import { addressEq, isContract, supports1271, verifyAddress } from "./utils";
+import { LaserTransaction } from "./signatures";
 
 /**
  * @dev Checks that the parameters are ok to lock the wallet.
@@ -61,14 +62,21 @@ export async function recoverVerifier(
     provider: Provider,
     walletState: WalletState
 ) {
+    // @todo Add 5 days delay.
     let isRecoveryOwnerOrGuardian = false;
 
     walletState.guardians.map((guardian) => {
         if (addressEq(guardian, signer)) isRecoveryOwnerOrGuardian = true;
+        if (addressEq(guardian, newOwner)) {
+            throw Error("Invalid operation 'recover': guardian cannot be owner.");
+        }
     });
 
     walletState.recoveryOwners.map((recoveryOwner) => {
         if (addressEq(recoveryOwner, signer)) isRecoveryOwnerOrGuardian = true;
+        if (addressEq(recoveryOwner, newOwner)) {
+            throw Error("Invalid operation 'recover': recovery owner cannot be owner.");
+        }
     });
 
     if (!isRecoveryOwnerOrGuardian) {
@@ -77,6 +85,10 @@ export async function recoverVerifier(
 
     if (await isContract(provider, newOwner)) {
         throw Error("Invalid operation 'recover': new owner cannot be a contract.");
+    }
+
+    if (newOwner.toLowerCase() === ethers.constants.AddressZero.toLowerCase()) {
+        throw Error("Invalid operation 'recover': new owner cannot be address(0).");
     }
 }
 
@@ -89,10 +101,6 @@ export async function changeOwnerVerifier(
     newOwner: Address,
     walletState: WalletState
 ) {
-    if (!addressEq(signer, walletState.owner)) {
-        throw Error("Invalid operation 'changeOwner': only the owner can change the owner.");
-    }
-
     if (addressEq(newOwner, walletState.owner)) {
         throw Error("Invalid operation 'changeOwner': new owner cannot be current owner.");
     }
@@ -131,10 +139,6 @@ export async function addGuardianVerifier(
     newGuardian: Address,
     walletState: WalletState
 ) {
-    if (!addressEq(signer, walletState.owner)) {
-        throw Error("Invalid operation 'addGuardian': only the owner can add a guardian.");
-    }
-
     if (addressEq(newGuardian, constants.AddressZero)) {
         throw Error("Invalid operation 'addGuardian': new guardian cannot be address 0.");
     }
@@ -164,10 +168,6 @@ export async function addGuardianVerifier(
  * @dev Checks that the parameters are ok to remove a guardian.
  */
 export function removeGuardianVerifier(signer: Address, guardian: Address, walletState: WalletState) {
-    if (!addressEq(signer, walletState.owner)) {
-        throw Error("Invalid operation 'removeGuardian': only the owner can remove a guardian.");
-    }
-
     if (walletState.isLocked) {
         throw Error("Invalid operation 'removeGuardian': wallet is locked.");
     }
@@ -186,39 +186,6 @@ export function removeGuardianVerifier(signer: Address, guardian: Address, walle
 }
 
 /**
- * @dev Checks that the parameters are ok to swap a guardian.
- */
-export function swapGuardianVerifier(
-    signer: Address,
-    newGuardian: Address,
-    guardian: Address,
-    walletState: WalletState
-) {
-    if (!addressEq(signer, walletState.owner)) {
-        throw Error("Invalid operation 'swapGuardian': only the owner can swap a guardian.");
-    }
-
-    if (walletState.isLocked) {
-        throw Error("Invalid operation 'swapGuardian': wallet is locked.");
-    }
-
-    let isGuardian = false;
-    let isNewGuardian = false;
-    walletState.guardians.map((_guardian) => {
-        if (addressEq(_guardian, guardian)) isGuardian = true;
-        if (addressEq(_guardian, newGuardian)) isNewGuardian = true;
-    });
-
-    if (!isGuardian) {
-        throw Error("Invalid operation 'swapGuardian': address is not a guardian.");
-    }
-
-    if (newGuardian) {
-        throw Error("Invalid operation 'swapGuardian': newGuardian is already a guardian.");
-    }
-}
-
-/**
  * @dev Checks that the parameters are ok to add a recovery owner.
  */
 export async function addRecoveryOwnerVerifier(
@@ -227,10 +194,6 @@ export async function addRecoveryOwnerVerifier(
     newRecoveryOwner: Address,
     walletState: WalletState
 ) {
-    if (!addressEq(signer, walletState.owner)) {
-        throw Error("Invalid operation 'addRecoveryOwner': only the owner can add a recovery owner.");
-    }
-
     if (addressEq(newRecoveryOwner, constants.AddressZero)) {
         throw Error("Invalid operation 'addRecoveryOwner': new recovery owner cannot be address 0.");
     }
@@ -260,10 +223,6 @@ export async function addRecoveryOwnerVerifier(
  * @dev Checks that the parameters are ok to remove a recovery owner.
  */
 export function removeRecoveryOwnerVerifier(signer: Address, recoveryOwner: Address, walletState: WalletState) {
-    if (!addressEq(signer, walletState.owner)) {
-        throw Error("Invalid operation 'removeRecoveryOwner': only the owner can remove a recovery owner.");
-    }
-
     if (walletState.isLocked) {
         throw Error("Invalid operation 'removeRecoveryOwner': wallet is locked.");
     }
@@ -282,10 +241,6 @@ export function removeRecoveryOwnerVerifier(signer: Address, recoveryOwner: Addr
 }
 
 export function sendEthVerifier(signer: Address, transferAmount: BigNumber, walletState: WalletState) {
-    if (!addressEq(signer, walletState.owner)) {
-        throw Error("Invalid operation 'sendEth': only the owner can send eth.");
-    }
-
     if (transferAmount.eq(BigNumber.from(0)) || transferAmount.lt(0)) {
         throw Error("Invalid opearation 'sendEth': invalid amount.");
     }
@@ -305,10 +260,6 @@ export function transferERC20Verifier(
     walletBalance: BigNumber,
     walletState: WalletState
 ) {
-    if (!addressEq(signer, walletState.owner)) {
-        throw Error("Invalid operation 'transferERC20': only the owner can send eth.");
-    }
-
     if (walletState.isLocked) {
         throw Error("Invalid operation 'transferERC20': wallet is locked.");
     }
@@ -318,6 +269,139 @@ export function transferERC20Verifier(
     }
 }
 
+export async function verifyDeployment(
+    provider: Provider,
+    owner: Address,
+    recoveryOwners: Address[],
+    guardians: Address[]
+): Promise<void> {
+    verifyOwner(provider, owner);
 
+    verifyGuardians(provider, guardians);
 
+    verifyRecoveryOwners(provider, recoveryOwners);
 
+    verifyDuplicate(owner, recoveryOwners, guardians);
+}
+
+async function verifyOwner(provider: Provider, _owner: Address): Promise<void> {
+    const owner = await verifyAddress(provider, _owner);
+
+    if (owner.toLowerCase() === ethers.constants.AddressZero.toLowerCase()) {
+        throw Error("Owner cannot be address 0.");
+    }
+
+    if (await isContract(provider, owner)) {
+        throw Error("Owner cannot be a contract.");
+    }
+}
+
+async function verifyGuardians(provider: Provider, guardians: Address[]): Promise<void> {
+    if (guardians.length < 1) {
+        throw Error("There needs to be at least 1 guardian.");
+    }
+
+    let dupGuardians: string[] = [];
+
+    for (let i = 0; i < guardians.length; i++) {
+        const guardian = await verifyAddress(provider, guardians[i]);
+        dupGuardians.push(guardian.toLowerCase());
+        if (guardian.toLowerCase() === ethers.constants.AddressZero.toLowerCase()) {
+            throw Error("Guardian cannot be address 0.");
+        }
+
+        if (await isContract(provider, guardian)) {
+            if (!(await supports1271(provider, guardian))) {
+                throw Error("Guardian does not support EIP1271.");
+            }
+        }
+    }
+
+    if (new Set(dupGuardians).size < dupGuardians.length) {
+        throw Error("Duplicate guardians.");
+    }
+}
+
+async function verifyRecoveryOwners(provider: Provider, recoveryOwners: Address[]): Promise<void> {
+    if (recoveryOwners.length < 1) {
+        throw Error("There needs to be at least 1 recovery owner.");
+    }
+
+    let dupRecoveryOwners: string[] = [];
+
+    for (let i = 0; i < recoveryOwners.length; i++) {
+        const recoveryOwner = await verifyAddress(provider, recoveryOwners[i]);
+        dupRecoveryOwners.push(recoveryOwner.toLowerCase());
+        if (recoveryOwner.toLowerCase() === ethers.constants.AddressZero.toLowerCase()) {
+            throw Error("Recovery owner cannot be address 0.");
+        }
+
+        if (await isContract(provider, recoveryOwner)) {
+            if (!(await supports1271(provider, recoveryOwner))) {
+                throw Error("Recovery owner does not support EIP1271.");
+            }
+        }
+    }
+
+    if (new Set(dupRecoveryOwners).size < dupRecoveryOwners.length) {
+        throw Error("Duplicate recovery owners.");
+    }
+}
+
+function verifyDuplicate(owner: Address, recoveryOwners: Address[], guardians: Address[]) {
+    if (recoveryOwners.includes(owner)) {
+        throw Error("Owner cannot be a recovery owner.");
+    }
+
+    if (guardians.includes(owner)) {
+        throw Error("Owner cannot be a guardian.");
+    }
+
+    for (let i = 0; i < recoveryOwners.length; i++) {
+        if (guardians.includes(recoveryOwners[i])) {
+            throw Error("Recovery owner cannot be a guardian.");
+        }
+    }
+}
+
+export function verifyPackedSignatures(tr1: LaserTransaction, tr2: LaserTransaction) {
+    if (tr1.signer !== "owner" && tr1.signer !== "guardian" && tr1.signer !== "recoveryOwner") {
+        throw Error("Invalid signer");
+    }
+
+    if (tr2.signer !== "owner" && tr2.signer !== "guardian" && tr2.signer !== "recoveryOwner") {
+        throw Error("Invalid signer");
+    }
+
+    if (tr1.signer.toLowerCase() === tr2.signer.toLowerCase()) {
+        throw Error("Signers cannot be the same.");
+    }
+
+    if (("value" in tr1 && !("value" in tr2)) || ("value" in tr2 && !("value" in tr1))) {
+        throw Error("Transaction types mismatch.");
+    }
+
+    if ("to" in tr1 && "to" in tr2) {
+        if (tr1.to.toLowerCase() !== tr2.to.toLowerCase()) {
+            throw Error("Transaction 'to' mismatch.");
+        }
+    }
+
+    if ("value" in tr1 && "value" in tr2) {
+        if (tr1.value.toString() !== tr2.value.toString()) {
+            throw Error("Transaction 'value' missmatch.");
+        }
+    }
+
+    if (tr1.nonce.toString() !== tr2.nonce.toString()) {
+        throw Error("Transaction 'nonce' mismatch.");
+    }
+
+    if (tr1.callData.toLowerCase() !== tr2.callData.toLowerCase()) {
+        throw Error("Transaction 'callData' missmatch.");
+    }
+
+    if (tr1.signatures.length < 132 || tr2.signatures.length < 132) {
+        throw Error("Invalid signature length.");
+    }
+}
