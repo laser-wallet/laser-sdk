@@ -16,26 +16,25 @@ export type Domain = {
     verifyingContract: string;
 };
 
-export type Transaction = {
-    to: Address;
-    value: BigNumberish;
-    callData: string;
-    nonce: BigNumberish;
-    signatures: string;
-    signer?: string;
-};
-
-export type RecoveryTransaction = {
-    nonce: Number;
-    callData: string;
-    signatures: string;
-    signer?: string;
-};
 export type LaserTypes = {
     to: Address;
     value: BigNumberish;
     callData: string;
     nonce: BigNumberish;
+};
+
+export type Chain = "mainnet" | "goerli" | "kovan" | "ropsten" | "localhost";
+
+type TransactionType = "recovery" | "exec";
+export type OffChainTransaction = {
+    to: Address;
+    value: BigNumberish;
+    callData: string;
+    nonce: BigNumberish;
+    signatures: string;
+    signer: string;
+    chain: Chain;
+    transactionType: TransactionType;
 };
 
 export type WalletState = {

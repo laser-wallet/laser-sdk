@@ -5,7 +5,7 @@ import erc20Abi from "../abis/erc20.abi.json";
 import { LaserWallet__factory, LaserWallet, LaserHelper__factory, LaserHelper } from "../typechain";
 import { abi as walletAbi } from "../deployments/localhost/LaserWallet.json";
 import { getDeployedAddresses } from "../constants";
-import { Address, Transaction, RecoveryTransaction } from "../types";
+import { Address, OffChainTransaction } from "../types";
 import { decodeSigner, LaserTransaction } from "../utils";
 import {
     sign,
@@ -23,6 +23,7 @@ import {
     encodeFunctionData,
     transferERC20Verifier,
     getRecoveryHash,
+    getChain,
 } from "../utils";
 import { ILaser } from "./interfaces/ILaser";
 import { WalletState } from "../types";
@@ -63,14 +64,13 @@ export class Laser implements ILaser {
      * @dev Sends a complete transaction.
      *      The transaction must be already signed and verified.
      *
-     * @param transaction Transaction | RecoveryTransaction.
      */
-    async execTransaction(transaction: LaserTransaction): Promise<ContractReceipt> {
+    async execTransaction(transaction: OffChainTransaction): Promise<ContractReceipt> {
         if (transaction.signatures.length < 262) {
             throw Error("Invalid signature length, there needs to be 2 signatures.");
         }
 
-        if ("value" in transaction) {
+        if (transaction.transactionType === "exec") {
             // If value in transaction, then it is a normal transaction.
             // Normal transaction are sent through 'exec' and require the signature of
             // the owner + recovery owner or owner + guardian.
@@ -119,7 +119,7 @@ export class Laser implements ILaser {
     /**
      * @dev Locks the wallet, can only be signed by a recovery owner or guardian.
      */
-    async lockWallet(nonce: Number): Promise<RecoveryTransaction> {
+    async lockWallet(nonce: BigNumberish): Promise<OffChainTransaction> {
         if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
 
@@ -134,17 +134,21 @@ export class Laser implements ILaser {
         const signature = await sign(this.signer, recoveryHash);
 
         return {
-            nonce,
+            to: this.wallet.address,
+            value: 0,
             callData,
+            nonce,
             signatures: signature,
             signer: decodeSigner(walletState, this.signer.address),
+            chain: getChain(this.chainId),
+            transactionType: "recovery",
         };
     }
 
     /**
      * @dev Unlocks the wallet, can only be signed by the owner, guardian, or recovery owner.
      */
-    async unlockWallet(nonce: Number): Promise<RecoveryTransaction> {
+    async unlockWallet(nonce: BigNumberish): Promise<OffChainTransaction> {
         if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
 
@@ -159,17 +163,21 @@ export class Laser implements ILaser {
         const signature = await sign(this.signer, recoveryHash);
 
         return {
-            nonce,
+            to: this.wallet.address,
+            value: 0,
             callData,
+            nonce,
             signatures: signature,
             signer: decodeSigner(walletState, this.signer.address),
+            chain: getChain(this.chainId),
+            transactionType: "recovery",
         };
     }
 
     /**
      * @dev Recovers the wallet, can only be signed by the recovery owner or guardian.
      */
-    async recover(_newOwner: Address, nonce: Number): Promise<RecoveryTransaction> {
+    async recover(_newOwner: Address, nonce: BigNumberish): Promise<OffChainTransaction> {
         if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
         const newOwner = await verifyAddress(this.provider, _newOwner);
@@ -185,17 +193,21 @@ export class Laser implements ILaser {
         const signature = await sign(this.signer, recoveryHash);
 
         return {
-            nonce,
+            to: this.wallet.address,
+            value: 0,
             callData,
+            nonce,
             signatures: signature,
             signer: decodeSigner(walletState, this.signer.address),
+            chain: getChain(this.chainId),
+            transactionType: "recovery",
         };
     }
 
     /**
      * @dev Changes the owner, can only be signed by the owner + recovery owner or owner + guardian.
      */
-    async changeOwner(_newOwner: Address, nonce: Number): Promise<Transaction> {
+    async changeOwner(_newOwner: Address, nonce: BigNumberish): Promise<OffChainTransaction> {
         if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
         const newOwner = await verifyAddress(this.provider, _newOwner);
@@ -207,15 +219,23 @@ export class Laser implements ILaser {
 
         const callData = encodeFunctionData(walletAbi, "changeOwner", [newOwner]);
         const transaction = await this.signTransaction(this.wallet.address, 0, callData, nonce.toString());
-        transaction.signer = decodeSigner(walletState, this.signer.address);
 
-        return transaction;
+        return {
+            to: this.wallet.address,
+            value: 0,
+            callData,
+            nonce,
+            signatures: transaction.signatures,
+            signer: decodeSigner(walletState, this.signer.address),
+            chain: getChain(this.chainId),
+            transactionType: "exec",
+        };
     }
 
     /**
      * @dev Adds a guardian, can only be signed by the owner + recovery owner or owner + guardian.
      */
-    async addGuardian(_newGuardian: Address, nonce: Number): Promise<Transaction> {
+    async addGuardian(_newGuardian: Address, nonce: BigNumberish): Promise<OffChainTransaction> {
         if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
         const newGuardian = await verifyAddress(this.provider, _newGuardian);
@@ -227,15 +247,23 @@ export class Laser implements ILaser {
 
         const callData = encodeFunctionData(walletAbi, "addGuardian", [newGuardian]);
         const transaction = await this.signTransaction(this.wallet.address, 0, callData, nonce.toString());
-        transaction.signer = decodeSigner(walletState, this.signer.address);
 
-        return transaction;
+        return {
+            to: this.wallet.address,
+            value: 0,
+            callData,
+            nonce,
+            signatures: transaction.signatures,
+            signer: decodeSigner(walletState, this.signer.address),
+            chain: getChain(this.chainId),
+            transactionType: "exec",
+        };
     }
 
     /**
      * @dev Removes a guardian, can only be signed by the owner + recovery owner or owner + guardian.
      */
-    async removeGuardian(_guardian: Address, nonce: Number): Promise<Transaction> {
+    async removeGuardian(_guardian: Address, nonce: BigNumberish): Promise<OffChainTransaction> {
         if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
         const guardian = await verifyAddress(this.provider, _guardian);
@@ -258,15 +286,23 @@ export class Laser implements ILaser {
 
         const callData = encodeFunctionData(walletAbi, "removeGuardian", [prevGuardian, guardian]);
         const transaction = await this.signTransaction(this.wallet.address, 0, callData, nonce.toString());
-        transaction.signer = decodeSigner(walletState, this.signer.address);
 
-        return transaction;
+        return {
+            to: this.wallet.address,
+            value: 0,
+            callData,
+            nonce,
+            signatures: transaction.signatures,
+            signer: decodeSigner(walletState, this.signer.address),
+            chain: getChain(this.chainId),
+            transactionType: "exec",
+        };
     }
 
     /**
      * @dev Adds a recovery owner, can only be signed by the owner + recovery owner or owner + guardian.
      */
-    async addRecoveryOwner(_newRecoveryOwner: Address, nonce: Number): Promise<Transaction> {
+    async addRecoveryOwner(_newRecoveryOwner: Address, nonce: BigNumberish): Promise<OffChainTransaction> {
         if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
         const newRecoveryOwner = await verifyAddress(this.provider, _newRecoveryOwner);
@@ -278,15 +314,23 @@ export class Laser implements ILaser {
 
         const callData = encodeFunctionData(walletAbi, "addRecoveryOwner", [newRecoveryOwner]);
         const transaction = await this.signTransaction(this.wallet.address, 0, callData, nonce.toString());
-        transaction.signer = decodeSigner(walletState, this.signer.address);
 
-        return transaction;
+        return {
+            to: this.wallet.address,
+            value: 0,
+            callData,
+            nonce,
+            signatures: transaction.signatures,
+            signer: decodeSigner(walletState, this.signer.address),
+            chain: getChain(this.chainId),
+            transactionType: "exec",
+        };
     }
 
     /**
      * @dev Removes a recovery owner, can only be signed by the owner + recovery owner or owner + guardian.
      */
-    async removeRecoveryOwner(_recoveryOwner: Address, nonce: Number): Promise<Transaction> {
+    async removeRecoveryOwner(_recoveryOwner: Address, nonce: BigNumberish): Promise<OffChainTransaction> {
         if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
         const recoveryOwner = await verifyAddress(this.provider, _recoveryOwner);
@@ -311,9 +355,17 @@ export class Laser implements ILaser {
 
         const callData = encodeFunctionData(walletAbi, "removeRecoveryOwner", [prevRecoveryOwner, recoveryOwner]);
         const transaction = await this.signTransaction(this.wallet.address, 0, callData, nonce.toString());
-        transaction.signer = decodeSigner(walletState, this.signer.address);
 
-        return transaction;
+        return {
+            to: this.wallet.address,
+            value: 0,
+            callData,
+            nonce,
+            signatures: transaction.signatures,
+            signer: decodeSigner(walletState, this.signer.address),
+            chain: getChain(this.chainId),
+            transactionType: "exec",
+        };
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -323,7 +375,7 @@ export class Laser implements ILaser {
     /**
      * @dev Sends eth, can only be signed by the owner + recovery owner or owner + guardian.
      */
-    async sendEth(_to: Address, _amount: BigNumberish, nonce: Number): Promise<Transaction> {
+    async sendEth(_to: Address, _amount: BigNumberish, nonce: BigNumberish): Promise<OffChainTransaction> {
         if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
 
@@ -336,8 +388,17 @@ export class Laser implements ILaser {
         sendEthVerifier(this.signer.address, value, walletState);
 
         const transaction = await this.signTransaction(to, value, "0x", nonce.toString());
-        transaction.signer = decodeSigner(walletState, this.signer.address);
-        return transaction;
+
+        return {
+            to: to,
+            value,
+            callData: "0x",
+            nonce,
+            signatures: transaction.signatures,
+            signer: decodeSigner(walletState, this.signer.address),
+            chain: getChain(this.chainId),
+            transactionType: "exec",
+        };
     }
 
     /**
@@ -347,8 +408,8 @@ export class Laser implements ILaser {
         _tokenAddress: Address,
         _to: Address,
         amount: BigNumberish,
-        nonce: Number
-    ): Promise<Transaction> {
+        nonce: BigNumberish
+    ): Promise<OffChainTransaction> {
         if (!this.initialized) await this.init();
         const walletState = await this.getWalletState();
 
@@ -375,9 +436,17 @@ export class Laser implements ILaser {
         const callData = encodeFunctionData(erc20Abi, "transfer", [to, transferAmount]);
 
         const transaction = await this.signTransaction(to, 0, callData, nonce.toString());
-        transaction.signer = decodeSigner(walletState, this.signer.address);
 
-        return transaction;
+        return {
+            to: to,
+            value: 0,
+            callData,
+            nonce,
+            signatures: transaction.signatures,
+            signer: decodeSigner(walletState, this.signer.address),
+            chain: getChain(this.chainId),
+            transactionType: "exec",
+        };
     }
 
     /*//////////////////////////////////////////////////////////////

@@ -1,5 +1,5 @@
-import { Address, Transaction, WalletState, RecoveryTransaction } from "../../types";
-import { BigNumberish, providers, ContractReceipt } from "ethers";
+import { Address, Transaction, WalletState, RecoveryTransaction, OffChainTransaction } from "../../types";
+import { BigNumberish, providers, Contract, ContractReceipt } from "ethers";
 import { LaserTransaction } from "../../utils";
 
 export interface ILaser {
@@ -10,25 +10,35 @@ export interface ILaser {
 
     getWalletState(): Promise<WalletState>;
 
-    lockWallet(nonce: Number): Promise<RecoveryTransaction>;
+    lockWallet(nonce: BigNumberish): Promise<OffChainTransaction>;
 
-    unlockWallet(nonce: Number): Promise<RecoveryTransaction>;
+    unlockWallet(nonce: BigNumberish): Promise<OffChainTransaction>;
 
-    recover(_newOwner: Address, nonce: Number): Promise<RecoveryTransaction>;
+    recover(_newOwner: Address, nonce: BigNumberish): Promise<OffChainTransaction>;
 
-    changeOwner(_newOwner: Address, nonce: Number): Promise<Transaction>;
+    changeOwner(_newOwner: Address, nonce: BigNumberish): Promise<OffChainTransaction>;
 
-    addGuardian(_newGuardian: Address, nonce: Number): Promise<Transaction>;
+    addGuardian(_newGuardian: Address, nonce: BigNumberish): Promise<OffChainTransaction>;
 
-    removeGuardian(_guardian: Address, nonce: Number): Promise<Transaction>;
+    removeGuardian(_guardian: Address, nonce: BigNumberish): Promise<OffChainTransaction>;
 
-    addRecoveryOwner(_newRecoveryOwner: Address, nonce: Number): Promise<Transaction>;
+    addRecoveryOwner(_newRecoveryOwner: Address, nonce: BigNumberish): Promise<OffChainTransaction>;
 
-    removeRecoveryOwner(_recoveryOwner: Address, nonce: Number): Promise<Transaction>;
+    removeRecoveryOwner(_recoveryOwner: Address, nonce: BigNumberish): Promise<OffChainTransaction>;
 
-    sendEth(_to: Address, _amount: BigNumberish, nonce: Number): Promise<Transaction>;
+    sendEth(_to: Address, _amount: BigNumberish, nonce: BigNumberish): Promise<OffChainTransaction>;
 
-    transferERC20(_tokenAddress: Address, _to: Address, amount: BigNumberish, nonce: Number): Promise<Transaction>;
+    transferERC20(
+        _tokenAddress: Address,
+        _to: Address,
+        amount: BigNumberish,
+        nonce: BigNumberish
+    ): Promise<OffChainTransaction>;
 
-    signTransaction(to: Address, value: BigNumberish, callData: string, nonce: BigNumberish): Promise<Transaction>;
+    signTransaction(
+        to: Address,
+        value: BigNumberish,
+        callData: string,
+        nonce: BigNumberish
+    ): Promise<OffChainTransaction>;
 }

@@ -16,7 +16,12 @@ export function getInitializer(
     return encodeFunctionData(LaserWallet__factory.abi, "init", [owner, guardians, recoveryOwners, ownerSignature]);
 }
 
-export function getRecoveryHash(walletAddress: Address, nonce: Number, chainId: Number, callData: string): string {
+export function getRecoveryHash(
+    walletAddress: Address,
+    nonce: BigNumberish,
+    chainId: Number,
+    callData: string
+): string {
     return utils.solidityKeccak256(
         ["uint256", "bytes", "address", "uint256"],
         [nonce, utils.keccak256(callData), walletAddress, chainId]
