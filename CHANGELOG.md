@@ -1,5 +1,11 @@
 # laser-sdk
 
+## 0.6.0
+
+### Minor Changes
+
+-   0317b6a: Vault version
+
 ## 0.5.0
 
 ### Minor Changes
