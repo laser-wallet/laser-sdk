@@ -1,6 +1,6 @@
 import { BigNumberish, utils, Contract, ethers, BigNumber } from "ethers";
 import { Provider } from "@ethersproject/providers";
-import { Address, Transaction } from "../types";
+import { Address } from "../types";
 import { abi as walletAbi } from "../deployments/localhost/LaserWallet.json";
 import { abi as factoryAbi } from "../deployments/localhost/LaserFactory.json";
 import { LaserHelper__factory } from "../typechain";

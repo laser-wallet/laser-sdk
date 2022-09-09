@@ -1,12 +1,11 @@
-import { Address, Transaction, WalletState, RecoveryTransaction, OffChainTransaction } from "../../types";
+import { Address, WalletState, OffChainTransaction } from "../../types";
 import { BigNumberish, providers, Contract, ContractReceipt } from "ethers";
-import { LaserTransaction } from "../../utils";
 
 export interface ILaser {
     // Inits Laser.
     init(): Promise<void>;
 
-    execTransaction(transaction: LaserTransaction): Promise<ContractReceipt>;
+    execTransaction(transaction: OffChainTransaction): Promise<ContractReceipt>;
 
     getWalletState(): Promise<WalletState>;
 
@@ -35,10 +34,5 @@ export interface ILaser {
         nonce: BigNumberish
     ): Promise<OffChainTransaction>;
 
-    signTransaction(
-        to: Address,
-        value: BigNumberish,
-        callData: string,
-        nonce: BigNumberish
-    ): Promise<OffChainTransaction>;
+    signTransaction(to: Address, value: BigNumberish, callData: string, nonce: BigNumberish): Promise<string>;
 }

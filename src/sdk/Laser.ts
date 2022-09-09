@@ -6,7 +6,7 @@ import { LaserWallet__factory, LaserWallet, LaserHelper__factory, LaserHelper } 
 import { abi as walletAbi } from "../deployments/localhost/LaserWallet.json";
 import { getDeployedAddresses } from "../constants";
 import { Address, OffChainTransaction } from "../types";
-import { decodeSigner, LaserTransaction } from "../utils";
+import { decodeSigner } from "../utils";
 import {
     sign,
     lockWalletVerifier,
@@ -131,17 +131,19 @@ export class Laser implements ILaser {
         const callData = encodeFunctionData(LaserWallet__factory.abi, "lock", []);
         const recoveryHash = getRecoveryHash(this.wallet.address, nonce, this.chainId, callData);
 
-        const signature = await sign(this.signer, recoveryHash);
+        const signatures = await sign(this.signer, recoveryHash);
 
         return {
+            wallet: this.wallet.address,
             to: this.wallet.address,
             value: 0,
             callData,
             nonce,
-            signatures: signature,
+            signatures,
             signer: decodeSigner(walletState, this.signer.address),
             chain: getChain(this.chainId),
             transactionType: "recovery",
+            description: "Lock wallet",
         };
     }
 
@@ -160,17 +162,19 @@ export class Laser implements ILaser {
         const callData = encodeFunctionData(LaserWallet__factory.abi, "unlock", []);
         const recoveryHash = getRecoveryHash(this.wallet.address, nonce, this.chainId, callData);
 
-        const signature = await sign(this.signer, recoveryHash);
+        const signatures = await sign(this.signer, recoveryHash);
 
         return {
+            wallet: this.wallet.address,
             to: this.wallet.address,
             value: 0,
             callData,
             nonce,
-            signatures: signature,
+            signatures,
             signer: decodeSigner(walletState, this.signer.address),
             chain: getChain(this.chainId),
             transactionType: "recovery",
+            description: "Unlock wallet",
         };
     }
 
@@ -190,17 +194,19 @@ export class Laser implements ILaser {
         const callData = encodeFunctionData(LaserWallet__factory.abi, "recover", [newOwner]);
         const recoveryHash = getRecoveryHash(this.wallet.address, nonce, this.chainId, callData);
 
-        const signature = await sign(this.signer, recoveryHash);
+        const signatures = await sign(this.signer, recoveryHash);
 
         return {
+            wallet: this.wallet.address,
             to: this.wallet.address,
             value: 0,
             callData,
             nonce,
-            signatures: signature,
+            signatures,
             signer: decodeSigner(walletState, this.signer.address),
             chain: getChain(this.chainId),
             transactionType: "recovery",
+            description: "Recover the wallet",
         };
     }
 
@@ -218,17 +224,19 @@ export class Laser implements ILaser {
         await changeOwnerVerifier(this.signer.address, this.provider, newOwner, walletState);
 
         const callData = encodeFunctionData(walletAbi, "changeOwner", [newOwner]);
-        const transaction = await this.signTransaction(this.wallet.address, 0, callData, nonce.toString());
+        const signatures = await this.signTransaction(this.wallet.address, 0, callData, nonce.toString());
 
         return {
+            wallet: this.wallet.address,
             to: this.wallet.address,
             value: 0,
             callData,
             nonce,
-            signatures: transaction.signatures,
+            signatures,
             signer: decodeSigner(walletState, this.signer.address),
             chain: getChain(this.chainId),
             transactionType: "exec",
+            description: "Change owner",
         };
     }
 
@@ -246,17 +254,19 @@ export class Laser implements ILaser {
         addGuardianVerifier(this.signer.address, this.provider, newGuardian, walletState);
 
         const callData = encodeFunctionData(walletAbi, "addGuardian", [newGuardian]);
-        const transaction = await this.signTransaction(this.wallet.address, 0, callData, nonce.toString());
+        const signatures = await this.signTransaction(this.wallet.address, 0, callData, nonce.toString());
 
         return {
+            wallet: this.wallet.address,
             to: this.wallet.address,
             value: 0,
             callData,
             nonce,
-            signatures: transaction.signatures,
+            signatures,
             signer: decodeSigner(walletState, this.signer.address),
             chain: getChain(this.chainId),
             transactionType: "exec",
+            description: "Add guardian",
         };
     }
 
@@ -285,17 +295,19 @@ export class Laser implements ILaser {
             prevGuardianIndex === -1 ? "0x0000000000000000000000000000000000000001" : guardians[prevGuardianIndex];
 
         const callData = encodeFunctionData(walletAbi, "removeGuardian", [prevGuardian, guardian]);
-        const transaction = await this.signTransaction(this.wallet.address, 0, callData, nonce.toString());
+        const signatures = await this.signTransaction(this.wallet.address, 0, callData, nonce.toString());
 
         return {
+            wallet: this.wallet.address,
             to: this.wallet.address,
             value: 0,
             callData,
             nonce,
-            signatures: transaction.signatures,
+            signatures,
             signer: decodeSigner(walletState, this.signer.address),
             chain: getChain(this.chainId),
             transactionType: "exec",
+            description: "Remove guardian",
         };
     }
 
@@ -313,17 +325,19 @@ export class Laser implements ILaser {
         addRecoveryOwnerVerifier(this.signer.address, this.provider, newRecoveryOwner, walletState);
 
         const callData = encodeFunctionData(walletAbi, "addRecoveryOwner", [newRecoveryOwner]);
-        const transaction = await this.signTransaction(this.wallet.address, 0, callData, nonce.toString());
+        const signatures = await this.signTransaction(this.wallet.address, 0, callData, nonce.toString());
 
         return {
+            wallet: this.wallet.address,
             to: this.wallet.address,
             value: 0,
             callData,
             nonce,
-            signatures: transaction.signatures,
+            signatures,
             signer: decodeSigner(walletState, this.signer.address),
             chain: getChain(this.chainId),
             transactionType: "exec",
+            description: "Add recovery owner",
         };
     }
 
@@ -354,17 +368,19 @@ export class Laser implements ILaser {
                 : recoveryOwners[prevRecoveryOwnerIndex];
 
         const callData = encodeFunctionData(walletAbi, "removeRecoveryOwner", [prevRecoveryOwner, recoveryOwner]);
-        const transaction = await this.signTransaction(this.wallet.address, 0, callData, nonce.toString());
+        const signatures = await this.signTransaction(this.wallet.address, 0, callData, nonce.toString());
 
         return {
+            wallet: this.wallet.address,
             to: this.wallet.address,
             value: 0,
             callData,
             nonce,
-            signatures: transaction.signatures,
+            signatures,
             signer: decodeSigner(walletState, this.signer.address),
             chain: getChain(this.chainId),
             transactionType: "exec",
+            description: "Remove recovery owner",
         };
     }
 
@@ -387,17 +403,19 @@ export class Laser implements ILaser {
 
         sendEthVerifier(this.signer.address, value, walletState);
 
-        const transaction = await this.signTransaction(to, value, "0x", nonce.toString());
+        const signatures = await this.signTransaction(to, value, "0x", nonce.toString());
 
         return {
-            to: to,
+            wallet: this.wallet.address,
+            to,
             value,
             callData: "0x",
             nonce,
-            signatures: transaction.signatures,
+            signatures,
             signer: decodeSigner(walletState, this.signer.address),
             chain: getChain(this.chainId),
             transactionType: "exec",
+            description: "Send ETH",
         };
     }
 
@@ -435,17 +453,19 @@ export class Laser implements ILaser {
 
         const callData = encodeFunctionData(erc20Abi, "transfer", [to, transferAmount]);
 
-        const transaction = await this.signTransaction(to, 0, callData, nonce.toString());
+        const signatures = await this.signTransaction(to, 0, callData, nonce.toString());
 
         return {
-            to: to,
+            wallet: this.wallet.address,
+            to,
             value: 0,
             callData,
             nonce,
-            signatures: transaction.signatures,
+            signatures,
             signer: decodeSigner(walletState, this.signer.address),
             chain: getChain(this.chainId),
             transactionType: "exec",
+            description: "Send ERC20 token",
         };
     }
 
@@ -456,15 +476,8 @@ export class Laser implements ILaser {
     /**
      * @dev Signs a transaction that is sent through 'exec'.
      */
-    async signTransaction(
-        to: Address,
-        value: BigNumberish,
-        callData: string,
-        nonce: BigNumberish
-    ): Promise<Transaction> {
+    async signTransaction(to: Address, value: BigNumberish, callData: string, nonce: BigNumberish): Promise<string> {
         const hash = await this.wallet.operationHash(to, value, callData, nonce);
-        const signatures = await sign(this.signer, hash);
-
-        return { to, value, callData, nonce, signatures };
+        return sign(this.signer, hash);
     }
 }

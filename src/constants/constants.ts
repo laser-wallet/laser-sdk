@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { Address, Transaction } from "../types";
+import { Address } from "../types";
 
 /**
  * @dev Mainnet deployed addresses.
