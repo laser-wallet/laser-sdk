@@ -1,1 +1,1 @@
-export { Laser, LaserFactory, LaserView, constants, abis, utils } from "./laser";
+export { Laser, LaserFactory, constants, abis, utils } from "./laser";

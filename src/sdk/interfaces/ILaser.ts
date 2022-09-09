@@ -1,46 +1,44 @@
-import { Address, Transaction, TransactionInfo } from "../../types";
-import { BigNumberish, providers, ContractReceipt } from "ethers";
+import { Address, Transaction, WalletState, RecoveryTransaction, OffChainTransaction } from "../../types";
+import { BigNumberish, providers, Contract, ContractReceipt } from "ethers";
+import { LaserTransaction } from "../../utils";
 
-///@title ILaser - interface for Laser's core logic.
-///contract's source: https://github.com/laser-wallet/laser-wallet-contracts
 export interface ILaser {
-    ///@dev Returns the transaction type to locks the wallet. Can only be called by the recovery owner and guardian.
-    lockWallet(txInfo: TransactionInfo): Promise<Transaction>;
+    // Inits Laser.
+    init(): Promise<void>;
 
-    ///@dev Returns the transaction type  to unlock the wallets. Can only be called by the owner + recovery owner
-    /// or owner + guardian.
-    unlockWallet(txInfo: TransactionInfo): Promise<Transaction>;
+    execTransaction(transaction: LaserTransaction): Promise<ContractReceipt>;
 
-    ///@dev Returns the transaction type to recover the wallet. Can only be called by a recovery owner or guardian.
-    recover(newOwner: Address, txInfo: TransactionInfo): Promise<Transaction>;
+    getWalletState(): Promise<WalletState>;
 
-    ///@dev Returns the transaction type  to change the owner. Can only be called by the owner.
-    changeOwner(newOwner: Address, txInfo: TransactionInfo): Promise<Transaction>;
+    lockWallet(nonce: BigNumberish): Promise<OffChainTransaction>;
 
-    ///@dev Returns the transaction type to add a guardian. Can only be called by the owner.
-    ///@notice The state is in the SSR module, not in the wallet itself.
-    addGuardian(newGuardian: Address, txInfo: TransactionInfo): Promise<Transaction>;
+    unlockWallet(nonce: BigNumberish): Promise<OffChainTransaction>;
 
-    ///@dev Returns the transaction type to remove a guardian. Can only be called by the owner.
-    ///@notice The state is in the SSR module, not in the wallet itself.
-    removeGuardian(guardianToRemove: Address, txInfo: TransactionInfo): Promise<Transaction>;
+    recover(_newOwner: Address, nonce: BigNumberish): Promise<OffChainTransaction>;
 
-    ///@dev Returns the transaction type add a recovery owner. Can only be called by the owenr.
-    ///@notice The state is in the SSR module, not in the wallet itself.
-    addRecoveryOwner(newRecoveryOwner: Address, txInfo: TransactionInfo): Promise<Transaction>;
+    changeOwner(_newOwner: Address, nonce: BigNumberish): Promise<OffChainTransaction>;
 
-    ///@dev Returns the transaction type to remove a recovery owner. Can only be called by the owner.
-    ///@notice The state is in the SSR module, not in the wallet itself.
-    removeRecoveryOwner(recoveryOwnerToRemove: Address, txInfo: TransactionInfo): Promise<Transaction>;
+    addGuardian(_newGuardian: Address, nonce: BigNumberish): Promise<OffChainTransaction>;
 
-    ///@dev Returns the transaction type to send eth. Can only be called by the owner.
-    sendEth(to: Address, amount: BigNumberish, txInfo: TransactionInfo): Promise<Transaction>;
+    removeGuardian(_guardian: Address, nonce: BigNumberish): Promise<OffChainTransaction>;
 
-    ///@dev Returns the transaction type to transfer an ERC-20 token. Can only be called by the owner.
+    addRecoveryOwner(_newRecoveryOwner: Address, nonce: BigNumberish): Promise<OffChainTransaction>;
+
+    removeRecoveryOwner(_recoveryOwner: Address, nonce: BigNumberish): Promise<OffChainTransaction>;
+
+    sendEth(_to: Address, _amount: BigNumberish, nonce: BigNumberish): Promise<OffChainTransaction>;
+
     transferERC20(
-        tokenAddress: Address,
-        to: Address,
+        _tokenAddress: Address,
+        _to: Address,
         amount: BigNumberish,
-        txInfo: TransactionInfo
-    ): Promise<Transaction>;
+        nonce: BigNumberish
+    ): Promise<OffChainTransaction>;
+
+    signTransaction(
+        to: Address,
+        value: BigNumberish,
+        callData: string,
+        nonce: BigNumberish
+    ): Promise<OffChainTransaction>;
 }

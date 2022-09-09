@@ -1,33 +1,32 @@
 import { Address } from "../../types";
 import { BigNumberish, ContractReceipt } from "ethers";
-import { FactoryTransaction } from "../LaserFactory";
 
-///@title ILaserFactory - interface for LaserFactory.
 export interface ILaserFactory {
-    ///@dev Mastercopy of the proxies, Laser core logic.
+    // Inits the factory.
+    init(): Promise<void>;
+
+    // Address of the factory.
+    getAddress(): Promise<Address>;
+
+    // Address of the master copy.
     getSingleton(): Promise<Address>;
 
     proxyRuntimeCode(): Promise<string>;
 
     proxyCreationCode(): Promise<string>;
 
-    ///@dev Creates a Laser proxy wallet with 'create2'.
     createWallet(
         owner: Address,
         recoveryOwners: Address[],
         guardians: Address[],
-        maxFeePerGas: BigNumberish,
-        maxPriorityFeePerGas: BigNumberish,
-        gasLimit: BigNumberish,
-        relayer: Address,
-        saltNumber: BigNumberish
-    ): Promise<FactoryTransaction>;
+        saltNumber: BigNumberish,
+        gasLimit?: BigNumberish
+    ): Promise<ContractReceipt>;
 
-    ///@dev Precomputes the address that will be deployed with 'createWallet'.
-    ///The proxy is created through 'create2', so any change will output a different address.
+    // Precomputes the address of a proxy that is created through 'create2'.
     preComputeAddress(
         owner: Address,
-        recoveryOwner: Address[],
+        recoveryOwners: Address[],
         guardians: Address[],
         saltNumber: BigNumberish
     ): Promise<Address>;
