@@ -1,5 +1,11 @@
 # laser-sdk
 
+## 0.6.1
+
+### Patch Changes
+
+-   cbdfddb: Vault fixes
+
 ## 0.6.0
 
 ### Minor Changes
