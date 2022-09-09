@@ -1,9 +1,8 @@
 import { BigNumber, BigNumberish, constants, ethers } from "ethers";
 import { Provider } from "@ethersproject/providers";
-import { WalletState } from "../types";
+import { OffChainTransaction, WalletState } from "../types";
 import { Address } from "../types";
 import { addressEq, isContract, supports1271, verifyAddress } from "./utils";
-import { LaserTransaction } from "./signatures";
 
 /**
  * @dev Checks that the parameters are ok to lock the wallet.
@@ -364,7 +363,7 @@ function verifyDuplicate(owner: Address, recoveryOwners: Address[], guardians: A
     }
 }
 
-export function verifyPackedSignatures(tr1: LaserTransaction, tr2: LaserTransaction) {
+export function verifyPackedSignatures(tr1: OffChainTransaction, tr2: OffChainTransaction) {
     if (tr1.signer !== "owner" && tr1.signer !== "guardian" && tr1.signer !== "recoveryOwner") {
         throw Error("Invalid signer");
     }

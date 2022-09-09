@@ -23,18 +23,18 @@ export type LaserTypes = {
     nonce: BigNumberish;
 };
 
-export type Chain = "mainnet" | "goerli" | "kovan" | "ropsten" | "localhost";
-
 type TransactionType = "recovery" | "exec";
 export type OffChainTransaction = {
+    wallet: Address;
     to: Address;
     value: BigNumberish;
     callData: string;
     nonce: BigNumberish;
     signatures: string;
     signer: string;
-    chain: Chain;
-    transactionType: TransactionType;
+    chain: string;
+    transactionType: TransactionType | string;
+    description?: string;
 };
 
 export type WalletState = {

@@ -1,6 +1,4 @@
-import { Chain } from "../types";
-
-export function getChain(chainId: Number): Chain {
+export function getChain(chainId: Number): string {
     switch (chainId) {
         case 1: {
             return "mainnet";
