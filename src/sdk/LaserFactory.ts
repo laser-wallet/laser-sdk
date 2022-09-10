@@ -1,11 +1,11 @@
-import { ethers, Contract, utils, ContractReceipt, BigNumberish, BigNumber, Signer } from "ethers";
-import { Wallet } from "@ethersproject/wallet";
 import { Provider } from "@ethersproject/providers";
-import { Address } from "../types";
+import { Wallet } from "@ethersproject/wallet";
+import { BigNumber, BigNumberish, providers } from "ethers";
 import { getDeployedAddresses } from "../constants/constants";
-import { LaserFactory__factory, LaserFactory as _LaserFactory } from "../typechain";
+import { LaserFactory as _LaserFactory, LaserFactory__factory } from "../typechain";
+import { Address } from "../types";
+import { estimateDeployGas, getInitHash, getInitializer, sign, verifyDeployment } from "../utils";
 import { ILaserFactory } from "./interfaces/ILaserFactory";
-import { sign, getInitializer, getInitHash, verifyDeployment } from "../utils";
 
 /**
  * @title LaserFactory
@@ -79,7 +79,7 @@ export class LaserFactory implements ILaserFactory {
         recoveryOwners: Address[],
         guardians: Address[],
         saltNumber: BigNumberish
-    ): Promise<ContractReceipt> {
+    ): Promise<providers.TransactionResponse> {
         if (!this.initialized) await this.init();
 
         const initHash = getInitHash(guardians, recoveryOwners, this.chainId);
@@ -88,10 +88,13 @@ export class LaserFactory implements ILaserFactory {
 
         // @todo Check that the signature is correct.
         await verifyDeployment(this.provider, owner, recoveryOwners, guardians);
+        const gasEstimate = estimateDeployGas(guardians, recoveryOwners);
 
         try {
-            const transaction = await this.factory.createProxy(initializer, saltNumber);
-            return transaction.wait();
+            const transaction = await this.factory.createProxy(initializer, saltNumber, {
+                gasLimit: BigNumber.from(gasEstimate).add(10000),
+            });
+            return transaction;
         } catch (e) {
             throw Error(`Error deploying the vault: ${e}`);
         }
