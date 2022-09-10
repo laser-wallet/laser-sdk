@@ -87,7 +87,7 @@ export class LaserFactory implements ILaserFactory {
         const initializer = getInitializer(owner, guardians, recoveryOwners, ownerSignature);
 
         // @todo Check that the signature is correct.
-        verifyDeployment(this.provider, owner, recoveryOwners, guardians);
+        await verifyDeployment(this.provider, owner, recoveryOwners, guardians);
 
         try {
             const transaction = await this.factory.createProxy(initializer, saltNumber);
