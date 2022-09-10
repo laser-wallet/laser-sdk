@@ -1,5 +1,11 @@
 # laser-sdk
 
+## 0.6.2
+
+### Patch Changes
+
+-   0013663: Update createWallet method
+
 ## 0.6.1
 
 ### Patch Changes
