@@ -274,13 +274,12 @@ export async function verifyDeployment(
     recoveryOwners: Address[],
     guardians: Address[]
 ): Promise<void> {
-    verifyOwner(provider, owner);
-
-    verifyGuardians(provider, guardians);
-
-    verifyRecoveryOwners(provider, recoveryOwners);
-
-    verifyDuplicate(owner, recoveryOwners, guardians);
+    await Promise.all([
+        verifyOwner(provider, owner),
+        verifyGuardians(provider, guardians),
+        verifyRecoveryOwners(provider, recoveryOwners),
+        verifyDuplicate(owner, recoveryOwners, guardians),
+    ]);
 }
 
 async function verifyOwner(provider: Provider, _owner: Address): Promise<void> {

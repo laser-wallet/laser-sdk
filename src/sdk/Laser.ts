@@ -189,7 +189,7 @@ export class Laser implements ILaser {
         if (nonce < walletState.nonce) {
             throw Error("Incorrect nonce.");
         }
-        recoverVerifier(this.signer.address, newOwner, this.provider, walletState);
+        await recoverVerifier(this.signer.address, newOwner, this.provider, walletState);
 
         const callData = encodeFunctionData(LaserWallet__factory.abi, "recover", [newOwner]);
         const recoveryHash = getRecoveryHash(this.wallet.address, nonce, this.chainId, callData);
@@ -251,7 +251,7 @@ export class Laser implements ILaser {
         if (nonce < walletState.nonce) {
             throw Error("Incorrect nonce.");
         }
-        addGuardianVerifier(this.signer.address, this.provider, newGuardian, walletState);
+        await addGuardianVerifier(this.signer.address, this.provider, newGuardian, walletState);
 
         const callData = encodeFunctionData(walletAbi, "addGuardian", [newGuardian]);
         const signatures = await this.signTransaction(this.wallet.address, 0, callData, nonce.toString());
@@ -322,7 +322,7 @@ export class Laser implements ILaser {
         if (nonce < walletState.nonce) {
             throw Error("Incorrect nonce.");
         }
-        addRecoveryOwnerVerifier(this.signer.address, this.provider, newRecoveryOwner, walletState);
+        await addRecoveryOwnerVerifier(this.signer.address, this.provider, newRecoveryOwner, walletState);
 
         const callData = encodeFunctionData(walletAbi, "addRecoveryOwner", [newRecoveryOwner]);
         const signatures = await this.signTransaction(this.wallet.address, 0, callData, nonce.toString());

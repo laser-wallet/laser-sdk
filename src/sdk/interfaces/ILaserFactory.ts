@@ -1,5 +1,5 @@
+import { BigNumberish, providers } from "ethers";
 import { Address } from "../../types";
-import { BigNumberish, ContractReceipt } from "ethers";
 
 export interface ILaserFactory {
     // Inits the factory.
@@ -21,7 +21,7 @@ export interface ILaserFactory {
         guardians: Address[],
         saltNumber: BigNumberish,
         gasLimit?: BigNumberish
-    ): Promise<ContractReceipt>;
+    ): Promise<providers.TransactionResponse>;
 
     // Precomputes the address of a proxy that is created through 'create2'.
     preComputeAddress(
