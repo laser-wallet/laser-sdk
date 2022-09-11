@@ -78,7 +78,8 @@ export class LaserFactory implements ILaserFactory {
         owner: Address,
         recoveryOwners: Address[],
         guardians: Address[],
-        saltNumber: BigNumberish
+        saltNumber: BigNumberish,
+        sender: Wallet
     ): Promise<providers.TransactionResponse> {
         if (!this.initialized) await this.init();
 
@@ -90,14 +91,9 @@ export class LaserFactory implements ILaserFactory {
         await verifyDeployment(this.provider, owner, recoveryOwners, guardians);
         const gasEstimate = estimateDeployGas(guardians, recoveryOwners);
 
-        try {
-            const transaction = await this.factory.createProxy(initializer, saltNumber, {
-                gasLimit: BigNumber.from(gasEstimate).add(10000),
-            });
-            return transaction;
-        } catch (e) {
-            throw Error(`Error deploying the vault: ${e}`);
-        }
+        return this.factory.connect(sender.connect(this.provider)).createProxy(initializer, saltNumber, {
+            gasLimit: BigNumber.from(gasEstimate),
+        });
     }
 
     /**

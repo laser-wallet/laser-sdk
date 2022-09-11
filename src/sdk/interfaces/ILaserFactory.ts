@@ -1,4 +1,4 @@
-import { BigNumberish, providers } from "ethers";
+import { BigNumberish, providers, Wallet } from "ethers";
 import { Address } from "../../types";
 
 export interface ILaserFactory {
@@ -20,7 +20,7 @@ export interface ILaserFactory {
         recoveryOwners: Address[],
         guardians: Address[],
         saltNumber: BigNumberish,
-        gasLimit?: BigNumberish
+        sender: Wallet
     ): Promise<providers.TransactionResponse>;
 
     // Precomputes the address of a proxy that is created through 'create2'.
