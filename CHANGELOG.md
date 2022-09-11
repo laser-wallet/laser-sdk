@@ -1,5 +1,11 @@
 # laser-sdk
 
+## 0.6.3
+
+### Patch Changes
+
+-   215a625: Pass sender to create wallet
+
 ## 0.6.2
 
 ### Patch Changes
