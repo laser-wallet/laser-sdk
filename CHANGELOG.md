@@ -1,5 +1,11 @@
 # laser-sdk
 
+## 0.6.5
+
+### Patch Changes
+
+-   e0379c7: Fix missing provider
+
 ## 0.6.4
 
 ### Patch Changes
