@@ -65,7 +65,7 @@ export class Laser implements ILaser {
      *      The transaction must be already signed and verified.
      *
      */
-    async execTransaction(transaction: OffChainTransaction): Promise<ContractReceipt> {
+    async execTransaction(transaction: OffChainTransaction, sender: Wallet): Promise<providers.TransactionResponse> {
         if (transaction.signatures.length < 262) {
             throw Error("Invalid signature length, there needs to be 2 signatures.");
         }
@@ -74,32 +74,19 @@ export class Laser implements ILaser {
             // If value in transaction, then it is a normal transaction.
             // Normal transaction are sent through 'exec' and require the signature of
             // the owner + recovery owner or owner + guardian.
-            try {
-                const tx = await this.wallet.exec(
+            return this.wallet
+                .connect(sender)
+                .exec(
                     transaction.to,
                     transaction.value,
                     transaction.callData,
                     transaction.nonce,
                     transaction.signatures
                 );
-                const receipt = await tx.wait();
-                return receipt;
-            } catch (e) {
-                throw Error(`Error sending transaction: ${e}`);
-            }
         } else {
-            // Else, it is a recovery transaction done through 'recovery'.
-            try {
-                const tx = await this.wallet.recovery(
-                    transaction.nonce.toString(),
-                    transaction.callData,
-                    transaction.signatures
-                );
-                const receipt = await tx.wait();
-                return receipt;
-            } catch (e) {
-                throw Error(`Error sending transaction: ${e}`);
-            }
+            return this.wallet
+                .connect(sender)
+                .recovery(transaction.nonce.toString(), transaction.callData, transaction.signatures);
         }
     }
 
