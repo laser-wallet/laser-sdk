@@ -440,11 +440,11 @@ export class Laser implements ILaser {
 
         const callData = encodeFunctionData(erc20Abi, "transfer", [to, transferAmount]);
 
-        const signatures = await this.signTransaction(to, 0, callData, nonce.toString());
+        const signatures = await this.signTransaction(tokenAddress, 0, callData, nonce.toString());
 
         return {
             wallet: this.wallet.address,
-            to,
+            to: tokenAddress,
             value: 0,
             callData,
             nonce,
