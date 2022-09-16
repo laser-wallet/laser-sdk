@@ -1,5 +1,11 @@
 # laser-sdk
 
+## 0.6.4
+
+### Patch Changes
+
+-   2384fd1: Pass sender to send transaction
+
 ## 0.6.3
 
 ### Patch Changes
