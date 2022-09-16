@@ -1,11 +1,11 @@
-import { Address, WalletState, OffChainTransaction } from "../../types";
-import { BigNumberish, providers, Contract, ContractReceipt } from "ethers";
+import { BigNumberish, providers, Wallet } from "ethers";
+import { Address, OffChainTransaction, WalletState } from "../../types";
 
 export interface ILaser {
     // Inits Laser.
     init(): Promise<void>;
 
-    execTransaction(transaction: OffChainTransaction): Promise<ContractReceipt>;
+    execTransaction(transaction: OffChainTransaction, sender: Wallet): Promise<providers.TransactionResponse>;
 
     getWalletState(): Promise<WalletState>;
 
