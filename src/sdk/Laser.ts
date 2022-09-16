@@ -2,7 +2,7 @@ import { Provider } from "@ethersproject/providers";
 import { Wallet } from "@ethersproject/wallet";
 import { BigNumber, BigNumberish, Contract, ContractReceipt, ethers, providers } from "ethers";
 import erc20Abi from "../abis/erc20.abi.json";
-import { LaserWallet__factory, LaserWallet, LaserHelper__factory, LaserHelper } from "../typechain";
+import { LaserWallet__factory, LaserWallet, LaserHelper__factory, LaserHelper, Erc20Abi__factory } from "../typechain";
 import { abi as walletAbi } from "../deployments/localhost/LaserWallet.json";
 import { getDeployedAddresses } from "../constants";
 import { Address, OffChainTransaction } from "../types";
@@ -424,7 +424,7 @@ export class Laser implements ILaser {
         const tokenAddress = await verifyAddress(this.provider, _tokenAddress);
         const to = await verifyAddress(this.provider, _to);
 
-        const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, this.provider);
+        const tokenContract = Erc20Abi__factory.connect(tokenAddress, this.provider);
         const walletBalance = await tokenContract.balanceOf(this.wallet.address);
 
         let decimals: number;

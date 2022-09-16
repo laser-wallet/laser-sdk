@@ -91,7 +91,7 @@ export class LaserFactory implements ILaserFactory {
         await verifyDeployment(this.provider, owner, recoveryOwners, guardians);
         const gasEstimate = estimateDeployGas(guardians, recoveryOwners);
 
-        return this.factory.connect(sender).createProxy(initializer, saltNumber, {
+        return this.factory.connect(sender.connect(this.provider)).createProxy(initializer, saltNumber, {
             gasLimit: BigNumber.from(gasEstimate),
         });
     }

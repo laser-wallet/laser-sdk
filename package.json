@@ -9,7 +9,7 @@
         "test": "ts-mocha test/*.ts --timeout 100000",
         "build": "yarn generate && tsc",
         "release": "yarn build && changeset publish",
-        "generate": "typechain --target=ethers-v5 'src/deployments/localhost/*.json' --out-dir src/typechain"
+        "generate": "typechain --target=ethers-v5 'src/{abis,deployments/localhost}/*.json' --out-dir src/typechain"
     },
     "author": "Rodrigo Herrera I",
     "license": "LGPL-3.0",
