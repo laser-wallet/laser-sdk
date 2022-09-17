@@ -21,8 +21,8 @@ async function sendEth() {
 
     const transaction = bundleTransactions(tx2, tx1); // bundleTransactions groups them correctly, the order does not matter.
     let bal = await provider.getBalance(random);
-    console.log("bal -->", bal.toString());
-    await laserOwner.execTransaction(transaction, guardian);
+    const gaslimit = 1000000;
+    await laserOwner.execTransaction(transaction, guardian, gaslimit);
 
     bal = await provider.getBalance(random);
     console.log("bal -->", bal.toString());
@@ -38,7 +38,7 @@ async function addGuardian() {
 
     const transaction = bundleTransactions(tx1, tx2);
 
-    await laserGuardian.execTransaction(transaction, guardian);
+    await laserGuardian.execTransaction(transaction, guardian, 1000000);
 
     const state = await laserGuardian.getWalletState();
 
