@@ -65,7 +65,11 @@ export class Laser implements ILaser {
      *      The transaction must be already signed and verified.
      *
      */
-    async execTransaction(transaction: OffChainTransaction, sender: Wallet): Promise<providers.TransactionResponse> {
+    async execTransaction(
+        transaction: OffChainTransaction,
+        sender: Wallet,
+        gasLimit: number
+    ): Promise<providers.TransactionResponse> {
         if (transaction.signatures.length < 262) {
             throw Error("Invalid signature length, there needs to be 2 signatures.");
         }
@@ -81,12 +85,15 @@ export class Laser implements ILaser {
                     transaction.value,
                     transaction.callData,
                     transaction.nonce,
-                    transaction.signatures
+                    transaction.signatures,
+                    { gasLimit: gasLimit }
                 );
         } else {
             return this.wallet
                 .connect(sender)
-                .recovery(transaction.nonce.toString(), transaction.callData, transaction.signatures);
+                .recovery(transaction.nonce.toString(), transaction.callData, transaction.signatures, {
+                    gasLimit: gasLimit,
+                });
         }
     }
 
