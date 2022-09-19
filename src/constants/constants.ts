@@ -4,8 +4,8 @@ import { Address } from "../types";
 /**
  * @dev Mainnet deployed addresses.
  */
-// import { address as mainnetFactory } from "../deployments/mainnet/LaserFactory.json";
-// import { address as mainnetHelper } from "../deployments/mainnet/LaserHelper.json";
+import { address as mainnetFactory } from "../deployments/mainnet/LaserFactory.json";
+import { address as mainnetHelper } from "../deployments/mainnet/LaserHelper.json";
 
 /**
  * @dev Goerli deployed addresses.
@@ -41,8 +41,8 @@ export function getDeployedAddresses(chainId: string): DeployedAddresses {
     switch (chainId) {
         case "1": {
             return {
-                laserFactory: "",
-                laserHelper: "",
+                laserFactory: mainnetFactory,
+                laserHelper: mainnetHelper,
             };
         }
         case "5": {
