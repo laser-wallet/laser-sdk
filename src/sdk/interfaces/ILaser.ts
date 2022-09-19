@@ -5,7 +5,11 @@ export interface ILaser {
     // Inits Laser.
     init(): Promise<void>;
 
-    execTransaction(transaction: OffChainTransaction, sender: Wallet): Promise<providers.TransactionResponse>;
+    execTransaction(
+        transaction: OffChainTransaction,
+        sender: Wallet,
+        gasLimit: number
+    ): Promise<providers.TransactionResponse>;
 
     getWalletState(): Promise<WalletState>;
 
