@@ -1,5 +1,11 @@
 # laser-sdk
 
+## 0.6.7
+
+### Patch Changes
+
+-   c6e4444: Add gas limit to exec
+
 ## 0.6.6
 
 ### Patch Changes
