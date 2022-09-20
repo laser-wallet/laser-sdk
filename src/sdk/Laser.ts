@@ -472,6 +472,7 @@ export class Laser implements ILaser {
      */
     async signTransaction(to: Address, value: BigNumberish, callData: string, nonce: BigNumberish): Promise<string> {
         const hash = await this.wallet.operationHash(to, value, callData, nonce);
+        console.log("hash -->", hash);
         return sign(this.signer, hash);
     }
 }

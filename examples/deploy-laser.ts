@@ -17,7 +17,5 @@ async function deploy() {
     const SALT = Math.floor(Math.random() * 1000);
     const addr = await factory.preComputeAddress(owner.address, recoveryOwners, guardians, SALT);
     console.log("addr -->", addr);
-    const tr = await factory.createWallet(owner.address, recoveryOwners, guardians, SALT);
-
-    console.log(tr.events);
+    const tr = await factory.createWallet(owner.address, recoveryOwners, guardians, SALT, owner);
 }

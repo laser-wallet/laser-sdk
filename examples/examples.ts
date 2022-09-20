@@ -4,7 +4,7 @@ import { bundleTransactions } from "../src/utils";
 import { owner } from "./deploy-laser";
 
 const provider = new ethers.providers.JsonRpcProvider(" http://127.0.0.1:8545/");
-const wallet = "0x615fCA4ed155eea16116405ED6C19264780fA6A3";
+const wallet = "0x42A0576Be1594a74069D842d14ce31beae8e784b";
 
 // Hardhat private keys.
 const guardian = new ethers.Wallet("0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e", provider);
