@@ -79,7 +79,7 @@ export function bundleTransactions(tr1: OffChainTransaction, tr2: OffChainTransa
  *
  * @returns  The address that signed the hash.
  */
-export async function verifySigner(provider: Provider, hash: string, signatures: string): Promise<Address> {
+export async function returnSigner(provider: Provider, hash: string, signatures: string): Promise<Address> {
     if (hash.slice(0, 2) !== "0x") {
         // We will give it a try.
         hash = "0x" + hash;
