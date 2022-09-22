@@ -1,5 +1,11 @@
 # laser-sdk
 
+## 0.7.0
+
+### Minor Changes
+
+-   bded3b4: Adding retrun signer to the utils function and changing the helper address
+
 ## 0.6.8
 
 ### Patch Changes
