@@ -1,7 +1,9 @@
+import { Provider } from "@ethersproject/providers";
 import { ethers, Wallet, BigNumber, BigNumberish } from "ethers";
 import { Domain, Address, types, LaserTypes, OffChainTransaction } from "../types";
 import { LaserWallet } from "../typechain";
 import { verifyPackedSignatures } from "./verifiers";
+import { getDeployedAddresses } from "../constants";
 
 export async function signTypedData(signer: Wallet, domain: Domain, transaction: OffChainTransaction): Promise<string> {
     const laserTypes: LaserTypes = {
@@ -68,5 +70,40 @@ export function bundleTransactions(tr1: OffChainTransaction, tr2: OffChainTransa
             chain: tr1.chain,
             transactionType: "recovery",
         };
+    }
+}
+
+/**
+ * @param hash   Hash that was signed.
+ * @param signatures  Signature(s) of the hash.
+ *
+ * @returns  The address that signed the hash.
+ */
+export async function returnSigner(provider: Provider, hash: string, signatures: string): Promise<Address> {
+    if (hash.slice(0, 2) !== "0x") {
+        // We will give it a try.
+        hash = "0x" + hash;
+    }
+    if (hash.length !== 66) {
+        // Hash has a fixed size of 32 bytes (64 hex + 0x prefix).
+        throw new Error("Incorrect hash length");
+    }
+    if (signatures.slice(0, 2) !== "0x") {
+        signatures = "0x" + signatures;
+    }
+    if (signatures.length < 132) {
+        // Signatures should be at least 65 bytes (130 hex + 0x prefix).
+        throw new Error("Incorrect signatures length");
+    }
+    const abi = ["function returnSigner(bytes32,bytes,uint256) external view returns(address)"];
+
+    const chainId = (await provider.getNetwork()).chainId;
+    const address = getDeployedAddresses(chainId.toString()).laserHelper;
+    const contract = new ethers.Contract(address, abi, provider);
+
+    try {
+        return await contract.returnSigner(hash, signatures, 0);
+    } catch (e) {
+        throw new Error(`There was a problem retrieving the signer: ${e}`);
     }
 }
