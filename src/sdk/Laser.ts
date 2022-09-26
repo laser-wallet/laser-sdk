@@ -3,7 +3,7 @@ import { Wallet } from "@ethersproject/wallet";
 import { BigNumber, BigNumberish, Contract, ContractReceipt, ethers, providers } from "ethers";
 import erc20Abi from "../abis/erc20.abi.json";
 import { LaserWallet__factory, LaserWallet, LaserHelper__factory, LaserHelper, Erc20Abi__factory } from "../typechain";
-import { abi as walletAbi } from "../deployments/localhost/LaserWallet.json";
+import { abi as walletAbi } from "../deployments/mainnet/LaserWallet.json";
 import { getDeployedAddresses } from "../constants";
 import { Address, OffChainTransaction } from "../types";
 import { decodeSigner } from "../utils";
