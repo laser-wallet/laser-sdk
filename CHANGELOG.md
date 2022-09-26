@@ -1,5 +1,11 @@
 # laser-sdk
 
+## 0.8.0
+
+### Minor Changes
+
+-   dedad0e: Update recovery
+
 ## 0.7.0
 
 ### Minor Changes
