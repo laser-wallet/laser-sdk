@@ -5,39 +5,16 @@ import { Address } from "../types";
 import { addressEq, isContract, supports1271, verifyAddress } from "./utils";
 
 /**
- * @dev Checks that the parameters are ok to lock the wallet.
- */
-export function lockWalletVerifier(signer: Address, walletState: WalletState) {
-    if (walletState.isLocked) {
-        throw Error("Invalid operation 'lockWallet': wallet is locked.");
-    }
-
-    let isRecoveryOwnerOrGuardian = false;
-
-    walletState.recoveryOwners.map((recoveryOwner) => {
-        if (addressEq(recoveryOwner, signer)) isRecoveryOwnerOrGuardian = true;
-    });
-
-    walletState.guardians.map((guardian) => {
-        if (addressEq(guardian, signer)) isRecoveryOwnerOrGuardian = true;
-    });
-
-    if (!isRecoveryOwnerOrGuardian) {
-        throw Error("Invalid operation 'lockWallet': only a recovery owner or guardian can lock the wallet.");
-    }
-}
-
-/**
  * @dev Checks that the parameters are ok to unlock the wallet.
  */
 export function unlockWalletVerifier(signer: Address, walletState: WalletState) {
-    if (!walletState.isLocked) {
+    if (!walletState._isLocked) {
         throw Error("Invalid operation 'unlockWallet': wallet is not locked.");
     }
 
     let isOwnerOrRecoveryOwnerOrGuardian = false;
 
-    if (addressEq(signer, walletState.owner)) isOwnerOrRecoveryOwnerOrGuardian = true;
+    if (addressEq(signer, walletState.oldOwner)) isOwnerOrRecoveryOwnerOrGuardian = true;
 
     walletState.recoveryOwners.map((recoveryOwner) => {
         if (addressEq(recoveryOwner, signer)) isOwnerOrRecoveryOwnerOrGuardian = true;
@@ -61,7 +38,6 @@ export async function recoverVerifier(
     provider: Provider,
     walletState: WalletState
 ) {
-    // @todo Add 5 days delay.
     let isRecoveryOwnerOrGuardian = false;
 
     walletState.guardians.map((guardian) => {
@@ -108,7 +84,7 @@ export async function changeOwnerVerifier(
         throw Error("Invalid operation 'changeOwner' : new owner cannot be address 0.");
     }
 
-    if (walletState.isLocked) {
+    if (walletState._isLocked) {
         throw Error("Invalid operation 'changeOwner': wallet is locked.");
     }
 
@@ -142,7 +118,7 @@ export async function addGuardianVerifier(
         throw Error("Invalid operation 'addGuardian': new guardian cannot be address 0.");
     }
 
-    if (walletState.isLocked) {
+    if (walletState._isLocked) {
         throw Error("Invalid operation 'addGuardian': wallet is locked.");
     }
 
@@ -167,7 +143,7 @@ export async function addGuardianVerifier(
  * @dev Checks that the parameters are ok to remove a guardian.
  */
 export function removeGuardianVerifier(signer: Address, guardian: Address, walletState: WalletState) {
-    if (walletState.isLocked) {
+    if (walletState._isLocked) {
         throw Error("Invalid operation 'removeGuardian': wallet is locked.");
     }
 
@@ -197,7 +173,7 @@ export async function addRecoveryOwnerVerifier(
         throw Error("Invalid operation 'addRecoveryOwner': new recovery owner cannot be address 0.");
     }
 
-    if (walletState.isLocked) {
+    if (walletState._isLocked) {
         throw Error("Invalid operation 'addRecoveryOwner': wallet is locked.");
     }
 
@@ -222,7 +198,7 @@ export async function addRecoveryOwnerVerifier(
  * @dev Checks that the parameters are ok to remove a recovery owner.
  */
 export function removeRecoveryOwnerVerifier(signer: Address, recoveryOwner: Address, walletState: WalletState) {
-    if (walletState.isLocked) {
+    if (walletState._isLocked) {
         throw Error("Invalid operation 'removeRecoveryOwner': wallet is locked.");
     }
 
@@ -244,7 +220,7 @@ export function sendEthVerifier(signer: Address, transferAmount: BigNumber, wall
         throw Error("Invalid opearation 'sendEth': invalid amount.");
     }
 
-    if (walletState.isLocked) {
+    if (walletState._isLocked) {
         throw Error("Invalid operation 'sendEth': wallet is locked.");
     }
 
@@ -259,7 +235,7 @@ export function transferERC20Verifier(
     walletBalance: BigNumber,
     walletState: WalletState
 ) {
-    if (walletState.isLocked) {
+    if (walletState._isLocked) {
         throw Error("Invalid operation 'transferERC20': wallet is locked.");
     }
 

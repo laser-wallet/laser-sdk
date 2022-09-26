@@ -9,7 +9,6 @@ import { Address, OffChainTransaction } from "../types";
 import { decodeSigner } from "../utils";
 import {
     sign,
-    lockWalletVerifier,
     unlockWalletVerifier,
     changeOwnerVerifier,
     verifyAddress,
@@ -102,44 +101,12 @@ export class Laser implements ILaser {
      */
     async getWalletState(): Promise<WalletState> {
         if (!this.initialized) await this.init();
-
         return this.laserHelper.getLaserState(this.wallet.address);
     }
 
     /*//////////////////////////////////////////////////////////////
                          SMART SOCIAL RECOVERY
     //////////////////////////////////////////////////////////////*/
-
-    /**
-     * @dev Locks the wallet, can only be signed by a recovery owner or guardian.
-     */
-    async lockWallet(nonce: BigNumberish): Promise<OffChainTransaction> {
-        if (!this.initialized) await this.init();
-        const walletState = await this.getWalletState();
-
-        if (nonce < walletState.nonce) {
-            throw Error("Incorrect nonce.");
-        }
-        lockWalletVerifier(this.signer.address, walletState);
-
-        const callData = encodeFunctionData(LaserWallet__factory.abi, "lock", []);
-        const recoveryHash = getRecoveryHash(this.wallet.address, nonce, this.chainId, callData);
-
-        const signatures = await sign(this.signer, recoveryHash);
-
-        return {
-            wallet: this.wallet.address,
-            to: this.wallet.address,
-            value: 0,
-            callData,
-            nonce,
-            signatures,
-            signer: decodeSigner(walletState, this.signer.address),
-            chain: getChain(this.chainId),
-            transactionType: "recovery",
-            description: "Lock wallet",
-        };
-    }
 
     /**
      * @dev Unlocks the wallet, can only be signed by the owner, guardian, or recovery owner.
@@ -245,7 +212,7 @@ export class Laser implements ILaser {
         if (nonce < walletState.nonce) {
             throw Error("Incorrect nonce.");
         }
-        await addGuardianVerifier(this.signer.address, this.provider, newGuardian, walletState);
+        //await addGuardianVerifier(this.signer.address, this.provider, newGuardian, walletState);
 
         const callData = encodeFunctionData(walletAbi, "addGuardian", [newGuardian]);
         const signatures = await this.signTransaction(this.wallet.address, 0, callData, nonce.toString());

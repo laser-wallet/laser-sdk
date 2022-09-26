@@ -13,8 +13,6 @@ export interface ILaser {
 
     getWalletState(): Promise<WalletState>;
 
-    lockWallet(nonce: BigNumberish): Promise<OffChainTransaction>;
-
     unlockWallet(nonce: BigNumberish): Promise<OffChainTransaction>;
 
     recover(_newOwner: Address, nonce: BigNumberish): Promise<OffChainTransaction>;
