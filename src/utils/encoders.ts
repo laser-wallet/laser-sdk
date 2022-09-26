@@ -35,7 +35,7 @@ export function getInitHash(guardians: Address[], recoveryOwners: Address[], cha
 export function decodeSigner(walletState: WalletState, _signer: Address): string {
     const signer = _signer.toLowerCase();
 
-    if (signer === walletState.owner.toLowerCase()) {
+    if (signer === walletState.owner.toLowerCase() || signer === walletState.oldOwner.toLowerCase()) {
         return "owner";
     }
 

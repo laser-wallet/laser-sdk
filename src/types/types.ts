@@ -42,7 +42,8 @@ export type WalletState = {
     guardians: Address[];
     recoveryOwners: Address[];
     singleton: string;
-    isLocked: boolean;
+    _isLocked: boolean;
     nonce: BigNumberish;
     balance: BigNumberish;
+    oldOwner: Address;
 };

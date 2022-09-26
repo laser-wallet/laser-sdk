@@ -14,12 +14,6 @@ import { address as goerliFactory } from "../deployments/goerli/LaserFactory.jso
 import { address as goerliHelper } from "../deployments/goerli/LaserHelper.json";
 
 /**
- * @dev Kovan deployed addresses.
- */
-import { address as kovanFactory } from "../deployments/kovan/LaserFactory.json";
-import { address as kovanHelper } from "../deployments/kovan/LaserHelper.json";
-
-/**
  * @dev Ropsten deployed addresses.
  */
 import { address as ropstenFactory } from "../deployments/ropsten/LaserFactory.json";
@@ -28,8 +22,8 @@ import { address as ropstenHelper } from "../deployments/ropsten/LaserHelper.jso
 /**
  * @dev Localhost deployed addresses.
  */
-import { address as localhostFactory } from "../deployments/localhost/LaserFactory.json";
-import { address as localhostHelper } from "../deployments/localhost/LaserHelper.json";
+// import { address as localhostFactory } from "../deployments/localhost/LaserFactory.json";
+// import { address as localhostHelper } from "../deployments/localhost/LaserHelper.json";
 
 export const MAGIC_VALUE = "0x1626ba7e";
 
@@ -51,24 +45,18 @@ export function getDeployedAddresses(chainId: string): DeployedAddresses {
                 laserHelper: goerliHelper,
             };
         }
-        case "42": {
-            return {
-                laserFactory: kovanFactory,
-                laserHelper: kovanHelper,
-            };
-        }
         case "3": {
             return {
                 laserFactory: ropstenFactory,
                 laserHelper: ropstenHelper,
             };
         }
-        case "31337": {
-            return {
-                laserFactory: localhostFactory,
-                laserHelper: localhostHelper,
-            };
-        }
+        // case "31337": {
+        //     return {
+        //         laserFactory: localhostFactory,
+        //         laserHelper: localhostHelper,
+        //     };
+        // }
         default: {
             throw Error("Unsupported network.");
         }
