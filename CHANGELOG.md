@@ -1,5 +1,11 @@
 # laser-sdk
 
+## 0.8.1
+
+### Patch Changes
+
+-   f7b5131: Fix TS error
+
 ## 0.8.0
 
 ### Minor Changes
