@@ -1,9 +1,6 @@
-import { BigNumberish, utils, Contract, ethers, BigNumber } from "ethers";
 import { Provider } from "@ethersproject/providers";
+import { BigNumberish, Contract, utils } from "ethers";
 import { Address } from "../types";
-import { abi as walletAbi } from "../deployments/localhost/LaserWallet.json";
-import { abi as factoryAbi } from "../deployments/localhost/LaserFactory.json";
-import { LaserHelper__factory } from "../typechain";
 
 export function addressEq(address1: string, address2: string): boolean {
     if (address1.slice(0, 2).toLowerCase() !== "0x") {
