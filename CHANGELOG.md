@@ -1,5 +1,11 @@
 # laser-sdk
 
+## 0.8.2
+
+### Patch Changes
+
+-   a186c14: removing wrong modifier
+
 ## 0.8.1
 
 ### Patch Changes
