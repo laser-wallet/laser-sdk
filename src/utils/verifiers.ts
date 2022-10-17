@@ -220,10 +220,6 @@ export function sendEthVerifier(signer: Address, transferAmount: BigNumber, wall
         throw Error("Invalid opearation 'sendEth': invalid amount.");
     }
 
-    if (walletState._isLocked) {
-        throw Error("Invalid operation 'sendEth': wallet is locked.");
-    }
-
     if (transferAmount.gt(walletState.balance)) {
         throw Error("Invalid operation 'sendEth': insufficient balance.");
     }
@@ -235,10 +231,6 @@ export function transferERC20Verifier(
     walletBalance: BigNumber,
     walletState: WalletState
 ) {
-    if (walletState._isLocked) {
-        throw Error("Invalid operation 'transferERC20': wallet is locked.");
-    }
-
     if (transferAmount.gt(walletBalance)) {
         throw Error("Invalid operation 'transferERC20': insufficient balance.");
     }
